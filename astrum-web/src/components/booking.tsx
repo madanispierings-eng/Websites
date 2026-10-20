@@ -55,12 +55,15 @@ export function BookingButton({
   message,
   className,
   variant = "default",
+  magnetic = false,
 }: {
   children?: React.ReactNode;
   topic?: string;
   message?: string | (() => string);
   className?: string;
   variant?: "default" | "secondary" | "link";
+  /** Leans up to 8px towards the pointer (see Cursor). */
+  magnetic?: boolean;
 }) {
   const { openBooking } = useBooking();
   const pathname = usePathname();
@@ -70,6 +73,7 @@ export function BookingButton({
       variant={variant}
       className={className}
       data-page={pathname}
+      data-magnetic={magnetic || undefined}
       onClick={() => openBooking({ topic, message: typeof message === "function" ? message() : message })}
     >
       {children}

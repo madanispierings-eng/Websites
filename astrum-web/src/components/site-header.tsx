@@ -20,26 +20,42 @@ const isActive = (pathname: string, href: string) => pathname === href || pathna
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const [open, setOpen] = React.useState(false);
+  // On the home page the hero carries its own links; the bar waits below it and comes back on the way up.
+  const home = pathname === "/";
   const headerRef = React.useRef<HTMLElement>(null);
 
   // Step aside while reading down, come back on the way up.
   React.useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
     let last = window.scrollY;
     const onScroll = () => {
       const y = window.scrollY;
-      const el = headerRef.current;
-      if (!el) return;
-      el.dataset.hidden = String(y > 240 && y > last && !el.contains(document.activeElement));
+      const hero = home ? (document.querySelector<HTMLElement>("[data-hero]")?.offsetHeight ?? 0) : 0;
+      const away = y > last && y > 240;
+      el.dataset.hidden = String((home && y < hero) || (away && !el.contains(document.activeElement)));
       last = y;
     };
+    const onFocus = () => (el.dataset.hidden = "false");
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    el.addEventListener("focusin", onFocus);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      el.removeEventListener("focusin", onFocus);
+    };
+  }, [home]);
   const inServices = services.some((s) => isActive(pathname, s.href));
 
   return (
-    <header ref={headerRef} className="sticky top-0 z-40 bg-background text-foreground transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] data-[hidden=true]:-translate-y-full">
+    <header
+      ref={headerRef}
+      data-hidden={home || undefined}
+      className={cn(
+        "top-0 z-40 bg-background text-foreground transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] data-[hidden=true]:-translate-y-full",
+        home ? "dark fixed inset-x-0" : "sticky",
+      )}
+    >
       <div className="container-page flex h-16 items-center justify-between gap-6 lg:h-20">
         <Link href="/" className="font-display text-[1.75rem] leading-none tracking-[0.18em] uppercase" aria-label="Astrum, naar de homepage" translate="no">
           Astrum
@@ -96,31 +112,40 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2 lg:hidden">
           <BookingButton className="h-11 px-4 text-small">Gesprek</BookingButton>
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger className="inline-flex h-11 items-center px-3 text-small font-medium hover:bg-secondary">
-              Menu
-            </SheetTrigger>
-            <SheetContent data-lenis-prevent side="right" className="w-full gap-0 overflow-y-auto overscroll-contain border-0 bg-background p-0 text-foreground sm:max-w-md">
-              <SheetTitle className="sr-only">Menu</SheetTitle>
-              <nav aria-label="Menu" className="mt-20 grid gap-1 px-6 pb-10">
-                {[{ href: "/", label: "Home" }, ...services.map((s) => ({ href: s.href, label: s.name })), ...nav, { href: "/vragen/", label: "Vragen" }].map(
-                  (item) => (
-                    <SheetClose asChild key={item.href}>
-                      <Link
-                        href={item.href}
-                        aria-current={pathname === item.href ? "page" : undefined}
-                        className="py-1 text-head aria-[current=page]:text-gold-deep"
-                      >
-                        {item.label}
-                      </Link>
-                    </SheetClose>
-                  ),
-                )}
-              </nav>
-            </SheetContent>
-          </Sheet>
+          <MobileMenu />
         </div>
       </div>
     </header>
+  );
+}
+
+/** The phone menu: one word that opens a full-screen panel. Used by the bar and by the home hero. */
+export function MobileMenu({ className }: { className?: string }) {
+  const pathname = usePathname();
+  const [open, setOpen] = React.useState(false);
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger className={cn("inline-flex h-11 items-center px-3 text-small font-medium hover:bg-secondary", className)}>
+        Menu
+      </SheetTrigger>
+      <SheetContent data-lenis-prevent side="right" className="w-full gap-0 overflow-y-auto overscroll-contain border-0 bg-background p-0 text-foreground sm:max-w-md">
+        <SheetTitle className="sr-only">Menu</SheetTitle>
+        <nav aria-label="Menu" className="mt-20 grid gap-1 px-6 pb-10">
+          {[{ href: "/", label: "Home" }, ...services.map((s) => ({ href: s.href, label: s.name })), ...nav, { href: "/vragen/", label: "Vragen" }].map(
+            (item) => (
+              <SheetClose asChild key={item.href}>
+                <Link
+                  href={item.href}
+                  aria-current={pathname === item.href ? "page" : undefined}
+                  className="py-1 text-head aria-[current=page]:text-gold-deep"
+                >
+                  {item.label}
+                </Link>
+              </SheetClose>
+            ),
+          )}
+        </nav>
+      </SheetContent>
+    </Sheet>
   );
 }

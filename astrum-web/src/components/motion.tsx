@@ -59,7 +59,6 @@ function useSmoothScroll() {
  * The page's motion layer. Markup opts in with data attributes:
  * - data-reveal on a section, data-r on its parts: headings rise line by line, pictures unmask, text fades up
  * - data-drift on a picture: slow scale while it crosses the screen
- * - data-hero*: the home page's opening and the city that opens to full width
  * - data-hscroll on a section with data-hscroll-track: steps that travel sideways while the section is pinned
  * - data-count: a figure that counts up
  * Everything is skipped under prefers-reduced-motion, so content is never left hidden.
@@ -71,23 +70,9 @@ export function Motion({ children }: { children: React.ReactNode }) {
 
   useGSAP(
     () => {
-      const root = scope.current!;
       const mm = gsap.matchMedia();
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        // Home opening: the promise rises line by line, then the copy, then the city.
-        const heroTitle = root.querySelector<HTMLElement>("[data-hero-title]");
-        if (heroTitle) {
-          SplitText.create(heroTitle, {
-            type: "lines",
-            mask: "lines",
-            autoSplit: true,
-            onSplit: (self) =>
-              gsap.from(self.lines, { yPercent: 110, duration: 1.4, ease: EASE, stagger: 0.12, delay: 0.35 }),
-          });
-          gsap.from("[data-hero-copy] > *", { y: 24, opacity: 0, duration: 1.1, ease: EASE, stagger: 0.1, delay: 0.75 });
-        }
-
         // Entrances, section by section.
         gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((section) => {
           const parts = gsap.utils.toArray<HTMLElement>(section.querySelectorAll("[data-r]"));
@@ -159,25 +144,8 @@ export function Motion({ children }: { children: React.ReactNode }) {
         });
       });
 
-      // Desktop only: the city opens to the full width, and the steps travel sideways.
+      // Desktop only: the steps travel sideways.
       mm.add("(prefers-reduced-motion: no-preference) and (min-width: 1024px)", () => {
-        const stage = root.querySelector<HTMLElement>("[data-hero-stage]");
-        if (stage) {
-          // Start from the page gutter in the full four-value form: the browser reports the inline inset as
-          // "inset(0px 40px)", which GSAP would pair up wrongly with the four-value end (lopsided, jumpy edges).
-          const gutter = () => getComputedStyle(root.querySelector(".container-page") ?? document.body).paddingLeft;
-          gsap
-            .timeline({ scrollTrigger: { trigger: stage, start: "top top", end: "+=70%", scrub: true, pin: true, invalidateOnRefresh: true } })
-            .fromTo(
-              "[data-hero-frame]",
-              { clipPath: () => `inset(0px ${gutter()} 0px ${gutter()})` },
-              { clipPath: "inset(0px 0px 0px 0px)", ease: "none" },
-              0,
-            )
-            .fromTo("[data-hero-img]", { scale: 1.12 }, { scale: 1, ease: "none" }, 0);
-          gsap.from("[data-hero-frame]", { opacity: 0, y: 40, duration: 1.6, ease: EASE, delay: 0.5 });
-        }
-
         const sideways = gsap.utils.toArray<HTMLElement>("[data-hscroll]");
         sideways.forEach((section) => {
           const track = section.querySelector<HTMLElement>("[data-hscroll-track]");

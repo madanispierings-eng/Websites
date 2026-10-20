@@ -1,48 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BookingButton } from "@/components/booking";
+import type { Viewport } from "next";
+import { HomeHero } from "@/components/home-hero";
 import { LoopVideo } from "@/components/loop-video";
 import { LazyCostCalculator as CostCalculator } from "@/components/lazy-cost-calculator";
 import { CtaBand, PriceList } from "@/components/sections";
 import { articles } from "@/lib/articles";
 import { team, values } from "@/lib/site";
 
+export const viewport: Viewport = { themeColor: "#102624" };
+
 export default function Home() {
   return (
     <>
-      {/* Hero: the promise in type, then the city opening up as you scroll */}
-      <section className="relative" data-hero>
-        <div className="container-page grid gap-10 pt-12 pb-10 lg:grid-cols-12 lg:items-end lg:gap-5 lg:pt-20 lg:pb-14">
-          <h1 className="text-display lg:col-span-8" data-hero-title>
-            Voor wie verder kijkt
-          </h1>
-          <div className="grid gap-6 lg:col-span-4 lg:pb-4" data-hero-copy>
-            <p className="text-lead">Astrum is een boutique makelaar in Dubai, voor Nederlanders die kopen, verkopen of beleggen.</p>
-            <p className="text-stone">Eerlijk advies, zonder haast. Ook als het beste antwoord ‘nog niet’ is.</p>
-            <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-              <BookingButton />
-              <Link href="/kosten/" className="link">Bereken de kosten</Link>
-            </div>
-          </div>
-        </div>
-        <div className="relative h-[64svh] lg:h-svh" data-hero-stage>
-          <div
-            className="absolute inset-0 overflow-hidden"
-            style={{ clipPath: "inset(0 clamp(20px, 3vw, 40px) 0 clamp(20px, 3vw, 40px))" }}
-            data-hero-frame
-          >
-            <Image
-              src="/img/skyline-hero.jpg"
-              alt="De skyline van Dubai in de avondzon, van ver gezien"
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover object-[78%_40%]"
-              data-hero-img
-            />
-          </div>
-        </div>
-      </section>
+      <HomeHero />
 
       {/* What Astrum stands for, beside the creek where Dubai began */}
       <section className="container-page grid gap-12 py-24 lg:grid-cols-12 lg:items-center lg:gap-5 lg:py-40" data-reveal>

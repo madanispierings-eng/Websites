@@ -5,17 +5,18 @@
 /* .light inside a .dark section switches back to the light tokens */
 @custom-variant dark (&:is(.dark *):not(:is(.light *)));
 
-/* Astrum tokens (DESIGN.md). shadcn's semantic variables are mapped onto them below. */
+/* Astrum tokens (PLAN-v3.md: Nachtcreek, Porselein, Champagne). shadcn's semantic variables are mapped onto them below. */
 @theme inline {
-  --color-limestone: #f5f5f3;
+  --color-limestone: #f2efe8;
   --color-paper: #ffffff;
   --color-ink: #1a1c1e;
   --color-stone: #63605b;
   --color-stone-light: #a8a49d;
-  --color-gold: #c2a26a;
+  --color-gold: #c9ab72;
   --color-gold-light: #ece2cf;
-  --color-creek: #1f3b3a;
-  --color-creek-deep: #172d2c;
+  --color-creek: #102624;
+  --color-creek-deep: #0b1c1b;
+  --color-surface: #173432;
   --color-tone: #ebeae6;
   --color-gold-deep: #7d6234;
 
@@ -64,17 +65,25 @@
   --radius-4xl: 0px;
 }
 
+:root {
+  /* page margins: 16px on a phone, 24px from tablet up */
+  --gutter: 16px;
+}
+@media (min-width: 768px) {
+  :root { --gutter: 24px; }
+}
+
 :root,
 .light {
   --radius: 0px;
-  --background: #f5f5f3;
+  --background: #f2efe8;
   --foreground: #1a1c1e;
   --card: #ffffff;
   --card-foreground: #1a1c1e;
   --popover: #ffffff;
   --popover-foreground: #1a1c1e;
-  --primary: #1f3b3a;
-  --primary-foreground: #ffffff;
+  --primary: #102624;
+  --primary-foreground: #f2efe8;
   --secondary: #ebeae6;
   --secondary-foreground: #1a1c1e;
   --muted: #ebeae6;
@@ -84,28 +93,28 @@
   --destructive: #a1301f;
   --border: #d9d7d2;
   --input: #a5a19a;
-  --ring: #1f3b3a;
+  --ring: #102624;
 }
 
-/* dark grounds: header, home hero, footer, the creek field */
+/* dark grounds: Nachtcreek. Header, home hero, footer, the creek field. Champagne only on the main action. */
 .dark:not(.light .dark) {
-  --background: #1f3b3a;
-  --foreground: #ffffff;
-  --card: #264645;
-  --card-foreground: #ffffff;
-  --popover: #264645;
-  --popover-foreground: #ffffff;
-  --primary: #ffffff;
-  --primary-foreground: #1f3b3a;
-  --secondary: #2c4f4d;
-  --secondary-foreground: #ffffff;
-  --muted: #2c4f4d;
-  --muted-foreground: #c3cfcc;
-  --accent: #2c4f4d;
-  --accent-foreground: #ffffff;
-  --border: #3a5c5a;
-  --input: #93a8a5;
-  --ring: #c2a26a;
+  --background: #102624;
+  --foreground: #f2efe8;
+  --card: #173432;
+  --card-foreground: #f2efe8;
+  --popover: #173432;
+  --popover-foreground: #f2efe8;
+  --primary: #c9ab72;
+  --primary-foreground: #102624;
+  --secondary: #1f403d;
+  --secondary-foreground: #f2efe8;
+  --muted: #1f403d;
+  --muted-foreground: #b9c6c2;
+  --accent: #1f403d;
+  --accent-foreground: #f2efe8;
+  --border: #2a4c49;
+  --input: #8fa5a1;
+  --ring: #c9ab72;
 }
 
 @layer base {
@@ -139,7 +148,7 @@
     width: 100%;
     max-width: 1440px;
     margin-inline: auto;
-    padding-inline: clamp(20px, 3vw, 40px);
+    padding-inline: var(--gutter);
   }
   .measure { max-width: 38rem; }
   .link {
@@ -216,3 +225,126 @@ html.lenis, html.lenis body { height: auto; }
 
 /* SplitText line masks: room for descenders (the j in "kijkt") without changing the line spacing. */
 h1 div, h2 div, h3 div { padding-bottom: 0.14em; margin-bottom: -0.14em; }
+
+/* ---------- Home hero: the name as a monument under Dubai at night (PLAN-v3.md, "Name under a photograph") ---------- */
+.hero {
+  /* the share of the screen the Nachtcreek band takes under the photograph */
+  --band: 42%;
+  /* ASTRUM's advance width in em, so the name can be sized to run from margin to margin */
+  --name-em: 4.62;
+  position: relative;
+  height: 100svh;
+  min-height: 620px;
+  overflow: hidden;
+  background: var(--color-creek);
+  color: var(--color-limestone);
+}
+@media (max-width: 767px) {
+  .hero { --band: 50%; min-height: 560px; }
+}
+@media (min-width: 768px) and (max-aspect-ratio: 1/1) {
+  /* a tall tablet: the name is width-bound, so the band gives the photograph more room */
+  .hero { --band: 34%; }
+}
+.hero-photo {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  clip-path: inset(0 0 var(--band) 0);
+}
+.hero-photo img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* the skyline stands on the band's edge, the sky above it */
+  object-position: 50% 30%;
+  transform-origin: 50% 45%;
+}
+@media (max-width: 767px) {
+  /* a taller crop on the phone so the towers still meet the band, Burj Khalifa near the middle */
+  .hero-photo img { top: -14%; height: 114%; object-position: 54% 50%; }
+}
+.hero-band {
+  position: absolute;
+  inset: calc(100% - var(--band)) var(--gutter) 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-top: 24px;
+}
+.hero-name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: min(calc((100vw - 2 * var(--gutter)) / var(--name-em)), 30svh);
+  line-height: 0.8;
+  /* the descenderless caps sit on the band's foot, 28px up (16px on a phone) */
+  margin-bottom: clamp(10px, 1.6vw, 22px);
+  transform-origin: 50% 100%;
+}
+.hero-letters {
+  display: flex;
+  justify-content: space-between;
+}
+.hero-letter {
+  display: block;
+  overflow: hidden;
+  /* room for the serifs and the A's apex inside the rising mask */
+  padding-top: 0.06em;
+}
+.hero-glyph { display: block; }
+.hero-glyph.is-cut {
+  color: transparent;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.hero-nav a { transition: color 0.2s ease, text-decoration-color 0.2s ease; }
+
+/* Before the opening plays, the parts start out of sight. Set by a head script only on the home page with motion
+   allowed, and lifted after four seconds whatever happens, so the hero is never left empty. */
+html.intro .hero-photo { opacity: 0; }
+html.intro .hero-glyph { transform: translateY(105%); }
+html.intro [data-hero-fade] { opacity: 0; }
+
+/* ---------- Cursor: a dot and a trailing ring, only with a fine pointer and motion allowed ---------- */
+.cursor { display: none; }
+html.has-cursor .cursor { display: block; }
+html.has-cursor, html.has-cursor * { cursor: none !important; }
+html.has-cursor :is(input, textarea, select, [contenteditable]) { cursor: auto !important; }
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  pointer-events: none;
+  border-radius: 9999px;
+  mix-blend-mode: difference;
+}
+.cursor-dot { width: 8px; height: 8px; margin: -4px 0 0 -4px; background: #fff; }
+.cursor-ring {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border: 1.5px solid #fff;
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), height 0.35s cubic-bezier(0.22, 1, 0.36, 1), margin 0.35s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease, border-color 0.25s ease, opacity 0.25s ease;
+}
+.cursor-ring span { font-size: 0.9375rem; color: var(--color-creek); opacity: 0; transition: opacity 0.2s ease; }
+.cursor[data-state="hover"] .cursor-ring { width: 56px; height: 56px; margin: -28px 0 0 -28px; }
+.cursor[data-state="label"] .cursor-ring {
+  width: 88px;
+  height: 88px;
+  margin: -44px 0 0 -44px;
+  mix-blend-mode: normal;
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+}
+.cursor[data-state="label"] .cursor-ring span { opacity: 1; }
+.cursor[data-state="label"] .cursor-dot,
+.cursor[data-hidden="true"] .cursor-dot,
+.cursor[data-hidden="true"] .cursor-ring { opacity: 0; }

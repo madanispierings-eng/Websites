@@ -128,7 +128,7 @@ export function MobileMenu({ className }: { className?: string }) {
       <SheetTrigger className={cn("inline-flex h-11 items-center px-3 text-small font-medium hover:bg-secondary", className)}>
         Menu
       </SheetTrigger>
-      <SheetContent data-lenis-prevent side="right" className="w-full gap-0 overflow-y-auto overscroll-contain border-0 bg-background p-0 text-foreground sm:max-w-md">
+      <SheetContent data-lenis-prevent side="right" className="gap-0 overflow-y-auto overscroll-contain border-0 bg-background p-0 text-foreground data-[side=right]:w-full data-[side=right]:border-l-0 data-[side=right]:sm:max-w-md">
         <SheetTitle className="sr-only">Menu</SheetTitle>
         <nav aria-label="Menu" className="mt-20 grid gap-1 px-6 pb-10">
           {[{ href: "/", label: "Home" }, ...services.map((s) => ({ href: s.href, label: s.name })), ...nav, { href: "/vragen/", label: "Vragen" }].map(

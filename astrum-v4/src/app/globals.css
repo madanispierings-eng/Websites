@@ -186,3 +186,76 @@ html.lenis, html.lenis body { height: auto; }
   .hero-row > :last-child { justify-self: center; text-align: center; }
   .hero-row .btn-gold { width: 100%; }
 }
+
+/* ---------- Before the opening plays: set by a head script on the home page with motion allowed, lifted after
+   four seconds whatever happens, so nothing is ever left hidden. ---------- */
+html.intro .stage { opacity: 0; }
+html.intro :is([data-hero-letter], [data-hero-sentence], [data-hero-part], [data-header]) { opacity: 0; }
+
+/* the caption that appears once the vitrine has opened to the whole screen */
+.stage-caption {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: 28px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  font-size: var(--text-small);
+  opacity: 0;
+  pointer-events: none;
+}
+.stage-caption a { pointer-events: auto; }
+
+/* ---------- Cursor: a dot and a trailing ring, only with a fine pointer and motion allowed ---------- */
+.cursor { display: none; }
+html.has-cursor .cursor { display: block; }
+html.has-cursor, html.has-cursor * { cursor: none !important; }
+html.has-cursor :is(input, textarea, select, [contenteditable]) { cursor: auto !important; }
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  pointer-events: none;
+  border-radius: 9999px;
+  mix-blend-mode: difference;
+}
+.cursor-dot { width: 8px; height: 8px; margin: -4px 0 0 -4px; background: #fff; transition: opacity 0.2s ease; }
+.cursor-ring {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border: 1.5px solid #fff;
+  transition:
+    width 0.45s var(--ease-out-expo),
+    height 0.45s var(--ease-out-expo),
+    margin 0.45s var(--ease-out-expo),
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    opacity 0.25s ease;
+}
+.cursor-ring span { font-size: var(--text-small); font-weight: 500; color: var(--color-gold-ink); opacity: 0; transition: opacity 0.2s ease; }
+.cursor[data-state="hover"] .cursor-ring { width: 60px; height: 60px; margin: -30px 0 0 -30px; }
+.cursor[data-state="label"] .cursor-ring {
+  width: 88px;
+  height: 88px;
+  margin: -44px 0 0 -44px;
+  mix-blend-mode: normal;
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+}
+.cursor[data-state="label"] .cursor-ring span { opacity: 1; }
+.cursor[data-state="label"] .cursor-dot,
+.cursor[data-hidden="true"] .cursor-dot,
+.cursor[data-hidden="true"] .cursor-ring { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor { display: none !important; }
+}
+@media (max-width: 767px) {
+  .stage-caption { flex-direction: column; gap: 4px; bottom: 20px; }
+}

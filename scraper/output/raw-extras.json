@@ -1,0 +1,592 @@
+{
+  "styles": {
+    "cssVariables": {
+      "--cream": "#f5f0e8",
+      "--gold": "#a8895a",
+      "--ink": "#1c1915",
+      "--sand": "#ebe3d6",
+      "--stone": "#7d7468",
+      "--line": "#1c19151f",
+      "--line-light": "#ffffff38",
+      "--serif": "\"Bodoni Moda\", \"Didot\", \"Bodoni 72\", Georgia, serif",
+      "--sans": "\"Inter Variable\", \"Inter\", system-ui, -apple-system, sans-serif",
+      "--gutter": "clamp(20px, 4.5vw, 64px)"
+    },
+    "elements": [
+      {
+        "selector": "body",
+        "fontFamily": "\"Inter Variable\", Inter, system-ui, -apple-system, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "letterSpacing": "normal",
+        "textTransform": "none",
+        "lineHeight": "25.6px",
+        "color": "rgb(28, 25, 21)",
+        "background": "rgb(245, 240, 232)",
+        "borderRadius": "0px"
+      },
+      {
+        "selector": "h1",
+        "fontFamily": "\"Bodoni Moda\", Didot, \"Bodoni 72\", Georgia, serif",
+        "fontSize": "129.6px",
+        "fontWeight": "400",
+        "letterSpacing": "41.472px",
+        "textTransform": "uppercase",
+        "lineHeight": "207.36px",
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px"
+      },
+      {
+        "selector": "h2",
+        "fontFamily": "\"Bodoni Moda\", Didot, \"Bodoni 72\", Georgia, serif",
+        "fontSize": "106.56px",
+        "fontWeight": "400",
+        "letterSpacing": "-1.0656px",
+        "textTransform": "none",
+        "lineHeight": "104.429px",
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px"
+      },
+      {
+        "selector": "h3",
+        "fontFamily": "\"Bodoni Moda\", Didot, \"Bodoni 72\", Georgia, serif",
+        "fontSize": "144px",
+        "fontWeight": "400",
+        "letterSpacing": "normal",
+        "textTransform": "none",
+        "lineHeight": "132.48px",
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px"
+      },
+      {
+        "selector": "p",
+        "fontFamily": "\"Bodoni Moda\", Didot, \"Bodoni 72\", Georgia, serif",
+        "fontSize": "31.68px",
+        "fontWeight": "400",
+        "letterSpacing": "normal",
+        "textTransform": "none",
+        "lineHeight": "50.688px",
+        "color": "rgba(255, 255, 255, 0.92)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px"
+      },
+      {
+        "selector": "nav a",
+        "fontFamily": "\"Inter Variable\", Inter, system-ui, -apple-system, sans-serif",
+        "fontSize": "10.5px",
+        "fontWeight": "400",
+        "letterSpacing": "3.15px",
+        "textTransform": "uppercase",
+        "lineHeight": "16.8px",
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px"
+      },
+      {
+        "selector": "button",
+        "fontFamily": "\"Inter Variable\", Inter, system-ui, -apple-system, sans-serif",
+        "fontSize": "10.5px",
+        "fontWeight": "400",
+        "letterSpacing": "2.73px",
+        "textTransform": "uppercase",
+        "lineHeight": "normal",
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "999px"
+      },
+      {
+        "selector": "header button",
+        "fontFamily": "\"Inter Variable\", Inter, system-ui, -apple-system, sans-serif",
+        "fontSize": "10.5px",
+        "fontWeight": "400",
+        "letterSpacing": "2.73px",
+        "textTransform": "uppercase",
+        "lineHeight": "normal",
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "999px"
+      },
+      {
+        "selector": ".updates-submit",
+        "fontFamily": "\"Inter Variable\", Inter, system-ui, -apple-system, sans-serif",
+        "fontSize": "10.5px",
+        "fontWeight": "400",
+        "letterSpacing": "2.73px",
+        "textTransform": "uppercase",
+        "lineHeight": "16.8px",
+        "color": "rgb(28, 25, 21)",
+        "background": "rgb(245, 240, 232)",
+        "borderRadius": "0px"
+      },
+      {
+        "selector": "footer",
+        "fontFamily": "\"Inter Variable\", Inter, system-ui, -apple-system, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "letterSpacing": "normal",
+        "textTransform": "none",
+        "lineHeight": "25.6px",
+        "color": "rgba(255, 255, 255, 0.7)",
+        "background": "rgb(15, 13, 11)",
+        "borderRadius": "0px"
+      }
+    ],
+    "colorUsage": [
+      [
+        "rgb(28, 25, 21)",
+        326
+      ],
+      [
+        "rgb(255, 255, 255)",
+        210
+      ],
+      [
+        "rgb(125, 116, 104)",
+        44
+      ],
+      [
+        "rgb(168, 137, 90)",
+        26
+      ],
+      [
+        "rgba(255, 255, 255, 0.7)",
+        25
+      ],
+      [
+        "rgb(0, 0, 0)",
+        23
+      ],
+      [
+        "rgb(230, 211, 173)",
+        14
+      ],
+      [
+        "rgba(255, 255, 255, 0.5)",
+        12
+      ],
+      [
+        "rgb(118, 118, 118)",
+        11
+      ],
+      [
+        "rgba(28, 25, 21, 0.12)",
+        9
+      ],
+      [
+        "rgba(255, 255, 255, 0.75)",
+        9
+      ],
+      [
+        "rgba(255, 255, 255, 0.8)",
+        6
+      ],
+      [
+        "rgb(15, 13, 11)",
+        5
+      ],
+      [
+        "rgba(255, 255, 255, 0.22)",
+        4
+      ],
+      [
+        "rgba(255, 255, 255, 0.82)",
+        4
+      ],
+      [
+        "rgb(235, 227, 214)",
+        3
+      ],
+      [
+        "rgb(245, 240, 232)",
+        3
+      ],
+      [
+        "rgba(245, 240, 232, 0.92)",
+        3
+      ],
+      [
+        "rgba(255, 255, 255, 0.92)",
+        2
+      ],
+      [
+        "rgba(255, 255, 255, 0.78)",
+        2
+      ]
+    ],
+    "sections": [
+      {
+        "id": null,
+        "tag": "header",
+        "cls": "nav  ",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "id": "top",
+        "tag": "section",
+        "cls": "hero",
+        "bg": "rgb(15, 13, 11)",
+        "color": "rgb(28, 25, 21)"
+      },
+      {
+        "id": null,
+        "tag": "section",
+        "cls": "intro",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(28, 25, 21)"
+      },
+      {
+        "id": "diensten",
+        "tag": "section",
+        "cls": "services",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "id": "werkwijze",
+        "tag": "section",
+        "cls": "process",
+        "bg": "rgb(235, 227, 214)",
+        "color": "rgb(28, 25, 21)"
+      },
+      {
+        "id": "updates",
+        "tag": "section",
+        "cls": "updates",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(28, 25, 21)"
+      },
+      {
+        "id": null,
+        "tag": "section",
+        "cls": "statement",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(28, 25, 21)"
+      },
+      {
+        "id": null,
+        "tag": "section",
+        "cls": "film",
+        "bg": "rgb(15, 13, 11)",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "id": "over",
+        "tag": "section",
+        "cls": "about",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(28, 25, 21)"
+      },
+      {
+        "id": "team",
+        "tag": "section",
+        "cls": "team",
+        "bg": "rgb(245, 240, 232)",
+        "color": "rgb(28, 25, 21)"
+      },
+      {
+        "id": "blog",
+        "tag": "section",
+        "cls": "blog",
+        "bg": "rgb(235, 227, 214)",
+        "color": "rgb(28, 25, 21)"
+      },
+      {
+        "id": "contact",
+        "tag": "section",
+        "cls": "contact",
+        "bg": "rgb(235, 227, 214)",
+        "color": "rgb(28, 25, 21)"
+      },
+      {
+        "id": null,
+        "tag": "footer",
+        "cls": "footer",
+        "bg": "rgb(15, 13, 11)",
+        "color": "rgba(255, 255, 255, 0.7)"
+      }
+    ],
+    "fontsLoaded": [
+      "Bodoni Moda 400 normal",
+      "Bodoni Moda 400 italic",
+      "Bodoni Moda 500 normal",
+      "Inter Variable 100 900 normal"
+    ]
+  },
+  "logo": {
+    "html": "Astrum",
+    "text": "ASTRUM",
+    "fontFamily": "\"Bodoni Moda\", Didot, \"Bodoni 72\", Georgia, serif",
+    "letterSpacing": "5.1px"
+  },
+  "modal": {
+    "text": "KENNISMAKEN\nPlan een gesprek\n\nVertel ons kort waar je staat. We nemen contact met je op voor een vrijblijvend gesprek, op een moment dat jou past.\n\nKom in contact\nE-MAIL\ninfo@astrumuae.com\n\n“Goed vastgoed koop je met rust.”\n\nLaat dit veld leeg \n\nNAAM\nE-MAIL\nTELEFOON (OPTIONEEL)\nWAAR GAAT HET OVER?\nKopen\nVerkopen\nPortfolio opbouwen\nEerst advies\nBERICHT\nVERSTUUR AANVRAAG\n\nWe gebruiken je gegevens alleen om contact met je op te nemen over deze aanvraag.",
+    "html": 3289,
+    "fields": [
+      {
+        "tag": "input",
+        "name": "form-name",
+        "type": "hidden",
+        "required": false,
+        "placeholder": null,
+        "label": null
+      },
+      {
+        "tag": "input",
+        "name": "bot-field",
+        "type": "text",
+        "required": false,
+        "placeholder": null,
+        "label": null
+      },
+      {
+        "tag": "input",
+        "name": "naam",
+        "type": "text",
+        "required": true,
+        "placeholder": "Je volledige naam",
+        "label": "NAAM"
+      },
+      {
+        "tag": "input",
+        "name": "email",
+        "type": "email",
+        "required": true,
+        "placeholder": "naam@voorbeeld.nl",
+        "label": "E-MAIL"
+      },
+      {
+        "tag": "input",
+        "name": "telefoon",
+        "type": "tel",
+        "required": false,
+        "placeholder": "+31 6 …",
+        "label": "TELEFOON (OPTIONEEL)"
+      },
+      {
+        "tag": "input",
+        "name": "onderwerp",
+        "type": "radio",
+        "required": false,
+        "placeholder": null,
+        "label": null,
+        "value": "Kopen"
+      },
+      {
+        "tag": "input",
+        "name": "onderwerp",
+        "type": "radio",
+        "required": false,
+        "placeholder": null,
+        "label": null,
+        "value": "Verkopen"
+      },
+      {
+        "tag": "input",
+        "name": "onderwerp",
+        "type": "radio",
+        "required": false,
+        "placeholder": null,
+        "label": null,
+        "value": "Portfolio opbouwen"
+      },
+      {
+        "tag": "input",
+        "name": "onderwerp",
+        "type": "radio",
+        "required": false,
+        "placeholder": null,
+        "label": null,
+        "value": "Eerst advies"
+      },
+      {
+        "tag": "textarea",
+        "name": "bericht",
+        "type": "textarea",
+        "required": false,
+        "placeholder": "Vertel kort over je plannen",
+        "label": "BERICHT"
+      }
+    ],
+    "links": [
+      {
+        "text": "info@astrumuae.com",
+        "href": "mailto:info@astrumuae.com"
+      }
+    ]
+  },
+  "mediaUrlsSeen": [
+    "https://astrumuae.com/film/hero/001.jpg",
+    "https://astrumuae.com/film/hero/002.jpg",
+    "https://astrumuae.com/film/hero/006.jpg",
+    "https://astrumuae.com/film/hero/087.jpg",
+    "https://astrumuae.com/film/hero/033.jpg",
+    "https://astrumuae.com/film/hero/080.jpg",
+    "https://astrumuae.com/film/hero/088.jpg",
+    "https://astrumuae.com/film/hero/004.jpg",
+    "https://astrumuae.com/film/hero/061.jpg",
+    "https://astrumuae.com/film/hero/097.jpg",
+    "https://astrumuae.com/film/hero/031.jpg",
+    "https://astrumuae.com/film/hero/003.jpg",
+    "https://astrumuae.com/film/hero/067.jpg",
+    "https://astrumuae.com/film/hero/026.jpg",
+    "https://astrumuae.com/film/hero/013.jpg",
+    "https://astrumuae.com/film/hero/101.jpg",
+    "https://astrumuae.com/film/hero/057.jpg",
+    "https://astrumuae.com/film/hero/039.jpg",
+    "https://astrumuae.com/film/hero/028.jpg",
+    "https://astrumuae.com/film/hero/020.jpg",
+    "https://astrumuae.com/film/hero/040.jpg",
+    "https://astrumuae.com/film/hero/023.jpg",
+    "https://astrumuae.com/film/hero/037.jpg",
+    "https://astrumuae.com/film/hero/027.jpg",
+    "https://astrumuae.com/film/hero/021.jpg",
+    "https://astrumuae.com/film/hero/055.jpg",
+    "https://astrumuae.com/film/hero/034.jpg",
+    "https://astrumuae.com/film/hero/041.jpg",
+    "https://astrumuae.com/film/hero/035.jpg",
+    "https://astrumuae.com/film/hero/059.jpg",
+    "https://astrumuae.com/film/hero/062.jpg",
+    "https://astrumuae.com/film/hero/049.jpg",
+    "https://astrumuae.com/film/hero/065.jpg",
+    "https://astrumuae.com/film/hero/068.jpg",
+    "https://astrumuae.com/film/hero/096.jpg",
+    "https://astrumuae.com/film/hero/047.jpg",
+    "https://astrumuae.com/film/hero/030.jpg",
+    "https://astrumuae.com/film/hero/086.jpg",
+    "https://astrumuae.com/film/hero/022.jpg",
+    "https://astrumuae.com/film/hero/024.jpg",
+    "https://astrumuae.com/film/hero/017.jpg",
+    "https://astrumuae.com/film/hero/043.jpg",
+    "https://astrumuae.com/film/hero/045.jpg",
+    "https://astrumuae.com/film/hero/046.jpg",
+    "https://astrumuae.com/film/hero/070.jpg",
+    "https://astrumuae.com/film/hero/085.jpg",
+    "https://astrumuae.com/film/hero/089.jpg",
+    "https://astrumuae.com/film/hero/008.jpg",
+    "https://astrumuae.com/film/hero/018.jpg",
+    "https://astrumuae.com/film/hero/032.jpg",
+    "https://astrumuae.com/film/hero/064.jpg",
+    "https://astrumuae.com/film/hero/090.jpg",
+    "https://astrumuae.com/film/hero/092.jpg",
+    "https://astrumuae.com/film/hero/036.jpg",
+    "https://astrumuae.com/film/hero/083.jpg",
+    "https://astrumuae.com/film/hero/044.jpg",
+    "https://astrumuae.com/film/hero/012.jpg",
+    "https://astrumuae.com/film/hero/082.jpg",
+    "https://astrumuae.com/film/hero/095.jpg",
+    "https://astrumuae.com/film/hero/060.jpg",
+    "https://astrumuae.com/film/hero/074.jpg",
+    "https://astrumuae.com/film/hero/005.jpg",
+    "https://astrumuae.com/film/hero/073.jpg",
+    "https://astrumuae.com/film/hero/069.jpg",
+    "https://astrumuae.com/film/hero/093.jpg",
+    "https://astrumuae.com/film/hero/094.jpg",
+    "https://astrumuae.com/film/hero/098.jpg",
+    "https://astrumuae.com/film/hero/100.jpg",
+    "https://astrumuae.com/film/hero/009.jpg",
+    "https://astrumuae.com/film/hero/011.jpg",
+    "https://astrumuae.com/film/hero/014.jpg",
+    "https://astrumuae.com/film/hero/029.jpg",
+    "https://astrumuae.com/film/hero/048.jpg",
+    "https://astrumuae.com/film/hero/051.jpg",
+    "https://astrumuae.com/film/hero/053.jpg",
+    "https://astrumuae.com/film/hero/054.jpg",
+    "https://astrumuae.com/film/hero/071.jpg",
+    "https://astrumuae.com/film/hero/076.jpg",
+    "https://astrumuae.com/film/hero/077.jpg",
+    "https://astrumuae.com/film/hero/084.jpg",
+    "https://astrumuae.com/film/hero/066.jpg",
+    "https://astrumuae.com/film/hero/075.jpg",
+    "https://astrumuae.com/film/hero/079.jpg",
+    "https://astrumuae.com/film/hero/099.jpg",
+    "https://astrumuae.com/film/hero/000.jpg",
+    "https://astrumuae.com/film/hero/010.jpg",
+    "https://astrumuae.com/film/hero/015.jpg",
+    "https://astrumuae.com/film/hero/042.jpg",
+    "https://astrumuae.com/film/hero/050.jpg",
+    "https://astrumuae.com/film/hero/058.jpg",
+    "https://astrumuae.com/film/hero/081.jpg",
+    "https://astrumuae.com/film/hero/007.jpg",
+    "https://astrumuae.com/assets/bodoni-moda-latin-500-normal-CtAcMono.woff2",
+    "https://astrumuae.com/film/hero/016.jpg",
+    "https://astrumuae.com/film/hero/038.jpg",
+    "https://astrumuae.com/film/hero/052.jpg",
+    "https://astrumuae.com/film/hero/063.jpg",
+    "https://astrumuae.com/film/hero/019.jpg",
+    "https://astrumuae.com/film/hero/091.jpg",
+    "https://astrumuae.com/film/hero/025.jpg",
+    "https://astrumuae.com/film/hero/056.jpg",
+    "https://astrumuae.com/film/hero/072.jpg",
+    "https://astrumuae.com/film/hero/078.jpg",
+    "https://astrumuae.com/assets/inter-latin-wght-normal-Dx4kXJAl.woff2",
+    "https://astrumuae.com/assets/bodoni-moda-latin-400-italic-DB-bun8K.woff2",
+    "https://astrumuae.com/film/hero/102.jpg",
+    "https://astrumuae.com/assets/bodoni-moda-latin-400-normal-CIWtV3SY.woff2",
+    "https://astrumuae.com/film/hero/105.jpg",
+    "https://astrumuae.com/film/hero/104.jpg",
+    "https://astrumuae.com/film/hero/109.jpg",
+    "https://astrumuae.com/film/hero/107.jpg",
+    "https://astrumuae.com/film/hero/110.jpg",
+    "https://astrumuae.com/film/hero/113.jpg",
+    "https://astrumuae.com/film/hero/112.jpg",
+    "https://astrumuae.com/film/hero/111.jpg",
+    "https://astrumuae.com/film/hero/108.jpg",
+    "https://astrumuae.com/film/hero/115.jpg",
+    "https://astrumuae.com/film/hero/116.jpg",
+    "https://astrumuae.com/film/hero/120.jpg",
+    "https://astrumuae.com/film/hero/124.jpg",
+    "https://astrumuae.com/film/hero/123.jpg",
+    "https://astrumuae.com/film/hero/125.jpg",
+    "https://astrumuae.com/film/hero/126.jpg",
+    "https://astrumuae.com/film/hero/129.jpg",
+    "https://astrumuae.com/film/hero/119.jpg",
+    "https://astrumuae.com/film/hero/128.jpg",
+    "https://astrumuae.com/film/hero/131.jpg",
+    "https://astrumuae.com/film/hero/132.jpg",
+    "https://astrumuae.com/film/hero/133.jpg",
+    "https://astrumuae.com/film/hero/117.jpg",
+    "https://astrumuae.com/film/hero/134.jpg",
+    "https://astrumuae.com/film/hero/121.jpg",
+    "https://astrumuae.com/film/hero/106.jpg",
+    "https://astrumuae.com/film/hero/135.jpg",
+    "https://astrumuae.com/film/hero/136.jpg",
+    "https://astrumuae.com/film/hero/138.jpg",
+    "https://astrumuae.com/film/hero/137.jpg",
+    "https://astrumuae.com/film/hero/139.jpg",
+    "https://astrumuae.com/film/hero/140.jpg",
+    "https://astrumuae.com/film/hero/141.jpg",
+    "https://astrumuae.com/film/hero/145.jpg",
+    "https://astrumuae.com/film/hero/148.jpg",
+    "https://astrumuae.com/film/hero/144.jpg",
+    "https://astrumuae.com/beeld/zwembad-terras.jpg",
+    "https://astrumuae.com/film/hero/143.jpg",
+    "https://astrumuae.com/film/hero/147.jpg",
+    "https://astrumuae.com/film/hero/149.jpg",
+    "https://astrumuae.com/film/hero/103.jpg",
+    "https://astrumuae.com/film/hero/114.jpg",
+    "https://astrumuae.com/film/hero/118.jpg",
+    "https://astrumuae.com/film/hero/122.jpg",
+    "https://astrumuae.com/film/hero/142.jpg",
+    "https://astrumuae.com/film/hero/130.jpg",
+    "https://astrumuae.com/film/hero/127.jpg",
+    "https://astrumuae.com/film/alba-film.mp4",
+    "https://astrumuae.com/beeld/terras-marina.jpg",
+    "https://astrumuae.com/beeld/tuin-zwembad.jpg",
+    "https://astrumuae.com/beeld/slaapkamer-palm.jpg",
+    "https://astrumuae.com/beeld/woonkamer-skyline.jpg",
+    "https://astrumuae.com/beeld/infinity-palm.jpg",
+    "https://astrumuae.com/beeld/terras-zwembad.jpg",
+    "https://astrumuae.com/film/hero/146.jpg",
+    "https://astrumuae.com/beeld/nacht-marina.jpg",
+    "https://astrumuae.com/beeld/jacht.jpg",
+    "https://astrumuae.com/team/over-astrum.jpg",
+    "https://astrumuae.com/team/denise-birjmohun.jpg",
+    "https://astrumuae.com/team/pim-verberg.jpg",
+    "https://astrumuae.com/team/ron-veen.jpg",
+    "https://astrumuae.com/beeld/strand-gebouw.jpg"
+  ]
+}

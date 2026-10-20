@@ -10,39 +10,38 @@ import { team, values } from "@/lib/site";
 export default function Home() {
   return (
     <>
-      {/* Hero: the photo of the people, the name crossing it */}
-      <section className="dark relative overflow-hidden bg-background text-foreground" data-hero>
-        <div className="grid min-h-[calc(100svh-5rem)] lg:grid-cols-[47%_53%]">
-          <div className="relative h-[58svh] p-3 lg:h-auto lg:p-5 lg:pr-0">
-            <div className="relative h-full overflow-hidden">
-              <Image
-                src="/img/duo.jpg"
-                alt="Pim Verberg en Denise Birjmohun van Astrum in een sales gallery in Dubai"
-                fill
-                priority
-                sizes="(min-width: 1024px) 47vw, 100vw"
-                className="object-cover object-[50%_28%]"
-                data-drift
-              />
-            </div>
-          </div>
-          <div className="relative flex flex-col justify-center px-5 pt-[16vw] pb-14 lg:px-0 lg:pt-0 lg:pb-[clamp(10rem,16vw,15rem)]">
-            <div className="grid max-w-[30ch] gap-8 lg:mx-auto" data-hero-copy>
-              <p className="text-lead">
-                Boutique makelaar in Dubai, voor Nederlanders die kopen, verkopen of beleggen.
-              </p>
-              <p className="text-muted-foreground">Eerlijk advies, zonder haast. Ook als het beste antwoord ‘nog niet’ is.</p>
-              <BookingButton className="justify-self-start" />
+      {/* Hero: the promise in type, then the city opening up as you scroll */}
+      <section className="relative" data-hero>
+        <div className="container-page grid gap-10 pt-12 pb-10 lg:grid-cols-12 lg:items-end lg:gap-5 lg:pt-20 lg:pb-14">
+          <h1 className="text-display lg:col-span-8" data-hero-title>
+            Voor wie verder kijkt
+          </h1>
+          <div className="grid gap-6 lg:col-span-4 lg:pb-4" data-hero-copy>
+            <p className="text-lead">Astrum is een boutique makelaar in Dubai, voor Nederlanders die kopen, verkopen of beleggen.</p>
+            <p className="text-stone">Eerlijk advies, zonder haast. Ook als het beste antwoord ‘nog niet’ is.</p>
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+              <BookingButton />
+              <Link href="/kosten/" className="link">Bereken de kosten</Link>
             </div>
           </div>
         </div>
-        <h1
-          translate="no"
-          data-wordmark
-          className="pointer-events-none absolute top-[calc(58svh-0.2em)] left-4 m-0 font-normal text-[26vw] leading-[0.82] tracking-[-0.045em] whitespace-nowrap select-none lg:top-auto lg:right-[clamp(20px,3vw,40px)] lg:bottom-8 lg:left-auto lg:text-display"
-        >
-          astrum<span className="sr-only">, boutique makelaar in Dubai voor Nederlanders</span>
-        </h1>
+        <div className="relative h-[64svh] lg:h-svh" data-hero-stage>
+          <div
+            className="absolute inset-0 overflow-hidden"
+            style={{ clipPath: "inset(0 clamp(20px, 3vw, 40px) 0 clamp(20px, 3vw, 40px))" }}
+            data-hero-frame
+          >
+            <Image
+              src="/img/skyline-hero.jpg"
+              alt="De skyline van Dubai in de avondzon, van ver gezien"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-[78%_40%]"
+              data-hero-img
+            />
+          </div>
+        </div>
       </section>
 
       {/* What Astrum stands for, beside the creek where Dubai began */}
@@ -127,7 +126,7 @@ export default function Home() {
       <section className="dark bg-creek text-foreground" aria-labelledby="kosten-titel" data-reveal>
         <div className="container-page grid gap-12 py-24 lg:grid-cols-12 lg:gap-5 lg:py-32">
           <div className="grid content-start gap-6 lg:col-span-5">
-            <p className="text-display leading-[0.8] text-gold tabular-nums" data-r data-count="4">
+            <p className="text-display leading-none text-gold tabular-nums" data-r data-count="4">
               4%
             </p>
             <h2 id="kosten-titel" className="text-head max-w-[12ch]" data-r>Wat kopen echt kost</h2>

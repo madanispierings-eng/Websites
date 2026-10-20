@@ -13,22 +13,32 @@ Bronnen: `frontend-design` (richting, tokens, layout), `ui-ux-pro-max` (UX-regel
 
 Dubai verkoopt met glanzende brochures. Astrum is het nuchtere prospectus ernaast: **de echte getallen staan groot**, en de mensen zijn zichtbaar. Al het lef zit in één ding: het grote woordmerk en de grote cijfers (kosten, percentages). De rest blijft rustig.
 
-## Tokens
+## Tokens (versie 2: high-end, licht)
+
+Het zwart uit versie 1 is vervangen. De klant vond het niet high-end en niet modern genoeg.
 
 | Rol | Naam | Hex | Gebruik |
 | --- | --- | --- | --- |
-| Ground | Kalksteen | `#E7E5E0` | Achtergrond van inhoudspagina's (laag chroma, geen crème) |
-| Ink | Merkinkt | `#1C1915` | Tekst, donkere velden, primaire knop op licht |
-| Muted | Steen | `#5E574E` | Secundaire tekst op licht (contrast 6,4:1) |
-| Accent | Goud | `#C9A45A` | Actieknop op donker, één accent per scherm |
-| Field | Creek | `#1F3B3A` | Eén gekleurd veld per pagina (calculator, citaat) |
-| Paper | Papier | `#F4F3F0` | Formulieren, kostentabel |
+| Ground | Porselein | `#F5F5F3` | Achtergrond: bijna wit, neutraal, geen crème |
+| Panel | Wit | `#FFFFFF` | Kaarten, formulieren, calculator |
+| Tone | Steen | `#EBEAE6` | Afwisselende secties, footer |
+| Ink | Antraciet | `#1A1C1E` | Tekst (geen zwart veld) |
+| Muted | Grijs | `#63605B` | Secundaire tekst |
+| Field | Creek | `#1F3B3A` | Primaire knop; calculator, kosten-hero en afsluitende band |
+| Accent | Champagne | `#C2A26A` / `#7D6234` | Cijfers op Creek / cijfers op licht (contrast) |
 
-- Hoeken: vierkant, behalve de ronde portretjes.
-- Geen verlopen, geen schaduw op stilstaande elementen, geen dunne decoratieve lijnen (alleen in tabellen en formulieren).
+**Type:** Bodoni Moda (koppen, h1/h2, display) en Clash Grotesk (tekst, h3, interface). Het woordmerk is ASTRUM in Bodoni, ruim gespatieerd, zoals het merk zelf.
 
-**Type:** Clash Grotesk (400, 500), één familie. Vijf stappen:
-small 15px · body 18px · lead 24px · head clamp(36px, 5vw, 64px) · display clamp(96px, 19vw, 300px). Display: tracking -0.04em, leading 0.85. Tekst: leading 1.55, maximaal 68 tekens per regel. Links uitgelijnd.
+**Beweging (GSAP + Lenis):**
+- soepel scrollen
+- een paginagordijn in Creek bij elke paginawissel
+- koppen die regel voor regel opkomen (SplitText)
+- foto's die met een masker onthuld worden
+- de hero-skyline die zich opent tot de volle breedte
+- de stappen op Kopen die horizontaal meelopen
+- een header die wegschuift tijdens het lezen
+
+Alles staat uit bij `prefers-reduced-motion`.
 
 ## Sitemap en navigatie
 

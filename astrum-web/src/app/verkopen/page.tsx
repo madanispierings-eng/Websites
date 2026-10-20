@@ -25,7 +25,7 @@ export default function VerkopenPage() {
       <section className="bg-tone" aria-label="Wat je van ons krijgt" data-reveal>
         <div className="container-page grid gap-12 py-24 lg:grid-cols-12 lg:gap-5 lg:py-32">
           <div className="grid content-start gap-6 lg:col-span-5">
-            <h2 className="text-head" data-r>Een prijs die kopers serieus nemen</h2>
+            <h2 className="text-head" data-r>Een prijs die klopt</h2>
             <p className="measure" data-r>
               Kopers in Dubai vergelijken. Wie te hoog begint, ziet zijn advertentie verouderen en eindigt vaak lager dan nodig. Wij
               beginnen bij de transacties in jouw gebouw en wijk, en bepalen samen met jou een prijs die klopt.

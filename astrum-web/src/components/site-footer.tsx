@@ -4,7 +4,7 @@ import { nav, photoCredits, services, site } from "@/lib/site";
 
 export function SiteFooter() {
   return (
-    <footer className="dark bg-background text-foreground">
+    <footer className="bg-tone text-foreground">
       <div className="container-page grid gap-16 pt-24 pb-10 lg:pt-32">
         <section aria-labelledby="private-list" className="grid gap-8 lg:grid-cols-[5fr_7fr] lg:gap-16">
           <div>
@@ -16,7 +16,7 @@ export function SiteFooter() {
           <NewsletterForm />
         </section>
 
-        <p className="text-display font-normal select-none" aria-hidden="true" translate="no">astrum</p>
+        <p className="text-display tracking-[0.12em] uppercase select-none" aria-hidden="true" translate="no" data-footer-mark>Astrum</p>
 
         <div className="grid gap-10 text-small sm:grid-cols-2 lg:grid-cols-4">
           <div className="grid content-start gap-2">
@@ -26,19 +26,19 @@ export function SiteFooter() {
           </div>
           <nav aria-label="Diensten" className="grid content-start gap-2">
             {services.map((s) => (
-              <Link key={s.href} href={s.href} className="hover:text-gold">{s.name}</Link>
+              <Link key={s.href} href={s.href} className="hover:text-gold-deep">{s.name}</Link>
             ))}
           </nav>
           <nav aria-label="Over Astrum" className="grid content-start gap-2">
             {nav.map((n) => (
-              <Link key={n.href} href={n.href} className="hover:text-gold">{n.label}</Link>
+              <Link key={n.href} href={n.href} className="hover:text-gold-deep">{n.label}</Link>
             ))}
-            <Link href="/vragen/" className="hover:text-gold">Vragen</Link>
+            <Link href="/vragen/" className="hover:text-gold-deep">Vragen</Link>
           </nav>
           <div className="grid content-start gap-2">
-            <a href={site.instagram} rel="noopener" className="hover:text-gold">Instagram</a>
-            <a href={site.linkedin} rel="noopener" className="hover:text-gold">LinkedIn</a>
-            <Link href="/privacy/" className="hover:text-gold">Privacy</Link>
+            <a href={site.instagram} rel="noopener" className="hover:text-gold-deep">Instagram</a>
+            <a href={site.linkedin} rel="noopener" className="hover:text-gold-deep">LinkedIn</a>
+            <Link href="/privacy/" className="hover:text-gold-deep">Privacy</Link>
           </div>
         </div>
 

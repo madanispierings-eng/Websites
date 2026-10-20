@@ -18,13 +18,13 @@ export function PageIntro({
 }) {
   return (
     <section className="container-page grid gap-10 pt-16 pb-20 lg:grid-cols-12 lg:items-center lg:gap-5 lg:pt-24 lg:pb-32" data-reveal>
-      <div className={cn("grid content-start gap-8", image ? "lg:col-span-6" : "lg:col-span-8")}>
+      <div className={cn("grid content-start gap-8", image ? "lg:col-span-5" : "lg:col-span-8")}>
         <h1 className="text-head max-w-[14ch]" data-r>{title}</h1>
         <p className="measure text-lead" data-r>{intro}</p>
         {children && <div data-r>{children}</div>}
       </div>
       {image && (
-        <div className="overflow-hidden lg:col-span-5 lg:col-start-8" data-r>
+        <div className="overflow-hidden lg:col-span-6 lg:col-start-7" data-r>
           <Image
             src={image.src}
             alt={image.alt}
@@ -127,6 +127,60 @@ export function Steps({
           </li>
         ))}
       </ol>
+    </section>
+  );
+}
+
+/**
+ * The same steps as a row of cards that travels sideways while the section is pinned (desktop, with motion).
+ * Without motion or on smaller screens the cards simply stack.
+ */
+export function StepsTravel({
+  title,
+  intro,
+  steps,
+  image,
+}: {
+  title: string;
+  intro?: string;
+  steps: { name: string; text: string; detail?: string[] }[];
+  image?: { src: string; alt: string; position?: string };
+}) {
+  return (
+    <section className="group/h overflow-hidden py-24 data-[h=true]:py-0 lg:py-32" data-hscroll data-reveal>
+      <div className="flex min-h-0 flex-col justify-center group-data-[h=true]/h:min-h-svh">
+        <div className="container-page grid gap-6 lg:grid-cols-12 lg:gap-5">
+          <h2 className="text-head lg:col-span-6" data-r>{title}</h2>
+          {intro && <p className="max-w-[34ch] self-end text-stone lg:col-span-4 lg:col-start-9" data-r>{intro}</p>}
+        </div>
+        <div className="container-page mt-12">
+          <ol className="grid gap-5 sm:grid-cols-2 group-data-[h=true]/h:flex group-data-[h=true]/h:w-max" data-hscroll-track>
+            {image && (
+              <li aria-hidden="true" className="relative hidden aspect-[4/5] w-[min(28rem,30vw)] shrink-0 overflow-hidden group-data-[h=true]/h:block">
+                <Image src={image.src} alt="" fill sizes="30vw" className="object-cover" style={{ objectPosition: image.position ?? "50% 50%" }} />
+              </li>
+            )}
+            {steps.map((s, i) => (
+              <li
+                key={s.name}
+                className="grid content-start gap-4 bg-paper p-8 group-data-[h=true]/h:w-[min(30rem,34vw)] group-data-[h=true]/h:shrink-0 lg:p-10"
+                data-r
+              >
+                <span className="text-head leading-none text-gold-deep tabular-nums" aria-hidden="true">{i + 1}</span>
+                <h3 className="text-lead font-medium">{s.name}</h3>
+                <p>{s.text}</p>
+                {s.detail && (
+                  <ul className="grid list-disc gap-1 pl-5 text-stone marker:text-gold">
+                    {s.detail.map((d) => (
+                      <li key={d}>{d}</li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
     </section>
   );
 }

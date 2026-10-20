@@ -21,7 +21,7 @@ export default function KostenPage() {
             <p className="measure text-lead" data-r>
               De koopprijs is niet het hele bedrag. Kies wat je wilt kopen en zie per post wat er bovenop komt.
             </p>
-            <p className="text-display leading-[0.8] text-gold tabular-nums" data-r aria-hidden="true">4%</p>
+            <p className="mt-4 text-display leading-none text-gold tabular-nums" data-r aria-hidden="true">4%</p>
             <p className="measure text-muted-foreground" data-r>
               De overdrachtsbelasting van het Dubai Land Department is bij elke aankoop de grootste post. De rest zijn vaste bedragen
               en, bij een bestaande woning, de makelaar.
@@ -75,7 +75,7 @@ export default function KostenPage() {
         </div>
       </section>
 
-      <CtaBand line="Zullen we jouw cijfers samen nalopen?" topic="Kopen" />
+      <CtaBand line="Samen je cijfers nalopen?" topic="Kopen" />
     </>
   );
 }

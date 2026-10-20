@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { CtaBand, FaqList, PageIntro, Steps } from "@/components/sections";
+import { CtaBand, FaqList, PageIntro, StepsTravel } from "@/components/sections";
 import { BookingButton } from "@/components/booking";
 import { faqs } from "@/lib/faq";
 
@@ -26,7 +26,7 @@ export default function KopenPage() {
       <PageIntro
         title="Kopen in Dubai"
         intro="We zoeken mee, toetsen elke prijs aan wat er echt betaald is en begeleiden je tot na de overdracht. In jouw tempo, in het Nederlands."
-        image={{ src: "/img/skyline.jpg", alt: "De skyline van Dubai in de avondzon", width: 1920, height: 1097, position: "86% 50%" }}
+        image={{ src: "/img/skyline-hero.jpg", alt: "De skyline van Dubai in de avondzon", width: 1920, height: 768, position: "84% 50%" }}
       >
         <div className="flex flex-wrap items-center gap-6">
           <BookingButton topic="Kopen" />
@@ -34,8 +34,8 @@ export default function KopenPage() {
         </div>
       </PageIntro>
 
-      <div className="bg-paper">
-        <Steps
+      <div className="bg-tone">
+        <StepsTravel
           title="Zo gaat kopen"
           intro="Vier stappen, zonder druk om te tekenen. Je bepaalt zelf wanneer de volgende begint."
           image={{ src: "/img/marina.jpg", alt: "Dubai Marina bij nacht", position: "35% 50%" }}

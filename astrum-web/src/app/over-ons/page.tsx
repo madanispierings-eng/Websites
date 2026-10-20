@@ -15,9 +15,9 @@ export default function OverOnsPage() {
     <>
       <section className="container-page grid gap-10 pt-16 pb-20 lg:grid-cols-12 lg:gap-5 lg:pt-24 lg:pb-28" data-reveal>
         <div className="grid content-start gap-8 lg:col-span-6">
-          <h1 className="text-head max-w-[14ch]" data-r>Boutique in aanpak, persoonlijk in contact</h1>
+          <h1 className="text-head max-w-[14ch]" data-r>Over Astrum</h1>
           <p className="measure text-lead" data-r>
-            Astrum helpt Nederlanders die in Dubai willen kopen of verkopen. Klein gehouden, zodat je altijd met dezelfde mensen praat.
+            Boutique in aanpak, persoonlijk in contact. Astrum helpt Nederlanders die in Dubai willen kopen of verkopen, en blijft klein, zodat je altijd met dezelfde mensen praat.
           </p>
         </div>
         <div className="relative aspect-[4/5] overflow-hidden lg:col-span-5 lg:col-start-8" data-r>

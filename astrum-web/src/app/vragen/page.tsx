@@ -28,14 +28,14 @@ const faqJsonLd = {
 export default function VragenPage() {
   return (
     <>
-      <section className="dark bg-background text-foreground" data-reveal>
+      <section data-reveal>
         <div className="container-page grid gap-12 pt-16 pb-24 lg:grid-cols-12 lg:gap-5 lg:pt-24 lg:pb-32">
           <div className="grid content-start gap-8 lg:col-span-5 lg:self-center">
             <h1 className="text-head" data-r>Wat je vooraf wilt weten</h1>
             <ul className="grid gap-1 text-muted-foreground" data-r>
               <li>Kantoor in {site.city}</li>
               <li>Gesprekken in het Nederlands, ter plekke of via video</li>
-              <li><a className="link text-foreground" href={`mailto:${site.email}`}>{site.email}</a></li>
+              <li><a className="link text-ink" href={`mailto:${site.email}`}>{site.email}</a></li>
             </ul>
             <nav aria-label="Onderwerpen" className="flex flex-wrap gap-x-6 gap-y-2" data-r>
               {topics.map((t) => (

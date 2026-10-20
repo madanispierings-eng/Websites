@@ -21,13 +21,28 @@ const isActive = (pathname: string, href: string) => pathname === href || pathna
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
+  const headerRef = React.useRef<HTMLElement>(null);
+
+  // Step aside while reading down, come back on the way up.
+  React.useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const el = headerRef.current;
+      if (!el) return;
+      el.dataset.hidden = String(y > 240 && y > last && !el.contains(document.activeElement));
+      last = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const inServices = services.some((s) => isActive(pathname, s.href));
 
   return (
-    <header className="dark sticky top-0 z-40 bg-background text-foreground">
+    <header ref={headerRef} className="sticky top-0 z-40 bg-background text-foreground transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] data-[hidden=true]:-translate-y-full">
       <div className="container-page flex h-16 items-center justify-between gap-6 lg:h-20">
-        <Link href="/" className="text-lead font-medium tracking-[-0.02em]" aria-label="Astrum, naar de homepage" translate="no">
-          astrum
+        <Link href="/" className="font-display text-[1.75rem] leading-none tracking-[0.18em] uppercase" aria-label="Astrum, naar de homepage" translate="no">
+          Astrum
         </Link>
 
         <div className="hidden items-center gap-2 lg:flex">
@@ -37,12 +52,12 @@ export function SiteHeader() {
                 <NavigationMenuTrigger
                   className={cn(
                     "h-11 bg-transparent px-3 text-small font-normal hover:bg-secondary data-[state=open]:bg-secondary",
-                    inServices && "text-gold",
+                    inServices && "text-gold-deep",
                   )}
                 >
                   Diensten
                 </NavigationMenuTrigger>
-                <NavigationMenuContent className="dark bg-popover">
+                <NavigationMenuContent className="bg-popover">
                   <ul className="grid w-[420px] gap-1 p-2">
                     {services.map((s) => (
                       <li key={s.href}>
@@ -67,7 +82,7 @@ export function SiteHeader() {
                     <Link
                       href={item.href}
                       aria-current={isActive(pathname, item.href) ? "page" : undefined}
-                      className="inline-flex h-11 items-center px-3 text-small hover:bg-secondary aria-[current=page]:text-gold"
+                      className="inline-flex h-11 items-center px-3 text-small hover:bg-secondary aria-[current=page]:text-gold-deep"
                     >
                       {item.label}
                     </Link>
@@ -85,7 +100,7 @@ export function SiteHeader() {
             <SheetTrigger className="inline-flex h-11 items-center px-3 text-small font-medium hover:bg-secondary">
               Menu
             </SheetTrigger>
-            <SheetContent side="right" className="dark w-full gap-0 overflow-y-auto overscroll-contain border-0 bg-background p-0 text-foreground sm:max-w-md">
+            <SheetContent data-lenis-prevent side="right" className="w-full gap-0 overflow-y-auto overscroll-contain border-0 bg-background p-0 text-foreground sm:max-w-md">
               <SheetTitle className="sr-only">Menu</SheetTitle>
               <nav aria-label="Menu" className="mt-20 grid gap-1 px-6 pb-10">
                 {[{ href: "/", label: "Home" }, ...services.map((s) => ({ href: s.href, label: s.name })), ...nav, { href: "/vragen/", label: "Vragen" }].map(
@@ -94,7 +109,7 @@ export function SiteHeader() {
                       <Link
                         href={item.href}
                         aria-current={pathname === item.href ? "page" : undefined}
-                        className="py-1 text-head aria-[current=page]:text-gold"
+                        className="py-1 text-head aria-[current=page]:text-gold-deep"
                       >
                         {item.label}
                       </Link>

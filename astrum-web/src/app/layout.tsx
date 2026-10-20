@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Bodoni_Moda } from "next/font/google";
 import localFont from "next/font/local";
 import { BookingProvider } from "@/components/booking";
 import { Motion } from "@/components/motion";
@@ -16,6 +17,14 @@ const clash = localFont({
   display: "swap",
 });
 
+const bodoni = Bodoni_Moda({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  style: ["normal"],
+  variable: "--font-bodoni",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: { default: "Astrum · Boutique makelaar in Dubai voor Nederlanders", template: "%s · Astrum" },
@@ -25,7 +34,7 @@ export const metadata: Metadata = {
   openGraph: { type: "website", locale: "nl_NL", siteName: "Astrum", images: ["/img/duo.jpg"] },
 };
 
-export const viewport: Viewport = { themeColor: "#1c1915" };
+export const viewport: Viewport = { themeColor: "#f5f5f3" };
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -40,7 +49,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="nl" className={clash.variable}>
+    <html lang="nl" className={`${clash.variable} ${bodoni.variable}`}>
       <body>
         <a
           href="#main"

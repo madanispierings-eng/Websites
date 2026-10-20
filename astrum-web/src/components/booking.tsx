@@ -35,7 +35,7 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
     <BookingContext.Provider value={value}>
       {children}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[calc(100svh-24px)] overflow-y-auto overscroll-contain bg-paper p-6 text-ink shadow-2xl ring-0 sm:max-w-xl sm:p-10" /* taste-skill-ignore: dialog floats */>
+        <DialogContent data-lenis-prevent className="max-h-[calc(100svh-24px)] overflow-y-auto overscroll-contain bg-paper p-6 text-ink shadow-2xl ring-0 sm:max-w-xl sm:p-10" /* taste-skill-ignore: dialog floats */>
           <DialogHeader className="gap-3 text-left">
             <DialogTitle className="text-head font-normal">Plan een gesprek</DialogTitle>
             <DialogDescription className="text-body text-stone">

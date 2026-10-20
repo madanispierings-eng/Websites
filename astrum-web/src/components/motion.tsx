@@ -19,7 +19,8 @@ function useSmoothScroll() {
 
   React.useEffect(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const lenis = new Lenis({ duration: 1.15, easing: (t) => 1 - Math.pow(1 - t, 4), anchors: { offset: -96 } });
+    // Anchors honour scroll-padding-top and scroll-margin-top, like a native jump; no extra offset.
+    const lenis = new Lenis({ duration: 1.15, easing: (t) => 1 - Math.pow(1 - t, 4), anchors: true });
     lenisRef.current = lenis;
     lenis.on("scroll", ScrollTrigger.update);
     // A jump Lenis did not make (keys, scrollbar, scrollTo) becomes its new position, so the next wheel tick
@@ -147,13 +148,14 @@ export function Motion({ children }: { children: React.ReactNode }) {
           });
         });
 
-        // The footer name settles into place.
-        gsap.from("[data-footer-mark]", {
+        // The footer name settles into place. The footer sits outside this scope, so look it up in the document.
+        const footerMark = document.querySelector<HTMLElement>("[data-footer-mark]");
+        if (footerMark) gsap.from(footerMark, {
           yPercent: 40,
           opacity: 0,
           duration: 1.4,
           ease: EASE,
-          scrollTrigger: { trigger: "[data-footer-mark]", start: "top 95%", once: true },
+          scrollTrigger: { trigger: footerMark, start: "top 95%", once: true },
         });
       });
 
@@ -173,7 +175,13 @@ export function Motion({ children }: { children: React.ReactNode }) {
           const track = section.querySelector<HTMLElement>("[data-hscroll-track]");
           if (!track) return;
           section.dataset.h = "true";
-          const distance = () => Math.max(0, track.scrollWidth - (track.parentElement?.clientWidth ?? window.innerWidth));
+          // Travel until the last card meets the container's right padding, not the screen edge.
+          const distance = () => {
+            const box = track.parentElement;
+            if (!box) return Math.max(0, track.scrollWidth - window.innerWidth);
+            const cs = getComputedStyle(box);
+            return Math.max(0, track.scrollWidth - (box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)));
+          };
           gsap.to(track, {
             x: () => -distance(),
             ease: "none",

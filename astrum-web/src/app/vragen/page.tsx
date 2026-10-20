@@ -58,7 +58,7 @@ export default function VragenPage() {
         <section
           key={t}
           id={t.replace(/\s+/g, "-").toLowerCase()}
-          className={`scroll-mt-24 ${i % 2 ? "bg-paper" : ""}`}
+          className={i % 2 ? "bg-paper" : undefined}
           aria-labelledby={`h-${i}`}
           data-reveal
         >

@@ -61,11 +61,11 @@ export function SiteHeader() {
                   <ul className="grid w-[420px] gap-1 p-2">
                     {services.map((s) => (
                       <li key={s.href}>
-                        <NavigationMenuLink asChild>
+                        {/* Classes on NavigationMenuLink so they merge with its flex row instead of fighting it. */}
+                        <NavigationMenuLink asChild className="block p-3 hover:bg-secondary focus:bg-secondary">
                           <Link
                             href={s.href}
                             aria-current={isActive(pathname, s.href) ? "page" : undefined}
-                            className="block p-3 hover:bg-secondary focus:bg-secondary"
                           >
                             <span className="block text-body font-medium">{s.name}</span>
                             <span className="mt-1 block text-small text-muted-foreground">{s.line}</span>

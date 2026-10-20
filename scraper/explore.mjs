@@ -1,0 +1,10 @@
+import { createRequire } from 'module';
+const require = createRequire('/opt/node-tools/node_modules/');
+const { chromium } = require('playwright');
+const b = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const p = await b.newPage({ viewport: { width: 1440, height: 900 }, userAgent: 'AstrumRedesignScraper/1.0 (+contact site owner)' });
+await p.goto('https://astrumuae.com/', { waitUntil: 'networkidle' });
+console.log(await p.evaluate(() => document.body.innerText));
+console.log('---BUTTONS');
+console.log(JSON.stringify(await p.$$eval('a,button', els => els.map(e => [e.tagName, e.innerText.trim().slice(0,60), e.getAttribute('href'), e.getAttribute('aria-label')])), null, 0));
+await b.close();

@@ -1,0 +1,2168 @@
+{
+  "note": "Images/film credited to OMNIYAT (Orla, The Alba - Dorchester Collection) per /beeldbronnen.html; usage requires OMNIYAT permission. Team photos are Astrum own.",
+  "assets": [
+    {
+      "url": "https://astrumuae.com/beeld/zwembad-terras.jpg",
+      "local": "assets/beeld/zwembad-terras.jpg",
+      "alt": "",
+      "role": "property-photo",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero-slideshow"
+      ],
+      "bytes": 732072
+    },
+    {
+      "url": "https://astrumuae.com/beeld/infinity-palm.jpg",
+      "local": "assets/beeld/infinity-palm.jpg",
+      "alt": "",
+      "role": "property-photo",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero-slideshow",
+        "werkwijze"
+      ],
+      "bytes": 478852
+    },
+    {
+      "url": "https://astrumuae.com/beeld/terras-marina.jpg",
+      "local": "assets/beeld/terras-marina.jpg",
+      "alt": "",
+      "role": "property-photo",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero-slideshow",
+        "werkwijze",
+        "blog"
+      ],
+      "bytes": 625761
+    },
+    {
+      "url": "https://astrumuae.com/beeld/woonkamer-skyline.jpg",
+      "local": "assets/beeld/woonkamer-skyline.jpg",
+      "alt": "",
+      "role": "property-photo",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero-slideshow",
+        "werkwijze"
+      ],
+      "bytes": 652770
+    },
+    {
+      "url": "https://astrumuae.com/beeld/tuin-zwembad.jpg",
+      "local": "assets/beeld/tuin-zwembad.jpg",
+      "alt": "",
+      "role": "property-photo",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero-slideshow"
+      ],
+      "bytes": 1109102
+    },
+    {
+      "url": "https://astrumuae.com/beeld/slaapkamer-palm.jpg",
+      "local": "assets/beeld/slaapkamer-palm.jpg",
+      "alt": "",
+      "role": "property-photo",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero-slideshow",
+        "werkwijze"
+      ],
+      "bytes": 738115
+    },
+    {
+      "url": "https://astrumuae.com/beeld/terras-zwembad.jpg",
+      "local": "assets/beeld/terras-zwembad.jpg",
+      "alt": "",
+      "role": "property-photo",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero-slideshow"
+      ],
+      "bytes": 626665
+    },
+    {
+      "url": "https://astrumuae.com/beeld/nacht-marina.jpg",
+      "local": "assets/beeld/nacht-marina.jpg",
+      "alt": "",
+      "role": "property-photo",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "diensten",
+        "blog"
+      ],
+      "bytes": 639609
+    },
+    {
+      "url": "https://astrumuae.com/beeld/jacht.jpg",
+      "local": "assets/beeld/jacht.jpg",
+      "alt": "",
+      "role": "property-photo",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "updates"
+      ],
+      "bytes": 915682
+    },
+    {
+      "url": "https://astrumuae.com/team/over-astrum.jpg",
+      "local": "assets/team/over-astrum.jpg",
+      "alt": "Pim Verberg en Denise Birjmohun van Astrum in een sales gallery in Dubai",
+      "role": "team-photo",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "over"
+      ],
+      "bytes": 198564
+    },
+    {
+      "url": "https://astrumuae.com/team/pim-verberg.jpg",
+      "local": "assets/team/pim-verberg.jpg",
+      "alt": "Pim Verberg",
+      "role": "team-photo",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "team"
+      ],
+      "bytes": 149083
+    },
+    {
+      "url": "https://astrumuae.com/team/denise-birjmohun.jpg",
+      "local": "assets/team/denise-birjmohun.jpg",
+      "alt": "Denise Birjmohun",
+      "role": "team-photo",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "team"
+      ],
+      "bytes": 155535
+    },
+    {
+      "url": "https://astrumuae.com/team/ron-veen.jpg",
+      "local": "assets/team/ron-veen.jpg",
+      "alt": "Ron Veen",
+      "role": "team-photo",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "team"
+      ],
+      "bytes": 143666
+    },
+    {
+      "url": "https://astrumuae.com/beeld/strand-gebouw.jpg",
+      "local": "assets/beeld/strand-gebouw.jpg",
+      "alt": "",
+      "role": "property-photo",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "blog"
+      ],
+      "bytes": 1227883
+    },
+    {
+      "url": "https://astrumuae.com/film/alba-film.mp4",
+      "local": "assets/film/alba-film.mp4",
+      "alt": "",
+      "role": "video",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero/brand film"
+      ],
+      "bytes": 7937053
+    },
+    {
+      "url": "https://astrumuae.com/favicon.svg",
+      "local": "assets/favicon.svg",
+      "alt": "Astrum favicon (A monogram)",
+      "role": "favicon/logo-mark",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [],
+      "bytes": 240
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/000.jpg",
+      "local": "assets/film/hero/000.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 32426
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/001.jpg",
+      "local": "assets/film/hero/001.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 32533
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/002.jpg",
+      "local": "assets/film/hero/002.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 31878
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/003.jpg",
+      "local": "assets/film/hero/003.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 31630
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/004.jpg",
+      "local": "assets/film/hero/004.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 31665
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/005.jpg",
+      "local": "assets/film/hero/005.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 32423
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/006.jpg",
+      "local": "assets/film/hero/006.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 33314
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/007.jpg",
+      "local": "assets/film/hero/007.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 33967
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/008.jpg",
+      "local": "assets/film/hero/008.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 35878
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/009.jpg",
+      "local": "assets/film/hero/009.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 36639
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/010.jpg",
+      "local": "assets/film/hero/010.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 37689
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/011.jpg",
+      "local": "assets/film/hero/011.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 38139
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/012.jpg",
+      "local": "assets/film/hero/012.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 38654
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/013.jpg",
+      "local": "assets/film/hero/013.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 38731
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/014.jpg",
+      "local": "assets/film/hero/014.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 38710
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/015.jpg",
+      "local": "assets/film/hero/015.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 38747
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/016.jpg",
+      "local": "assets/film/hero/016.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 38865
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/017.jpg",
+      "local": "assets/film/hero/017.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 38898
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/018.jpg",
+      "local": "assets/film/hero/018.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 38653
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/019.jpg",
+      "local": "assets/film/hero/019.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 38869
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/020.jpg",
+      "local": "assets/film/hero/020.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 38897
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/021.jpg",
+      "local": "assets/film/hero/021.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 38990
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/022.jpg",
+      "local": "assets/film/hero/022.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 38970
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/023.jpg",
+      "local": "assets/film/hero/023.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 38985
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/024.jpg",
+      "local": "assets/film/hero/024.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 39081
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/025.jpg",
+      "local": "assets/film/hero/025.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 39227
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/026.jpg",
+      "local": "assets/film/hero/026.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 39274
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/027.jpg",
+      "local": "assets/film/hero/027.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 39156
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/028.jpg",
+      "local": "assets/film/hero/028.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 39162
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/029.jpg",
+      "local": "assets/film/hero/029.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 39166
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/030.jpg",
+      "local": "assets/film/hero/030.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 39188
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/031.jpg",
+      "local": "assets/film/hero/031.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 39125
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/032.jpg",
+      "local": "assets/film/hero/032.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 39025
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/033.jpg",
+      "local": "assets/film/hero/033.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 168820
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/034.jpg",
+      "local": "assets/film/hero/034.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 174833
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/035.jpg",
+      "local": "assets/film/hero/035.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 177822
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/036.jpg",
+      "local": "assets/film/hero/036.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 176528
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/037.jpg",
+      "local": "assets/film/hero/037.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 178129
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/038.jpg",
+      "local": "assets/film/hero/038.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 177321
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/039.jpg",
+      "local": "assets/film/hero/039.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 177967
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/040.jpg",
+      "local": "assets/film/hero/040.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 180684
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/041.jpg",
+      "local": "assets/film/hero/041.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 181419
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/042.jpg",
+      "local": "assets/film/hero/042.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 180682
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/043.jpg",
+      "local": "assets/film/hero/043.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 176734
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/044.jpg",
+      "local": "assets/film/hero/044.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 179248
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/045.jpg",
+      "local": "assets/film/hero/045.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 176603
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/046.jpg",
+      "local": "assets/film/hero/046.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 175863
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/047.jpg",
+      "local": "assets/film/hero/047.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 173254
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/048.jpg",
+      "local": "assets/film/hero/048.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 177594
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/049.jpg",
+      "local": "assets/film/hero/049.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 173826
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/050.jpg",
+      "local": "assets/film/hero/050.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 173229
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/051.jpg",
+      "local": "assets/film/hero/051.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 175512
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/052.jpg",
+      "local": "assets/film/hero/052.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 171989
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/053.jpg",
+      "local": "assets/film/hero/053.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 171379
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/054.jpg",
+      "local": "assets/film/hero/054.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 175641
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/055.jpg",
+      "local": "assets/film/hero/055.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 175875
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/056.jpg",
+      "local": "assets/film/hero/056.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 172158
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/057.jpg",
+      "local": "assets/film/hero/057.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 175909
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/058.jpg",
+      "local": "assets/film/hero/058.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 173137
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/059.jpg",
+      "local": "assets/film/hero/059.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 172506
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/060.jpg",
+      "local": "assets/film/hero/060.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 176840
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/061.jpg",
+      "local": "assets/film/hero/061.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 172291
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/062.jpg",
+      "local": "assets/film/hero/062.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 173600
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/063.jpg",
+      "local": "assets/film/hero/063.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 176420
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/064.jpg",
+      "local": "assets/film/hero/064.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 175856
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/065.jpg",
+      "local": "assets/film/hero/065.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 172359
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/066.jpg",
+      "local": "assets/film/hero/066.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 177316
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/067.jpg",
+      "local": "assets/film/hero/067.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 174015
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/068.jpg",
+      "local": "assets/film/hero/068.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 172582
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/069.jpg",
+      "local": "assets/film/hero/069.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 177122
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/070.jpg",
+      "local": "assets/film/hero/070.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 175271
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/071.jpg",
+      "local": "assets/film/hero/071.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 174470
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/072.jpg",
+      "local": "assets/film/hero/072.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 170776
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/073.jpg",
+      "local": "assets/film/hero/073.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 172169
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/074.jpg",
+      "local": "assets/film/hero/074.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 168838
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/075.jpg",
+      "local": "assets/film/hero/075.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 167527
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/076.jpg",
+      "local": "assets/film/hero/076.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 168474
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/077.jpg",
+      "local": "assets/film/hero/077.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 163148
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/078.jpg",
+      "local": "assets/film/hero/078.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 166797
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/079.jpg",
+      "local": "assets/film/hero/079.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 166452
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/080.jpg",
+      "local": "assets/film/hero/080.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 165714
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/081.jpg",
+      "local": "assets/film/hero/081.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 162257
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/082.jpg",
+      "local": "assets/film/hero/082.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 165663
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/083.jpg",
+      "local": "assets/film/hero/083.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 162085
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/084.jpg",
+      "local": "assets/film/hero/084.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 161938
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/085.jpg",
+      "local": "assets/film/hero/085.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 162275
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/086.jpg",
+      "local": "assets/film/hero/086.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 165519
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/087.jpg",
+      "local": "assets/film/hero/087.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 165876
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/088.jpg",
+      "local": "assets/film/hero/088.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 166767
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/089.jpg",
+      "local": "assets/film/hero/089.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 167230
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/090.jpg",
+      "local": "assets/film/hero/090.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 164754
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/091.jpg",
+      "local": "assets/film/hero/091.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 171799
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/092.jpg",
+      "local": "assets/film/hero/092.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 166335
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/093.jpg",
+      "local": "assets/film/hero/093.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 171042
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/094.jpg",
+      "local": "assets/film/hero/094.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 166110
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/095.jpg",
+      "local": "assets/film/hero/095.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 167782
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/096.jpg",
+      "local": "assets/film/hero/096.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 170571
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/097.jpg",
+      "local": "assets/film/hero/097.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 167859
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/098.jpg",
+      "local": "assets/film/hero/098.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 171251
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/099.jpg",
+      "local": "assets/film/hero/099.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 167396
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/100.jpg",
+      "local": "assets/film/hero/100.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 171983
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/101.jpg",
+      "local": "assets/film/hero/101.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 168596
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/102.jpg",
+      "local": "assets/film/hero/102.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 172452
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/103.jpg",
+      "local": "assets/film/hero/103.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 167362
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/104.jpg",
+      "local": "assets/film/hero/104.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 173082
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/105.jpg",
+      "local": "assets/film/hero/105.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 172308
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/106.jpg",
+      "local": "assets/film/hero/106.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 169304
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/107.jpg",
+      "local": "assets/film/hero/107.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 172714
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/108.jpg",
+      "local": "assets/film/hero/108.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 168827
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/109.jpg",
+      "local": "assets/film/hero/109.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 173403
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/110.jpg",
+      "local": "assets/film/hero/110.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 170631
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/111.jpg",
+      "local": "assets/film/hero/111.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 170213
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/112.jpg",
+      "local": "assets/film/hero/112.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 168235
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/113.jpg",
+      "local": "assets/film/hero/113.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 178936
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/114.jpg",
+      "local": "assets/film/hero/114.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 175264
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/115.jpg",
+      "local": "assets/film/hero/115.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 172679
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/116.jpg",
+      "local": "assets/film/hero/116.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 174675
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/117.jpg",
+      "local": "assets/film/hero/117.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 170089
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/118.jpg",
+      "local": "assets/film/hero/118.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 172944
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/119.jpg",
+      "local": "assets/film/hero/119.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 163122
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/120.jpg",
+      "local": "assets/film/hero/120.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 158327
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/121.jpg",
+      "local": "assets/film/hero/121.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 152933
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/122.jpg",
+      "local": "assets/film/hero/122.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 143892
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/123.jpg",
+      "local": "assets/film/hero/123.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 146666
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/124.jpg",
+      "local": "assets/film/hero/124.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 139386
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/125.jpg",
+      "local": "assets/film/hero/125.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 137076
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/126.jpg",
+      "local": "assets/film/hero/126.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 129823
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/127.jpg",
+      "local": "assets/film/hero/127.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 135803
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/128.jpg",
+      "local": "assets/film/hero/128.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 138987
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/129.jpg",
+      "local": "assets/film/hero/129.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 148203
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/130.jpg",
+      "local": "assets/film/hero/130.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 153293
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/131.jpg",
+      "local": "assets/film/hero/131.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 156904
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/132.jpg",
+      "local": "assets/film/hero/132.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 160579
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/133.jpg",
+      "local": "assets/film/hero/133.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 164104
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/134.jpg",
+      "local": "assets/film/hero/134.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 164700
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/135.jpg",
+      "local": "assets/film/hero/135.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 162803
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/136.jpg",
+      "local": "assets/film/hero/136.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 167660
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/137.jpg",
+      "local": "assets/film/hero/137.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 163956
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/138.jpg",
+      "local": "assets/film/hero/138.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 167924
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/139.jpg",
+      "local": "assets/film/hero/139.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 163033
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/140.jpg",
+      "local": "assets/film/hero/140.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 168469
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/141.jpg",
+      "local": "assets/film/hero/141.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 164529
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/142.jpg",
+      "local": "assets/film/hero/142.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 164297
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/143.jpg",
+      "local": "assets/film/hero/143.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 168020
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/144.jpg",
+      "local": "assets/film/hero/144.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 166407
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/145.jpg",
+      "local": "assets/film/hero/145.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 169463
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/146.jpg",
+      "local": "assets/film/hero/146.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 165112
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/147.jpg",
+      "local": "assets/film/hero/147.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 169573
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/148.jpg",
+      "local": "assets/film/hero/148.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 164575
+    },
+    {
+      "url": "https://astrumuae.com/film/hero/149.jpg",
+      "local": "assets/film/hero/149.jpg",
+      "alt": "",
+      "role": "hero-frame",
+      "pages": [
+        "https://astrumuae.com/"
+      ],
+      "sections": [
+        "hero scroll frame-sequence (canvas, GSAP ScrollTrigger)"
+      ],
+      "bytes": 168045
+    }
+  ],
+  "failed": []
+}

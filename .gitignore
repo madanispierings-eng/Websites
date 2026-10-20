@@ -1,0 +1,10 @@
+# Scrape: copyrighted OMNIYAT property photos and the 28 MB hero film stay out of git
+scraper/output/assets/beeld/
+scraper/output/assets/film/
+scraper/node_modules/
+
+# Astrum site: raw downloads (optimised copies live in astrum/img and astrum/video)
+astrum/assets/*
+!astrum/assets/credits.json
+astrum/.taste-skill/inspect/
+astrum/.qa/

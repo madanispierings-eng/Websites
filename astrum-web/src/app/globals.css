@@ -1,0 +1,175 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* .light inside a .dark section switches back to the light tokens */
+@custom-variant dark (&:is(.dark *):not(:is(.light *)));
+
+/* Astrum tokens (DESIGN.md). shadcn's semantic variables are mapped onto them below. */
+@theme inline {
+  --color-limestone: #e4e4e0;
+  --color-paper: #f3f3f1;
+  --color-ink: #1c1915;
+  --color-stone: #5e574e;
+  --color-stone-light: #aaa39a;
+  --color-gold: #c9a45a;
+  --color-gold-light: #e6d3ad;
+  --color-creek: #1f3b3a;
+  --color-creek-deep: #172d2c;
+  --color-tone: #d6d5d0;
+  --color-gold-deep: #7a5c22;
+
+  --font-sans: var(--font-clash), "Helvetica Neue", Arial, sans-serif;
+  --font-heading: var(--font-clash), "Helvetica Neue", Arial, sans-serif;
+
+  /* five type steps */
+  --text-small: 0.9375rem;
+  --text-small--line-height: 1.5;
+  --text-body: 1.125rem;
+  --text-body--line-height: 1.55;
+  --text-lead: clamp(1.3125rem, 1.15rem + 0.6vw, 1.5rem);
+  --text-lead--line-height: 1.35;
+  --text-head: clamp(2.25rem, 1.4rem + 3.4vw, 4rem);
+  --text-head--line-height: 1;
+  --text-head--letter-spacing: -0.03em;
+  --text-display: clamp(6rem, 19vw, 18.75rem);
+  --text-display--line-height: 0.82;
+  --text-display--letter-spacing: -0.045em;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+}
+
+:root,
+.light {
+  --radius: 0px;
+  --background: #e4e4e0;
+  --foreground: #1c1915;
+  --card: #f3f3f1;
+  --card-foreground: #1c1915;
+  --popover: #f3f3f1;
+  --popover-foreground: #1c1915;
+  --primary: #1c1915;
+  --primary-foreground: #f4f3f0;
+  --secondary: #d6d5d0;
+  --secondary-foreground: #1c1915;
+  --muted: #d6d5d0;
+  --muted-foreground: #5e574e;
+  --accent: #d6d5d0;
+  --accent-foreground: #1c1915;
+  --destructive: #a1301f;
+  --border: #c9c5bd;
+  --input: #8f877c;
+  --ring: #1f3b3a;
+}
+
+/* dark grounds: header, home hero, footer, the creek field */
+.dark:not(.light .dark) {
+  --background: #1c1915;
+  --foreground: #f4f3f0;
+  --card: #26221d;
+  --card-foreground: #f4f3f0;
+  --popover: #26221d;
+  --popover-foreground: #f4f3f0;
+  --primary: #c9a45a;
+  --primary-foreground: #1c1915;
+  --secondary: #2f2a24;
+  --secondary-foreground: #f4f3f0;
+  --muted: #2f2a24;
+  --muted-foreground: #b3aca2;
+  --accent: #2f2a24;
+  --accent-foreground: #f4f3f0;
+  --border: #3a342d;
+  --input: #8a8277;
+  --ring: #c9a45a;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 6rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+  a, button, input, select, textarea, label, summary { touch-action: manipulation; }
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+  }
+  body {
+    @apply bg-background text-foreground text-body antialiased;
+  }
+  h1, h2, h3 { text-wrap: balance; font-weight: 400; }
+  p { text-wrap: pretty; }
+  ::selection { background: var(--color-gold); color: var(--color-ink); }
+  :focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+  button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
+}
+
+@layer components {
+  .container-page {
+    width: 100%;
+    max-width: 1440px;
+    margin-inline: auto;
+    padding-inline: clamp(20px, 3vw, 40px);
+  }
+  .measure { max-width: 38rem; }
+  .link {
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.22em;
+    transition: color 0.2s ease, text-decoration-thickness 0.2s ease;
+  }
+  .link:hover { text-decoration-thickness: 2px; }
+
+  /* the printed sheet: zigzag edges, used for price lists and the letter */
+  .zigzag-y {
+    clip-path: polygon(0% 0, 3.571% 10px, 7.143% 0, 10.714% 10px, 14.286% 0, 17.857% 10px, 21.429% 0, 25% 10px, 28.571% 0, 32.143% 10px, 35.714% 0, 39.286% 10px, 42.857% 0, 46.429% 10px, 50% 0, 53.571% 10px, 57.143% 0, 60.714% 10px, 64.286% 0, 67.857% 10px, 71.429% 0, 75% 10px, 78.571% 0, 82.143% 10px, 85.714% 0, 89.286% 10px, 92.857% 0, 96.429% 10px, 100% 0, 100% 100%, 96.429% calc(100% - 10px), 92.857% 100%, 89.286% calc(100% - 10px), 85.714% 100%, 82.143% calc(100% - 10px), 78.571% 100%, 75% calc(100% - 10px), 71.429% 100%, 67.857% calc(100% - 10px), 64.286% 100%, 60.714% calc(100% - 10px), 57.143% 100%, 53.571% calc(100% - 10px), 50% 100%, 46.429% calc(100% - 10px), 42.857% 100%, 39.286% calc(100% - 10px), 35.714% 100%, 32.143% calc(100% - 10px), 28.571% 100%, 25% calc(100% - 10px), 21.429% 100%, 17.857% calc(100% - 10px), 14.286% 100%, 10.714% calc(100% - 10px), 7.143% 100%, 3.571% calc(100% - 10px), 0% 100%);
+  }
+  .zigzag-bottom {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 96.429% calc(100% - 10px), 92.857% 100%, 89.286% calc(100% - 10px), 85.714% 100%, 82.143% calc(100% - 10px), 78.571% 100%, 75% calc(100% - 10px), 71.429% 100%, 67.857% calc(100% - 10px), 64.286% 100%, 60.714% calc(100% - 10px), 57.143% 100%, 53.571% calc(100% - 10px), 50% 100%, 46.429% calc(100% - 10px), 42.857% 100%, 39.286% calc(100% - 10px), 35.714% 100%, 32.143% calc(100% - 10px), 28.571% 100%, 25% calc(100% - 10px), 21.429% 100%, 17.857% calc(100% - 10px), 14.286% 100%, 10.714% calc(100% - 10px), 7.143% 100%, 3.571% calc(100% - 10px), 0% 100%);
+  }
+  /* a price-list row: name, dotted leader, value */
+  .leader-row {
+    display: grid;
+    grid-template-columns: minmax(0, max-content) minmax(16px, 1fr) max-content;
+    align-items: baseline;
+    column-gap: 10px;
+  }
+  .leader-row::after {
+    content: "";
+    grid-column: 2;
+    grid-row: 1;
+    border-bottom: 4px dotted currentColor;
+    opacity: 0.3;
+    transform: translateY(-4px);
+  }
+  .leader-row > :first-child { grid-column: 1; grid-row: 1; }
+  .leader-row > :nth-child(2) { grid-column: 3; grid-row: 1; text-align: right; font-variant-numeric: tabular-nums; }
+  .leader-row > :nth-child(n + 3) { grid-column: 1 / -1; }
+}

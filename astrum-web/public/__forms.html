@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="nl">
+<head><meta charset="utf-8"><title>Formulieren</title><meta name="robots" content="noindex"></head>
+<body>
+  <!-- Netlify detects these forms at deploy time; the site posts to this file. -->
+  <form name="kennismaking" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <input name="bot-field">
+    <input name="naam">
+    <input type="email" name="email">
+    <input type="tel" name="telefoon">
+    <input name="onderwerp">
+    <textarea name="bericht"></textarea>
+    <input name="pagina">
+  </form>
+  <form name="marktupdates" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <input name="bot-field">
+    <input name="voornaam">
+    <input type="email" name="email">
+  </form>
+</body>
+</html>

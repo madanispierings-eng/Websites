@@ -54,6 +54,6 @@ export const faqs: Faq[] = [
   {
     topic: "Verkopen",
     q: "Wat heb ik nodig om te verkopen?",
-    a: "Je eigendomsakte, een getekende opdracht (Form A) en voor de overdracht een NOC van de ontwikkelaar. Rust er nog een hypotheek op de woning, dan lossen we die bij de overdracht af. Wij regelen de volgorde.",
+    a: "Je eigendomsakte, een getekende opdracht (Form\u00a0A) en voor de overdracht een NOC van de ontwikkelaar. Rust er nog een hypotheek op de woning, dan lossen we die bij de overdracht af. Wij regelen de volgorde.",
   },
 ];

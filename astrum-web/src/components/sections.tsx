@@ -109,7 +109,7 @@ export function Steps({
           )}
         </div>
       </div>
-      <ol className="grid gap-12 lg:col-span-7 lg:col-start-6">
+      <ol className="grid content-start gap-12 lg:col-span-7 lg:col-start-6">
         {steps.map((s, i) => (
           <li key={s.name} className="grid gap-x-8 gap-y-3 sm:grid-cols-[4rem_1fr]" data-r>
             <span className="hidden text-head leading-none text-stone tabular-nums sm:block" aria-hidden="true">{i + 1}</span>

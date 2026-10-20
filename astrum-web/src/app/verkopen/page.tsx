@@ -43,7 +43,7 @@ export default function VerkopenPage() {
                 name: "Voor de verkoop",
                 rows: [
                   { name: "Waardebepaling op transacties", value: "onderbouwd" },
-                  { name: "Verkoopopdracht (Form A)", value: "RERA" },
+                  { name: "Verkoopopdracht (Form\u00a0A)", value: "RERA" },
                   { name: "Foto’s en presentatie", value: "verzorgd" },
                 ],
               },
@@ -51,7 +51,7 @@ export default function VerkopenPage() {
                 name: "Tijdens de verkoop",
                 rows: [
                   { name: "Kopers selecteren en bezichtigen", value: "ook zonder jou" },
-                  { name: "Onderhandelen en koopovereenkomst (Form F)", value: "samen" },
+                  { name: "Onderhandelen en koopovereenkomst (Form\u00a0F)", value: "samen" },
                 ],
               },
               {

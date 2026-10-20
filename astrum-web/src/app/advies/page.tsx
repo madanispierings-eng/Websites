@@ -52,7 +52,7 @@ export default function AdviesPage() {
                 <Image src={b.image.src} alt={b.image.alt} fill sizes="24rem" className="object-cover" style={{ objectPosition: b.image.position }} />
               </div>
             </div>
-            <div className="grid gap-6 lg:col-span-7 lg:col-start-6">
+            <div className="grid content-start gap-6 lg:col-span-7 lg:col-start-6">
               <p className="measure text-lead" data-r>{b.text}</p>
               <ul className="grid list-disc gap-1 pl-5 text-stone marker:text-gold" data-r>
                 {b.points.map((p) => <li key={p}>{p}</li>)}

@@ -22,7 +22,7 @@ export function LoopVideo({ src, poster, label, className }: { src: string; post
       return;
     }
     const io = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) video.play().catch(() => {});
+      if (entry.isIntersecting) video.play().catch(() => setPaused(true));
       else video.pause();
     });
     io.observe(video);

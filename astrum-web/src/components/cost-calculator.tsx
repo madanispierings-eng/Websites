@@ -107,14 +107,22 @@ export function CostCalculator({ explain = false }: { explain?: boolean }) {
         <caption className="sr-only">Bijkomende kosten bij aankoop</caption>
         <tbody>
           {lines.map((l) => (
-            <tr key={l.name} /* taste-skill-ignore: real table */ className="border-b border-tone align-baseline">
-              <th scope="row" className="py-3 pr-4 text-left font-normal">
-                {l.name}
-                <span className="block text-small text-stone">{l.note}</span>
-                {explain && <span className="measure mt-1 block text-small text-stone">{l.explain}</span>}
-              </th>
-              <td className="py-3 text-right whitespace-nowrap">{aed(l.amount)}</td>
-            </tr>
+            <React.Fragment key={l.name}>
+              <tr /* taste-skill-ignore: real table */ className={explain ? "align-baseline" : "border-b border-tone align-baseline"}>
+                <th scope="row" className={explain ? "pt-3 pr-4 text-left font-normal" : "py-3 pr-4 text-left font-normal"}>
+                  {l.name}
+                  <span className="block text-small text-stone">{l.note}</span>
+                </th>
+                <td className={explain ? "pt-3 text-right whitespace-nowrap" : "py-3 text-right whitespace-nowrap"}>{aed(l.amount)}</td>
+              </tr>
+              {explain && (
+                <tr /* taste-skill-ignore: real table */ className="border-b border-tone">
+                  <td colSpan={2} className="pb-3">
+                    <span className="measure mt-1 block text-small text-stone">{l.explain}</span>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
           ))}
         </tbody>
         <tfoot>

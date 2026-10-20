@@ -21,10 +21,10 @@ export default function InzichtenPage() {
 
       <section className="container-page pb-24 lg:pb-32" aria-label="Artikelen" data-reveal>
         <Link href={`/inzichten/${first.slug}/`} className="group grid gap-8 bg-paper lg:grid-cols-12 lg:gap-5" data-r>
-          <div className="relative aspect-[16/10] overflow-hidden lg:col-span-7">
+          <div className="relative aspect-[16/10] overflow-hidden lg:col-span-6 xl:col-span-7">
             <Image src={first.image.src} alt={first.image.alt} fill priority sizes="(min-width:1024px) 58vw, 100vw" className="object-cover" data-drift />
           </div>
-          <div className="grid content-end gap-4 p-6 lg:col-span-5 lg:p-10">
+          <div className="grid min-w-0 content-end gap-4 p-6 lg:col-span-6 lg:p-10 xl:col-span-5">
             <h2 className="text-head group-hover:text-creek">{first.title}</h2>
             <p className="measure text-lead">{first.dek}</p>
             <p className="text-small text-stone">{first.topic}, {first.minutes} min lezen</p>

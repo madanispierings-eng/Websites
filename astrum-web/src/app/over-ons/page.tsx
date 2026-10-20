@@ -41,7 +41,7 @@ export default function OverOnsPage() {
           <p>Wij zijn Pim, Denise en Ron. We helpen Nederlanders die in Dubai willen kopen of verkopen, en we doen dat zoals we het zelf zouden willen.</p>
           <p>
             Dubai verkoopt zichzelf met torens en beloftes. Wij werken met{" "}
-            <mark className="bg-gold-light px-1 text-ink">echte verkoopprijzen in plaats van beloftes</mark>: wat er in een gebouw
+            <mark className="-mx-0.5 bg-gold-light box-decoration-clone px-0.5 text-ink">echte verkoopprijzen in plaats van beloftes</mark>: wat er in een gebouw
             werkelijk betaald is, leggen we naast de brochure.
           </p>
           <p>Je hebt één vast aanspreekpunt, in het Nederlands, van het eerste gesprek tot ver na de overdracht. Geen callcenter, geen wisselende agents.</p>

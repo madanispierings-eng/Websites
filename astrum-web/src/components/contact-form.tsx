@@ -33,6 +33,11 @@ export function ContactFields({ defaultTopic, defaultMessage }: { defaultTopic?:
   const onBlur = (e: React.FocusEvent<HTMLFormElement>) => {
     const name = (e.target as unknown as HTMLInputElement).name as keyof Errors;
     if (name !== "naam" && name !== "email") return;
+    // Leaving an untouched, empty field is not an error yet. Flagging it here shifts the layout
+    // between mousedown and mouseup, so a click on the submit button would never land.
+    if (!(e.target as unknown as HTMLInputElement).value.trim() && !errors[name]) return;
+    // Moving to the submit button: onSubmit validates everything, without shifting the button away.
+    if ((e.relatedTarget as HTMLElement | null)?.getAttribute("type") === "submit") return;
     const next = validate(e.currentTarget);
     setErrors((prev) => ({ ...prev, [name]: next[name] }));
   };

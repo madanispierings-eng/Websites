@@ -1,0 +1,188 @@
+@import "tailwindcss";
+
+/* Astrum v4 — "Dubai als stuk in de vitrine". Flessengroen veld, ivoor tekst, goud alleen op de actie en de coördinaten. */
+@theme {
+  --color-ground: #10261b;
+  --color-surface: #173322;
+  --color-ink: #ede6d3;
+  --color-muted: #a9a58f;
+  --color-gold: #d9b860;
+  --color-gold-ink: #10261b;
+
+  --font-sans: var(--font-clash), "Helvetica Neue", Arial, sans-serif;
+  --font-serif: var(--font-bodoni), "Bodoni 72", Didot, Georgia, serif;
+
+  /* five steps: small, body, lead (the serif sentence), head, display */
+  --text-small: 0.9375rem;
+  --text-small--line-height: 1.45;
+  --text-body: clamp(1.0625rem, 1rem + 0.2vw, 1.1875rem);
+  --text-body--line-height: 1.55;
+  --text-lead: clamp(1.5rem, 1.1rem + 1.5vw, 2.375rem);
+  --text-lead--line-height: 1.12;
+  --text-head: clamp(2.5rem, 1.4rem + 4.4vw, 5.5rem);
+  --text-head--line-height: 1;
+  --text-display: clamp(4rem, 12vw, 12rem);
+  --text-display--line-height: 0.9;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root {
+  /* page margins: 20px on a phone, 32px from tablet up */
+  --gutter: 20px;
+  color-scheme: dark;
+}
+@media (min-width: 768px) {
+  :root { --gutter: 32px; }
+}
+
+@layer base {
+  html {
+    background: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    font-size: var(--text-body);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3 { font-weight: 400; text-wrap: balance; }
+  p { text-wrap: pretty; }
+  ::selection { background: var(--color-gold); color: var(--color-gold-ink); }
+  :focus-visible { outline: 2px solid var(--color-gold); outline-offset: 4px; }
+  a, button { touch-action: manipulation; }
+  button:not(:disabled) { cursor: pointer; }
+}
+
+/* ---------- Lenis ---------- */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* ---------- The wide wordmark: six capitals spread like the numerals on a dial ---------- */
+.wordmark {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.wordmark > span { display: block; }
+
+/* ---------- The button: one solid gold rectangle, square corners ---------- */
+.btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 28px;
+  background: var(--color-gold);
+  color: var(--color-gold-ink);
+  font-size: var(--text-small);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.btn-gold:hover { background: var(--color-ink); }
+.btn-gold:active { translate: 0 1px; }
+
+/* ---------- Home hero: the counter ---------- */
+.hero {
+  /* the vitrine: 4:5, as wide as the screen's height allows */
+  --vit-w: min(28vw, calc((100svh - 420px) * 0.8));
+  --vit-top: max(80px, 9svh);
+  position: relative;
+  height: 100svh;
+  min-height: 640px;
+  overflow: hidden;
+  background: var(--color-ground);
+}
+@media (min-width: 768px) and (max-aspect-ratio: 1/1) {
+  /* a tall tablet: the vitrine takes the width the height gives it */
+  .hero { --vit-w: min(52vw, calc((100svh - 440px) * 0.8)); --vit-top: max(96px, 10svh); }
+}
+@media (max-width: 767px) {
+  .hero {
+    --vit-w: min(70vw, calc((100svh - 440px) * 0.8));
+    --vit-top: max(88px, 12svh);
+    min-height: 680px;
+  }
+}
+
+/* The photograph layer spans the whole screen; its clip is the vitrine, so it can open to the full view later. */
+.stage {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(
+    var(--vit-top)
+    calc((100% - var(--vit-w)) / 2)
+    calc(100% - var(--vit-top) - var(--vit-w) * 1.25)
+    calc((100% - var(--vit-w)) / 2)
+  );
+}
+.stage-frame {
+  position: absolute;
+  left: calc((100% - var(--vit-w)) / 2);
+  top: var(--vit-top);
+  width: var(--vit-w);
+  aspect-ratio: 4 / 5;
+  transform-origin: 50% 50%;
+}
+.stage-frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* kept dark and warm, so the gold and the green are not disturbed */
+  filter: brightness(0.92) saturate(0.92);
+}
+.stage-frame img + img { opacity: 0; }
+
+.hero-copy {
+  position: absolute;
+  inset: calc(var(--vit-top) + var(--vit-w) * 1.25) var(--gutter) 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 36px;
+  text-align: center;
+}
+.hero-title {
+  width: min(72vw, 1100px);
+  font-size: clamp(1.75rem, 1rem + 2.4vw, 3.5rem);
+}
+.hero-sentence {
+  margin-top: 22px;
+  font-family: var(--font-serif);
+  font-size: var(--text-lead);
+  line-height: 1.12;
+  max-width: 24ch;
+}
+.hero-row {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  column-gap: 48px;
+  width: min(100%, 980px);
+  font-size: var(--text-small);
+}
+.hero-row > :first-child { justify-self: end; text-align: right; }
+.hero-row > :last-child { justify-self: start; text-align: left; }
+.coords { color: var(--color-gold); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 767px) {
+  .hero-copy { padding-top: 24px; }
+  .hero-title { width: 100%; font-size: 1.75rem; }
+  .hero-sentence { margin-top: 16px; font-size: 6vw; max-width: 20ch; }
+  .hero-row { margin-top: 22px; grid-template-columns: 1fr; row-gap: 14px; }
+  .hero-row > :first-child,
+  .hero-row > :last-child { justify-self: center; text-align: center; }
+  .hero-row .btn-gold { width: 100%; }
+}

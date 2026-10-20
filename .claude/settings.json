@@ -1,10 +1,16 @@
 {
+  "enabledMcpjsonServers": [
+    "shadcn",
+    "playwright",
+    "chrome-devtools"
+  ],
   "enabledPlugins": {
     "frontend-design@claude-code-plugins": true,
     "ui-ux-pro-max@ui-ux-pro-max-skill": true,
     "taste-skill@taste-skill": true,
     "impeccable@impeccable": true,
-    "gsap-skills@gsap-skills": true
+    "gsap-skills@gsap-skills": true,
+    "figma@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "claude-code-plugins": {
@@ -36,11 +42,12 @@
         "source": "github",
         "repo": "greensock/gsap-skills"
       }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
     }
-  },
-  "enabledMcpjsonServers": [
-    "shadcn",
-    "playwright",
-    "chrome-devtools"
-  ]
+  }
 }

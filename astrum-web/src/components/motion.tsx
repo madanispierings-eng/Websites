@@ -163,9 +163,17 @@ export function Motion({ children }: { children: React.ReactNode }) {
       mm.add("(prefers-reduced-motion: no-preference) and (min-width: 1024px)", () => {
         const stage = root.querySelector<HTMLElement>("[data-hero-stage]");
         if (stage) {
+          // Start from the page gutter in the full four-value form: the browser reports the inline inset as
+          // "inset(0px 40px)", which GSAP would pair up wrongly with the four-value end (lopsided, jumpy edges).
+          const gutter = () => getComputedStyle(root.querySelector(".container-page") ?? document.body).paddingLeft;
           gsap
-            .timeline({ scrollTrigger: { trigger: stage, start: "top top", end: "+=70%", scrub: true, pin: true } })
-            .to("[data-hero-frame]", { clipPath: "inset(0px 0px 0px 0px)", ease: "none" }, 0)
+            .timeline({ scrollTrigger: { trigger: stage, start: "top top", end: "+=70%", scrub: true, pin: true, invalidateOnRefresh: true } })
+            .fromTo(
+              "[data-hero-frame]",
+              { clipPath: () => `inset(0px ${gutter()} 0px ${gutter()})` },
+              { clipPath: "inset(0px 0px 0px 0px)", ease: "none" },
+              0,
+            )
             .fromTo("[data-hero-img]", { scale: 1.12 }, { scale: 1, ease: "none" }, 0);
           gsap.from("[data-hero-frame]", { opacity: 0, y: 40, duration: 1.6, ease: EASE, delay: 0.5 });
         }

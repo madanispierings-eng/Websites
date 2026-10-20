@@ -2,15 +2,35 @@
   "mcpServers": {
     "shadcn": {
       "command": "npx",
-      "args": ["-y", "shadcn@latest", "mcp"]
+      "args": [
+        "-y",
+        "shadcn@latest",
+        "mcp"
+      ]
     },
     "playwright": {
       "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest", "--headless", "--browser", "chromium"]
+      "args": [
+        "-y",
+        "@playwright/mcp@latest",
+        "--headless",
+        "--browser",
+        "chromium",
+        "--executable-path",
+        "${CHROME_PATH:-/opt/pw-browsers/chromium}",
+        "--isolated"
+      ]
     },
     "chrome-devtools": {
       "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@latest", "--headless", "--isolated", "--executablePath", "${CHROME_PATH:-/opt/pw-browsers/chromium}"]
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--headless",
+        "--isolated",
+        "--executablePath",
+        "${CHROME_PATH:-/opt/pw-browsers/chromium}"
+      ]
     }
   }
 }

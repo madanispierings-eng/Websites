@@ -122,10 +122,10 @@ export const menu = [
 ];
 
 /**
- * Soorten woningen voor de showcase. Sfeerbeelden van Unsplash, geen aanbod van Astrum en niet allemaal in Dubai
- * gefotografeerd; de tekst beschrijft het type woning en waar je het in Dubai vooral vindt.
+ * Wat Astrum doet (uit astrumuae.com): kopen, verkopen, advies en portfolio. Astrum toont geen woningaanbod; de foto's
+ * zijn Unsplash-beelden die in Dubai gemaakt zijn en laten de stad zien, niet een woning van Astrum.
  */
-export type Home = { id: string; name: string; where: string; line: string; main: Photo; detail?: Photo };
+export type Service = { id: string; name: string; where: string; line: string; ask: string; main: Photo; detail?: Photo };
 
 const unsplash = (
   src: string,
@@ -138,53 +138,56 @@ const unsplash = (
   focus = "50% 50%",
 ): Photo => ({ src, width, height, alt, by, byUrl: `https://unsplash.com/@${handle}${utm}`, page: `https://unsplash.com/photos/${id}${utm}`, focus });
 
-export const homes: Home[] = [
+export const services: Service[] = [
   {
-    id: "penthouse",
-    name: "Penthouse",
-    where: "Vooral in Downtown en Business Bay",
-    line: "Dubbele hoogte, glas van vloer tot plafond en de stad aan je voeten. Zeldzaam, dus de prijs per vierkante meter vraagt een eerlijke vergelijking.",
+    id: "kopen",
+    name: "Kopen",
+    where: "Bestaande bouw en off-plan",
+    line: "We zoeken mee, toetsen de cijfers aan echte transacties en begeleiden je tot de overdracht. Geen haast om te tekenen.",
+    ask: "kopen in Dubai",
     main: unsplash(
-      "https://images.unsplash.com/photo-1776362355123-ca966d36e29c",
-      5000, 2812,
-      "Een penthouse met een woonkamer van dubbele hoogte, ramen van vloer tot plafond en een trap naar de bovenverdieping",
-      "Aalo Lens", "aalolens", "Ez7fz5mavj0", "40% 50%",
+      "https://images.unsplash.com/photo-1654520015092-b9b4ddf2e7c7",
+      4288, 2848,
+      "Een woonkamer in Moon Tower in Dubai met een raam van vloer tot plafond en torens erachter",
+      "Coralt Zou", "cora1t", "Jvy0fB41xtQ", "55% 50%",
     ),
     detail: unsplash(
-      "https://images.unsplash.com/photo-1705326701287-346fc37a2c86",
-      6616, 3676,
-      "Een lichte woonkamer met een witte bank, ronde fauteuils en een lage tafel",
-      "Pipcke", "pipcke", "SZ-DsEZxzlg", "50% 60%",
+      "https://images.unsplash.com/photo-1719474815671-08411b0ea840",
+      4666, 3111,
+      "Een lichte keuken in een appartement in The Sterling West in Business Bay, met uitzicht op de torens",
+      "Nisha Vastu", "nisharoi", "uUNm0_e1kFo", "65% 50%",
     ),
   },
   {
-    id: "appartement",
-    name: "Appartement in een toren",
-    where: "Vooral in Dubai Marina, JBR en Creek Harbour",
-    line: "Een balkon boven het water, een zwembad in het gebouw en verhuur die zichzelf vaak bewijst. We kijken eerst naar wat er in jouw gebouw echt verkocht is.",
+    id: "verkopen",
+    name: "Verkopen",
+    where: "Voor eigenaren in Dubai",
+    line: "Een eerlijke vraagprijs op basis van wat er in jouw gebouw en wijk echt betaald is. En een koper die past.",
+    ask: "verkopen in Dubai",
     main: unsplash(
-      "https://images.unsplash.com/photo-1767055114909-1170503862f1",
-      3333, 5000,
-      "Een witte woontoren met golvende balkons, van onderaf gezien tegen een bewolkte lucht",
-      "Jonathan Lim", "jonathankslim", "7dthTZ48vEY", "50% 40%",
+      "https://images.unsplash.com/photo-1772175089016-4023a6f3d219",
+      4480, 6720,
+      "Het zwembad van The Address Downtown in Dubai, met de torens van Downtown erachter op een zonnige dag",
+      "Damian Kamp", "dmotionmedia", "NUyGj5eS_rM", "50% 45%",
     ),
   },
   {
-    id: "villa",
-    name: "Villa met zwembad",
-    where: "Vooral op de Palm Jumeirah en in Dubai Hills",
-    line: "Ruimte, een eigen tuin en water voor de deur. Voor wie er wil wonen of lang wil vasthouden, met het onderhoud en de servicekosten vooraf op papier.",
+    id: "advies",
+    name: "Advies en portfolio",
+    where: "Ook als het antwoord nee is",
+    line: "Twijfel je nog? Dan kijken we eerst samen of Dubai bij jouw plan past. Daarna bouwen we, als je wilt, aan een portfolio voor nu en voor later.",
+    ask: "advies over Dubai",
     main: unsplash(
-      "https://images.unsplash.com/photo-1613977257363-707ba9348227",
-      7781, 5190,
-      "Een moderne witte villa met een zwembad, ligbedden en een overdekt terras",
-      "John Fornander", "johnfo", "Id7u0EkTjBE", "50% 55%",
+      "https://images.unsplash.com/photo-1619806840163-38e329be64bb",
+      4820, 3615,
+      "Downtown Dubai vanaf een dak gezien, met Burj Khalifa boven de torens en het water van de fonteinen",
+      "Jeshur Jacinto", "jnjshots", "b_oMlBq0VrQ", "50% 55%",
     ),
     detail: unsplash(
-      "https://images.unsplash.com/photo-1543489822-c49534f3271f",
-      3456, 1944,
-      "Een infinity pool aan een witte gevel, met zee en eilanden aan de horizon",
-      "big.tiny.belly", "bigtinybelly", "XtnNrQYC7ts", "60% 50%",
+      "https://images.unsplash.com/photo-1615747476328-41153cf6da54",
+      5284, 6605,
+      "Witte bogen aan het water in Dubai, met de skyline en Burj Khalifa in de verte",
+      "Ismail Merad", "ismail_fwcr", "T9WWuoUwxjA", "50% 60%",
     ),
   },
 ];

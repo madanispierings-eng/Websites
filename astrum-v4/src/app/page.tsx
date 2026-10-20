@@ -1,8 +1,8 @@
 import { Hero } from "@/components/home/hero";
 import { Showcase } from "@/components/home/showcase";
-import { districts, homes, site } from "@/lib/content";
+import { districts, services, site } from "@/lib/content";
 
-const photos = [districts[0].photo, ...homes.flatMap((h) => (h.detail ? [h.main, h.detail] : [h.main]))];
+const photos = [districts[0].photo, ...services.flatMap((h) => (h.detail ? [h.main, h.detail] : [h.main]))];
 
 export default function Home() {
   return (
@@ -13,7 +13,7 @@ export default function Home() {
       <footer id="contact" className="page-x grid gap-6 pt-24 pb-10">
         <a href={`mailto:${site.email}`} className="w-fit text-head">{site.email}</a>
         <p className="credits max-w-[70ch]">
-          Foto’s via Unsplash (sfeerbeelden, geen aanbod van Astrum):{" "}
+          Foto’s van Dubai via Unsplash:{" "}
           {photos.map((p, i) => (
             <span key={p.src}>
               <a href={p.page}>{p.by}</a>

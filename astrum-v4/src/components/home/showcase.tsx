@@ -7,35 +7,35 @@ import { SplitText } from "gsap/SplitText";
 import { useGSAP } from "@gsap/react";
 import { Arrow } from "@/components/ui/arrow";
 import { Media } from "@/components/ui/media";
-import { homes, site, type Home } from "@/lib/content";
+import { services, site, type Service } from "@/lib/content";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 
-const ask = (h: Home) =>
-  `mailto:${site.email}?subject=${encodeURIComponent(`${h.name} in Dubai`)}&body=${encodeURIComponent(
-    `Hallo Astrum,\n\nIk ben benieuwd naar een ${h.name.toLowerCase()} in Dubai. Kunnen we een keer bellen?\n\n`,
+const ask = (h: Service) =>
+  `mailto:${site.email}?subject=${encodeURIComponent(`Gesprek over ${h.ask}`)}&body=${encodeURIComponent(
+    `Hallo Astrum,\n\nIk wil graag een keer praten over ${h.ask}. Wanneer komt het jullie uit?\n\n`,
   )}`;
 
-function Text({ home, as: Tag = "div" }: { home: Home; as?: "div" | "figcaption" }) {
+function Text({ home, as: Tag = "div" }: { home: Service; as?: "div" | "figcaption" }) {
   return (
     <Tag className="sc-text">
       <h3 data-sc-title>{home.name}</h3>
       <p className="sc-where" data-sc-part>{home.where}</p>
       <p data-sc-part>{home.line}</p>
       <a className="link-draw" href={ask(home)} data-sc-part data-magnetic>
-        Vraag ernaar <Arrow />
+        Plan een gesprek <Arrow />
       </a>
     </Tag>
   );
 }
 
 /**
- * Kinds of homes Astrum helps people buy, in an uneven white layout: a wide penthouse with its detail beside it, a
- * tall tower to the right of centre, and a villa set large and low with the pool above its words.
+ * What Astrum does, in an uneven white layout over photographs taken in Dubai: buying with a wide interior and its
+ * detail beside it, selling beside a tall picture right of centre, advice with Downtown set large and low.
  */
 export function Showcase() {
   const root = React.useRef<HTMLElement>(null);
-  const [penthouse, tower, villa] = homes;
+  const [buying, selling, advice] = services;
 
   useGSAP(
     () => {
@@ -93,35 +93,35 @@ export function Showcase() {
   );
 
   return (
-    <section ref={root} id="woningen" className="showcase" aria-labelledby="sc-title">
+    <section ref={root} id="diensten" className="showcase" aria-labelledby="sc-title">
       <div className="page-x">
         <header className="sc-head grid-12" data-sc-block>
-          <h2 id="sc-title" data-sc-title>Zo woon je in Dubai</h2>
+          <h2 id="sc-title" data-sc-title>Wat we voor je doen</h2>
           <p data-sc-part>
-            Van een penthouse boven Downtown tot een villa aan het water op de Palm. We laten zien wat er te koop is, met de
-            prijzen die er echt betaald zijn ernaast.
+            Persoonlijke begeleiding en korte lijnen. Je hebt één aanspreekpunt, in het Nederlands, van het eerste gesprek tot
+            ver na de overdracht. Ook daarna, voor verhuur of je volgende stap.
           </p>
         </header>
 
-        <article className="sc-item sc-a grid-12" data-sc-block aria-label={penthouse.name}>
-          <Media className="sc-main" photo={penthouse.main} sizes="(min-width: 768px) 66vw, 100vw" />
+        <article className="sc-item sc-a grid-12" data-sc-block aria-label={buying.name}>
+          <Media className="sc-main" photo={buying.main} sizes="(min-width: 768px) 66vw, 100vw" />
           <div className="sc-side">
-            {penthouse.detail && <Media className="sc-detail" photo={penthouse.detail} sizes="(min-width: 768px) 26vw, 64vw" />}
-            <Text home={penthouse} />
+            {buying.detail && <Media className="sc-detail" photo={buying.detail} sizes="(min-width: 768px) 26vw, 64vw" />}
+            <Text home={buying} />
           </div>
         </article>
 
-        <article className="sc-item sc-b grid-12" data-sc-block aria-label={tower.name}>
-          <Text home={tower} />
-          <Media className="sc-main" photo={tower.main} sizes="(min-width: 768px) 42vw, 82vw" />
+        <article className="sc-item sc-b grid-12" data-sc-block aria-label={selling.name}>
+          <Text home={selling} />
+          <Media className="sc-main" photo={selling.main} sizes="(min-width: 768px) 42vw, 82vw" />
         </article>
 
-        <article className="sc-item sc-c grid-12" data-sc-block aria-label={villa.name}>
+        <article className="sc-item sc-c grid-12" data-sc-block aria-label={advice.name}>
           <div className="sc-side">
-            {villa.detail && <Media className="sc-detail" photo={villa.detail} sizes="(min-width: 768px) 33vw, 64vw" />}
-            <Text home={villa} />
+            {advice.detail && <Media className="sc-detail" photo={advice.detail} sizes="(min-width: 768px) 33vw, 64vw" />}
+            <Text home={advice} />
           </div>
-          <Media className="sc-main" photo={villa.main} sizes="(min-width: 768px) 66vw, 100vw" />
+          <Media className="sc-main" photo={advice.main} sizes="(min-width: 768px) 66vw, 100vw" />
         </article>
       </div>
     </section>

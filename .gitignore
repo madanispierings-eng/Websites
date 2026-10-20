@@ -8,3 +8,7 @@ astrum/assets/*
 !astrum/assets/credits.json
 astrum/.taste-skill/inspect/
 astrum/.qa/
+
+# Claude Code: personal settings and the impeccable engine binary (downloaded on first run)
+.claude/settings.local.json
+.claude/skills/impeccable/scripts/bin/

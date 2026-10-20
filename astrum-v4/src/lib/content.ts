@@ -16,8 +16,8 @@ export const hero = {
 };
 
 export const nav = [
-  { href: "#wijken", label: "Wijken" },
   { href: "#diensten", label: "Diensten" },
+  { href: "#wijken", label: "Wijken" },
   { href: "#kosten", label: "Kosten" },
   { href: "#over-ons", label: "Over ons" },
 ];
@@ -114,10 +114,12 @@ export const photoSrcSet = (p: Photo, widths = [640, 960, 1440, 2000, 2800]) =>
   widths.map((w) => `${photoUrl(p, w)} ${w}w`).join(", ");
 
 export const menu = [
-  { href: "#wijken", label: "Wijken" },
   { href: "#diensten", label: "Kopen, verkopen, advies" },
+  { href: "#wijken", label: "Wijken" },
+  { href: "#werkwijze", label: "Werkwijze" },
   { href: "#kosten", label: "Wat kopen kost" },
   { href: "#over-ons", label: "Over ons" },
+  { href: "#vragen", label: "Vragen" },
   { href: "#contact", label: "Contact" },
 ];
 
@@ -191,3 +193,133 @@ export const services: Service[] = [
     ),
   },
 ];
+
+export const statement = {
+  text: "Het gaat niet om het hoogste gebouw of het snelste project. Het gaat om de keuze die past bij jouw plan.",
+  usps: ["Eerst jouw plan, dan pas een woning", "Echte verkoopprijzen in plaats van beloftes", "Eén vast aanspreekpunt, in het Nederlands"],
+};
+
+/** De wijken waar Nederlandse kopers het vaakst naar vragen. Alle foto's zijn in Dubai gemaakt. */
+export const areas: District[] = [
+  {
+    id: "palm",
+    name: "Palm Jumeirah",
+    line: "Het eiland in de vorm van een palm: villa’s op de bladeren, appartementen op de stam en hotels op de kroon.",
+    coords: "25°07′N 55°08′E",
+    photo: unsplash(
+      "https://images.unsplash.com/photo-1677632227880-4d21073ef8f4",
+      6000, 4000,
+      "De bladeren van de Palm Jumeirah vol villa’s, van bovenaf gezien vanaf Aura Skypool, met Atlantis aan de horizon",
+      "Thomas Haas", "thomashaas", "wfANLGIhOtM", "50% 55%",
+    ),
+  },
+  {
+    id: "marina",
+    name: "Dubai Marina",
+    line: "Woontorens rond een jachthaven van drie kilometer, met de zee en het strand van JBR op loopafstand.",
+    coords: "25°05′N 55°08′E",
+    photo: unsplash(
+      "https://images.unsplash.com/photo-1721801783842-7133fbf11509",
+      6000, 4000,
+      "Dubai Marina van bovenaf, met de jachthaven tussen de woontorens",
+      "Nelemson Guevarra", "nelemson", "kFVru8-ObEA", "50% 50%",
+    ),
+  },
+  {
+    id: "jumeirah",
+    name: "Jumeirah",
+    line: "De kust van het oudere Dubai: lagere bebouwing, villa’s met tuinen en de stranden rond Burj Al Arab.",
+    coords: "25°08′N 55°11′E",
+    photo: unsplash(
+      "https://images.unsplash.com/flagged/photo-1555457900-4f4cf4768371",
+      5726, 3222,
+      "Burj Al Arab bij daglicht, met Jumeirah Beach Hotel en de skyline van Dubai in de verte",
+      "Nathan John", "jnate", "FI8xXh9eX5w", "35% 50%",
+    ),
+  },
+  {
+    id: "downtown",
+    name: "Downtown",
+    line: "Het centrum rond Burj Khalifa en Dubai Mall, met appartementen tot hoog in de torens en de fonteinen voor de deur.",
+    coords: "25°12′N 55°16′E",
+    photo: unsplash(
+      "https://images.unsplash.com/photo-1708361089093-beef4c4584e7",
+      7883, 5604,
+      "Burj Khalifa en de torens van Downtown Dubai in de schemering, gezien vanaf Sky Views",
+      "Fabien Bellanger", "fabbel78", "WyfXOHgI49s", "50% 50%",
+    ),
+  },
+  {
+    id: "creek",
+    name: "Creek Harbour",
+    line: "Een nieuwe wijk aan de kreek, grotendeels off-plan, met uitzicht over het water op de skyline van Downtown.",
+    coords: "25°12′N 55°21′E",
+    photo: unsplash(
+      "https://images.unsplash.com/photo-1706798636475-882837a93f94",
+      2992, 3740,
+      "De skyline van Dubai met Burj Khalifa bij zonsondergang, gezien over het water vanaf Creek Harbour",
+      "Shifan Hassan", "shifanhassan", "BebLGxMR-uM", "50% 55%",
+    ),
+  },
+];
+
+/** Een eigen foto van Astrum, uit /public. */
+export type LocalPhoto = { src: string; width: number; height: number; alt: string; focus?: string };
+
+export const process = {
+  title: "Vier stappen. In jouw tempo.",
+  intro: "Een goede aankoop begint bij jouw plan. Pas daarna kijken we naar projecten.",
+  steps: [
+    {
+      name: "Kennismaken",
+      text: "We beginnen met jouw plan, niet met een project. Wat wil je, hoe lang kun je wachten, wat mag het kosten?",
+      local: { src: "/img/duo.jpg", width: 920, height: 1125, alt: "Pim Verberg en Denise Birjmohun van Astrum in een sales gallery in Dubai", focus: "50% 30%" } as LocalPhoto,
+    },
+    {
+      name: "Uitzoeken",
+      text: "We vergelijken wijken, ontwikkelaars en echte verkoopprijzen. Je ziet wat er speelt, ook wat minder mooi is.",
+      photo: unsplash(
+        "https://images.unsplash.com/photo-1748373502104-cb28af375638",
+        6000, 4000,
+        "De kust van Dubai van bovenaf, met het strand van JBR, de torens van de Marina en de Palm in de verte",
+        "Nejc Soklič", "nejc_soklic", "C3ZBEAzk64Q", "50% 50%",
+      ),
+    },
+    {
+      name: "Aankopen",
+      text: "We lopen elk document met je door en zijn erbij tot de overdracht. Geen haast om te tekenen.",
+      photo: unsplash(
+        "https://images.unsplash.com/photo-1677632227484-7ae0b3d2528a",
+        5994, 3996,
+        "Uitzicht vanaf Aura Skypool over de kust van Dubai, met Burj Al Arab en Downtown in de nevel",
+        "Thomas Haas", "thomashaas", "rS9JaZD6mtE", "50% 50%",
+      ),
+    },
+    {
+      name: "Daarna",
+      text: "Ook na de sleutel blijven we bereikbaar. Voor vragen over verhuur, de markt of je volgende stap.",
+      photo: unsplash(
+        "https://images.unsplash.com/photo-1688671525781-d9447cf1abd2",
+        3210, 2140,
+        "De skyline van Dubai over het water, met Burj Al Arab en Burj Khalifa in de verte",
+        "Thomas Haas", "thomashaas", "3D5YdOq68Y4", "50% 50%",
+      ),
+    },
+  ],
+};
+
+export const team = {
+  title: "De mensen achter Astrum",
+  intro: "Persoonlijk betrokken, van het eerste gesprek tot ver na de overdracht.",
+  quote: "Astrum begeleidt investeerders persoonlijk en met geduld. Samen bouwen we aan een portfolio voor nu en voor later, als je vaste partner in de Emiraten.",
+  people: [
+    { name: "Pim Verberg", role: "Co-founder", note: "Deelt op Instagram wat hij in de markt ziet.", photo: { src: "/img/pim.jpg", width: 900, height: 1600, alt: "Pim Verberg, co-founder van Astrum", focus: "50% 22%" } as LocalPhoto },
+    { name: "Denise Birjmohun", role: "Co-founder", photo: { src: "/img/denise.jpg", width: 900, height: 1600, alt: "Denise Birjmohun, co-founder van Astrum", focus: "50% 22%" } as LocalPhoto },
+    { name: "Ron Veen", role: "Co-founder", photo: { src: "/img/ron.jpg", width: 900, height: 1600, alt: "Ron Veen, co-founder van Astrum", focus: "50% 22%" } as LocalPhoto },
+  ],
+};
+
+export const privateList = {
+  name: "Astrum Private List",
+  text: "Wat er echt verkocht is, welke projecten eraan komen en kansen die we eerst met deze lijst delen. Persoonlijk samengesteld, zonder ruis.",
+};

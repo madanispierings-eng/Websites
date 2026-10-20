@@ -1,27 +1,25 @@
+import { Areas } from "@/components/home/areas";
+import { Contact } from "@/components/home/contact";
+import { Costs } from "@/components/home/costs";
+import { Faq } from "@/components/home/faq";
 import { Hero } from "@/components/home/hero";
+import { Process } from "@/components/home/process";
 import { Showcase } from "@/components/home/showcase";
-import { districts, services, site } from "@/lib/content";
-
-const photos = [districts[0].photo, ...services.flatMap((h) => (h.detail ? [h.main, h.detail] : [h.main]))];
+import { Statement } from "@/components/home/statement";
+import { Team } from "@/components/home/team";
 
 export default function Home() {
   return (
     <>
       <Hero />
+      <Statement />
       <Showcase />
-      {/* Tijdelijk einde van de pagina tot de volgende secties er zijn: contact en de fotoverantwoording. */}
-      <footer id="contact" className="page-x grid gap-6 pt-24 pb-10">
-        <a href={`mailto:${site.email}`} className="w-fit text-head">{site.email}</a>
-        <p className="credits max-w-[70ch]">
-          Foto’s van Dubai via Unsplash:{" "}
-          {photos.map((p, i) => (
-            <span key={p.src}>
-              <a href={p.page}>{p.by}</a>
-              {i < photos.length - 1 ? ", " : "."}
-            </span>
-          ))}
-        </p>
-      </footer>
+      <Areas />
+      <Process />
+      <Costs />
+      <Team />
+      <Faq />
+      <Contact />
     </>
   );
 }

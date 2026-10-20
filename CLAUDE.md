@@ -10,3 +10,7 @@ In dit project zijn design-skills, component-bibliotheken en browsertools geïns
 6. **Controleren:** laat de `visual-qa` agent de pagina in een echte browser bekijken (Playwright of Chrome DevTools) en fouten herstellen.
 
 Lever nooit UI-werk op zonder stap 6.
+
+# Scrapen
+
+Gebruik voor het binnenhalen van (complete) websites de `website-scraper` agent. Respecteer `robots.txt` en test eerst op een klein aantal pagina's.

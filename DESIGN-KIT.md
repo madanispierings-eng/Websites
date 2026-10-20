@@ -42,6 +42,28 @@ Vraagt een API-key van https://21st.dev/magic/console:
 claude mcp add magic --scope project --env API_KEY=jouw-key -- npx -y @21st-dev/magic@latest
 ```
 
+## Websites scrapen
+
+De agent `website-scraper` haalt complete websites binnen en zet ze om naar
+Markdown, JSON of CSV. Hij gebruikt Playwright voor JavaScript-zware sites en
+schrijft voor grote sites zelf een crawl-script in `scraper/`.
+
+Vraag bijvoorbeeld: *"Scrape alle producten van voorbeeld.nl naar een CSV."*
+
+**In cloud-sessies:** het netwerk staat standaard alleen pakketbronnen
+(npm, PyPI, GitHub) toe. Zet in de omgevingsinstellingen *Network access* op
+**Full**, of voeg de te scrapen domeinen toe bij *Allowed domains*. Zie
+https://code.claude.com/docs/en/cloud-environments#network-access.
+
+**Optioneel: Apify** (kant-en-klare cloud-scrapers, vraagt een API-token van
+https://console.apify.com/account/integrations):
+
+```sh
+claude mcp add apify --scope project --env APIFY_TOKEN=jouw-token -- npx -y @apify/actors-mcp-server
+```
+
+In cloud-sessies moet dan ook `api.apify.com` toegestaan zijn.
+
 ## Goed om te weten
 
 - Impeccable draait hooks bij sessiestart, na elke Edit/Write en bij Stop. De

@@ -112,7 +112,7 @@ export function Hero() {
             const split = SplitText.create(lines, { type: "lines", mask: "lines" });
             const parts = section.querySelectorAll(".hero-support, .hero-cta");
             const header = document.querySelector("[data-header]");
-            gsap.set(split.lines, { yPercent: 110 });
+            gsap.set(split.lines, { yPercent: 145 });
             gsap.set([parts, header], { y: 20, opacity: 0 });
             html.classList.remove("intro");
             gsap

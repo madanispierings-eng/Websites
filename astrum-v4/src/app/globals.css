@@ -774,3 +774,10 @@ section[id] { scroll-margin-top: 0; }
 @media (max-width: 767px) {
   .cost-lines-list > div { grid-template-columns: 1fr; gap: 10px; }
 }
+
+/* SplitText line masks: room for descenders (the j in "wijk") and the dots above, without changing the line spacing */
+:is(h1, h2, h3) > div[style*="overflow: clip"],
+.hero-title span > div[style*="overflow: clip"] {
+  padding-block: 0.1em 0.18em;
+  margin-block: -0.1em -0.18em;
+}

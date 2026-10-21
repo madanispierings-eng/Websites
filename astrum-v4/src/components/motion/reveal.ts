@@ -53,7 +53,8 @@ export function useReveal(scope: React.RefObject<HTMLElement | null>, extra?: (r
               mask: "lines",
               autoSplit: true,
               onSplit: (self) => {
-                const tween = gsap.from(self.lines, { yPercent: 110, duration: 1.1, ease: "expo.out", stagger: 0.08 });
+                // once the lines are up the masks go, so nothing below the baseline stays clipped
+                const tween = gsap.from(self.lines, { yPercent: 110, duration: 1.1, ease: "expo.out", stagger: 0.08, onComplete: () => self.revert() });
                 tl.add(tween, 0);
                 return tween;
               },

@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import { useGSAP } from "@gsap/react";
+import Link from "next/link";
 import { Arrow } from "@/components/ui/arrow";
 import { districts, hero, photoSrcSet, photoUrl } from "@/lib/content";
 
@@ -163,9 +164,9 @@ export function Hero() {
           ))}
         </p>
         <div className="hero-cta">
-          <a href="#contact" className="btn" data-magnetic>
+          <Link href="/contact/" className="btn" data-magnetic>
             {hero.action} <Arrow />
-          </a>
+          </Link>
         </div>
       </div>
 

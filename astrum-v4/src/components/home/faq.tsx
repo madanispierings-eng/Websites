@@ -5,18 +5,26 @@ import { useReveal } from "@/components/motion/reveal";
 import { faqs } from "@/lib/faq";
 
 /** The questions people ask before they call, grouped by topic; a native disclosure that opens smoothly. */
-export function Faq() {
+export function Faq({
+  title = "Wat mensen ons vragen",
+  topics: only,
+  heading: Heading = "h2",
+}: {
+  title?: string;
+  topics?: string[];
+  heading?: "h1" | "h2";
+}) {
   const root = React.useRef<HTMLElement>(null);
   useReveal(root);
-  const topics = [...new Set(faqs.map((f) => f.topic))];
+  const topics = [...new Set(faqs.map((f) => f.topic))].filter((t) => !only || only.includes(t));
 
   return (
-    <section ref={root} id="vragen" className="faq page-x" aria-labelledby="faq-title">
+    <section ref={root} className="faq page-x" aria-labelledby="faq-title" data-heading={Heading}>
       <div className="faq-grid grid-12">
         <div className="faq-head" data-r-block>
-          <h2 id="faq-title" data-r-title>
-            Wat mensen ons vragen
-          </h2>
+          <Heading id="faq-title" data-r-title>
+            {title}
+          </Heading>
           <p data-r>Staat jouw vraag er niet bij? Stel hem gewoon in het gesprek. Ook de vragen die je liever vooraf weet.</p>
         </div>
         <div className="faq-list">

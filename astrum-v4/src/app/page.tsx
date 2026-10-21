@@ -1,12 +1,9 @@
 import { Areas } from "@/components/home/areas";
-import { Contact } from "@/components/home/contact";
-import { Costs } from "@/components/home/costs";
-import { Faq } from "@/components/home/faq";
 import { Hero } from "@/components/home/hero";
-import { Process } from "@/components/home/process";
 import { Showcase } from "@/components/home/showcase";
 import { Statement } from "@/components/home/statement";
-import { Team } from "@/components/home/team";
+import { CtaBand } from "@/components/page/cta-band";
+import { CostsTeaser } from "@/components/page/costs-teaser";
 
 export default function Home() {
   return (
@@ -14,12 +11,9 @@ export default function Home() {
       <Hero />
       <Statement />
       <Showcase />
-      <Areas />
-      <Process />
-      <Costs />
-      <Team />
-      <Faq />
-      <Contact />
+      <Areas link />
+      <CostsTeaser />
+      <CtaBand />
     </>
   );
 }

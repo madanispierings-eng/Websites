@@ -19,7 +19,7 @@ const general = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
-  title: "Astrum · Vastgoed in Dubai, voor wie verder kijkt",
+  title: { default: "Astrum · Vastgoed in Dubai, voor wie verder kijkt", template: "%s · Astrum" },
   description:
     "Astrum is een boutique makelaar in Dubai voor Nederlanders. Kopen, verkopen en advies met echte transactieprijzen en één vast Nederlandstalig aanspreekpunt.",
   icons: { icon: "/favicon.svg" },

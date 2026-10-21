@@ -19,7 +19,7 @@ export const faqs: Faq[] = [
   {
     topic: "Kosten",
     q: "Wat betaal ik bovenop de koopprijs?",
-    a: "Vooral 4% overdrachtsbelasting aan het Dubai Land Department, plus een paar vaste bedragen. Bij een bestaande woning komen daar de trustee en de makelaar bij. Hierboven reken je het uit voor jouw prijs.",
+    a: "Vooral 4% overdrachtsbelasting aan het Dubai Land Department, plus een paar vaste bedragen. Bij een bestaande woning komen daar de trustee en de makelaar bij. Op de pagina Kosten reken je het uit voor jouw prijs.",
   },
   {
     topic: "Kosten",

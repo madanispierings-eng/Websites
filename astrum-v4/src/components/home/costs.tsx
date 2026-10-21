@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import gsap from "gsap";
+import Link from "next/link";
 import { useReveal } from "@/components/motion/reveal";
 import { site } from "@/lib/content";
 import { GOLDEN_VISA_THRESHOLD, type Mode, aed, eur, formatNumber, parseNumber, purchaseCosts } from "@/lib/costs";
@@ -20,7 +21,7 @@ const ltvs = ["0.5", "0.6", "0.75"];
  * The one live thing: choose how you buy and a price, and read what comes on top of it, line by line, with the total
  * set large and counting to its new value. Plain controls, so it works with a thumb and without script styling.
  */
-export function Costs() {
+export function Costs({ heading: Heading = "h2" }: { heading?: "h1" | "h2" }) {
   const root = React.useRef<HTMLElement>(null);
   const totalRef = React.useRef<HTMLSpanElement>(null);
   const shownTotal = React.useRef<number | null>(null);
@@ -58,12 +59,12 @@ export function Costs() {
     `\nTotaal bovenop de koopprijs: ${aed(total)}`;
 
   return (
-    <section ref={root} id="kosten" className="costs" aria-labelledby="costs-title">
+    <section ref={root} className="costs" aria-labelledby="costs-title">
       <div className="costs-grid grid-12 page-x">
         <div className="costs-intro" data-r-block>
-          <h2 id="costs-title" data-r-title>
+          <Heading id="costs-title" data-r-title>
             Wat kopen echt kost
-          </h2>
+          </Heading>
           <p data-r>
             Overdrachtsbelasting, de trustee, de makelaar en de bank. Kies een prijs en zie wat er bovenop komt, voordat
             iemand je een brochure laat zien.
@@ -171,14 +172,18 @@ export function Costs() {
           <p className="costs-hint">Indicatief, op basis van de gangbare tarieven in Dubai. Voor jouw aankoop rekenen we het tot op de dirham na.</p>
 
           <div className="costs-actions">
-            <a
+            <Link
               className="btn"
-              href="#contact"
-              onClick={() => window.dispatchEvent(new CustomEvent("astrum:prefill", { detail: { topic: "Kopen", message: summary } }))}
+              href="/contact/?onderwerp=Kopen"
+              onClick={() => {
+                try {
+                  sessionStorage.setItem("astrum-bericht", summary);
+                } catch {}
+              }}
               data-magnetic
             >
               Bespreek jouw cijfers
-            </a>
+            </Link>
             <a
               className="link-draw"
               href={`mailto:?subject=${encodeURIComponent("Kosten kopen in Dubai")}&body=${encodeURIComponent(summary + `\n\nIndicatief, berekend op ${site.url.replace("https://", "")}`)}`}

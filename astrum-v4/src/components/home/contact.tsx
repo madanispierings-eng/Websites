@@ -30,7 +30,7 @@ function useSubmit() {
 }
 
 /** The close of the page: one sentence set large, the conversation form, and the Private List. */
-export function Contact() {
+export function Contact({ heading: Heading = "h2" }: { heading?: "h1" | "h2" }) {
   const root = React.useRef<HTMLElement>(null);
   const [topic, setTopic] = React.useState("Kopen");
   const [message, setMessage] = React.useState("");
@@ -38,24 +38,26 @@ export function Contact() {
   const list = useSubmit();
   useReveal(root);
 
-  // The cost calculator can hand over its numbers.
+  // A page can hand over the subject (?onderwerp=Verkopen) and the cost calculator its numbers.
   React.useEffect(() => {
-    const onPrefill = (e: Event) => {
-      const d = (e as CustomEvent<{ topic?: string; message?: string }>).detail;
-      if (d.topic) setTopic(d.topic);
-      if (d.message) setMessage(d.message);
-    };
-    window.addEventListener("astrum:prefill", onPrefill);
-    return () => window.removeEventListener("astrum:prefill", onPrefill);
+    const t = new URLSearchParams(window.location.search).get("onderwerp");
+    if (t && topics.includes(t)) setTopic(t);
+    try {
+      const m = sessionStorage.getItem("astrum-bericht");
+      if (m) {
+        setMessage(m);
+        sessionStorage.removeItem("astrum-bericht");
+      }
+    } catch {}
   }, []);
 
   return (
-    <section ref={root} id="contact" className="contact page-x" aria-labelledby="contact-title">
+    <section ref={root} className="contact page-x" aria-labelledby="contact-title">
       <div className="contact-grid grid-12">
         <div className="contact-head" data-r-block>
-          <h2 id="contact-title" data-r-title>
+          <Heading id="contact-title" data-r-title>
             Eerst praten. Dan pas kiezen.
-          </h2>
+          </Heading>
           <p data-r>Vertel kort waar je staat. We nemen contact op voor een vrijblijvend gesprek, op een moment dat jou past.</p>
           <p className="contact-direct" data-r>
             Liever direct? <a className="link-draw" href={`mailto:${site.email}`}>{site.email}</a> of{" "}

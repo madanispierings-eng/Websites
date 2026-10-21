@@ -2,12 +2,16 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Dialog } from "radix-ui";
 import { menu, nav, site } from "@/lib/content";
 
-/** Wordmark left; on desktop four links and the menu square on the right. Steps aside while reading down. */
+const isActive = (pathname: string, href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+
+/** Wordmark left; on desktop the main pages and the menu square on the right. Steps aside while reading down. */
 export function SiteHeader() {
   const ref = React.useRef<HTMLElement>(null);
+  const pathname = usePathname();
 
   React.useEffect(() => {
     const el = ref.current;
@@ -41,9 +45,9 @@ export function SiteHeader() {
       <div className="flex items-center gap-8">
         <nav aria-label="Snelmenu" className="hidden items-center gap-8 lg:flex">
           {nav.map((n) => (
-            <a key={n.href} href={n.href} className="nav-link">
+            <Link key={n.href} href={n.href} className="nav-link" aria-current={isActive(pathname, n.href) ? "page" : undefined}>
               {n.label}
-            </a>
+            </Link>
           ))}
         </nav>
         <Menu />
@@ -53,8 +57,10 @@ export function SiteHeader() {
 }
 
 function Menu() {
+  const pathname = usePathname();
+  const [open, setOpen] = React.useState(false);
   return (
-    <Dialog.Root>
+    <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger className="menu-btn" aria-label="Menu" data-magnetic>
         <i />
         <i />
@@ -71,13 +77,17 @@ function Menu() {
             </Dialog.Close>
           </div>
           <Dialog.Description className="sr-only">Ga naar een onderdeel van de site of neem contact op.</Dialog.Description>
-          <nav aria-label="Hoofdmenu" className="mt-[8svh] grid gap-2">
+          <nav aria-label="Hoofdmenu" className="mt-[6svh] grid gap-1">
             {menu.map((m) => (
-              <Dialog.Close asChild key={m.href}>
-                <a href={m.href} className="w-fit text-head transition-opacity duration-300 hover:opacity-60">
-                  {m.label}
-                </a>
-              </Dialog.Close>
+              <Link
+                key={m.href}
+                href={m.href}
+                onClick={() => setOpen(false)}
+                aria-current={isActive(pathname, m.href) ? "page" : undefined}
+                className="menu-link w-fit text-[clamp(2rem,1.2rem+2.6vw,3.5rem)] leading-[1.08] tracking-[-0.035em] transition-opacity duration-300 hover:opacity-60"
+              >
+                {m.label}
+              </Link>
             ))}
           </nav>
           <div className="mt-auto grid gap-1 pt-16 text-small">

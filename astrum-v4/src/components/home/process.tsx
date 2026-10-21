@@ -30,7 +30,7 @@ export function Process() {
   });
 
   return (
-    <section ref={root} id="werkwijze" className="process" aria-labelledby="process-title">
+    <section ref={root} className="process" aria-labelledby="process-title">
       <div className="process-inner page-x">
         <div className="process-head" data-r-block>
           <h2 id="process-title" data-r-title>

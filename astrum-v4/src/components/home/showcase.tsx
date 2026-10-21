@@ -4,12 +4,9 @@ import * as React from "react";
 import { useReveal } from "@/components/motion/reveal";
 import { Arrow } from "@/components/ui/arrow";
 import { Media } from "@/components/ui/media";
-import { services, site, type Service } from "@/lib/content";
+import Link from "next/link";
+import { services, type Service } from "@/lib/content";
 
-const ask = (h: Service) =>
-  `mailto:${site.email}?subject=${encodeURIComponent(`Gesprek over ${h.ask}`)}&body=${encodeURIComponent(
-    `Hallo Astrum,\n\nIk wil graag een keer praten over ${h.ask}. Wanneer komt het jullie uit?\n\n`,
-  )}`;
 
 function Text({ home, as: Tag = "div" }: { home: Service; as?: "div" | "figcaption" }) {
   return (
@@ -17,9 +14,9 @@ function Text({ home, as: Tag = "div" }: { home: Service; as?: "div" | "figcapti
       <h3 data-r-title>{home.name}</h3>
       <p className="sc-where" data-r>{home.where}</p>
       <p data-r>{home.line}</p>
-      <a className="link-draw" href={ask(home)} data-r data-magnetic>
-        Plan een gesprek <Arrow />
-      </a>
+      <Link className="link-draw" href={home.href} data-r data-magnetic>
+        Meer over {home.name.toLowerCase()} <Arrow />
+      </Link>
     </Tag>
   );
 }

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import gsap from "gsap";
+import Link from "next/link";
 import { useReveal } from "@/components/motion/reveal";
 import { areas, districts, menu, process, services, site, type Photo } from "@/lib/content";
 
@@ -30,10 +31,13 @@ export function SiteFooter() {
         </div>
         <nav aria-label="Onderdelen" data-r>
           {menu.map((m) => (
-            <a key={m.href} href={m.href} className="link-draw">
+            <Link key={m.href} href={m.href} className="link-draw">
               {m.label}
-            </a>
+            </Link>
           ))}
+          <Link href="/privacy/" className="link-draw">
+            Privacy
+          </Link>
         </nav>
         <div data-r>
           <a className="link-draw" href={`mailto:${site.email}`}>{site.email}</a>

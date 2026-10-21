@@ -16,10 +16,12 @@ export const hero = {
 };
 
 export const nav = [
-  { href: "#diensten", label: "Diensten" },
-  { href: "#wijken", label: "Wijken" },
-  { href: "#kosten", label: "Kosten" },
-  { href: "#over-ons", label: "Over ons" },
+  { href: "/kopen/", label: "Kopen" },
+  { href: "/verkopen/", label: "Verkopen" },
+  { href: "/advies/", label: "Advies" },
+  { href: "/wijken/", label: "Wijken" },
+  { href: "/kosten/", label: "Kosten" },
+  { href: "/over-ons/", label: "Over ons" },
 ];
 
 /** Een Unsplash-foto, gehotlinkt via imgix zoals de Unsplash-richtlijnen vragen. */
@@ -114,20 +116,22 @@ export const photoSrcSet = (p: Photo, widths = [640, 960, 1440, 2000, 2800]) =>
   widths.map((w) => `${photoUrl(p, w)} ${w}w`).join(", ");
 
 export const menu = [
-  { href: "#diensten", label: "Kopen, verkopen, advies" },
-  { href: "#wijken", label: "Wijken" },
-  { href: "#werkwijze", label: "Werkwijze" },
-  { href: "#kosten", label: "Wat kopen kost" },
-  { href: "#over-ons", label: "Over ons" },
-  { href: "#vragen", label: "Vragen" },
-  { href: "#contact", label: "Contact" },
+  { href: "/", label: "Home" },
+  { href: "/kopen/", label: "Kopen" },
+  { href: "/verkopen/", label: "Verkopen" },
+  { href: "/advies/", label: "Advies en portfolio" },
+  { href: "/wijken/", label: "Wijken" },
+  { href: "/kosten/", label: "Wat kopen kost" },
+  { href: "/over-ons/", label: "Over ons" },
+  { href: "/vragen/", label: "Vragen" },
+  { href: "/contact/", label: "Contact" },
 ];
 
 /**
  * Wat Astrum doet (uit astrumuae.com): kopen, verkopen, advies en portfolio. Astrum toont geen woningaanbod; de foto's
  * zijn Unsplash-beelden die in Dubai gemaakt zijn en laten de stad zien, niet een woning van Astrum.
  */
-export type Service = { id: string; name: string; where: string; line: string; ask: string; main: Photo; detail?: Photo };
+export type Service = { id: string; href: string; name: string; where: string; line: string; ask: string; main: Photo; detail?: Photo };
 
 const unsplash = (
   src: string,
@@ -143,6 +147,7 @@ const unsplash = (
 export const services: Service[] = [
   {
     id: "kopen",
+    href: "/kopen/",
     name: "Kopen",
     where: "Bestaande bouw en off-plan",
     line: "We zoeken mee, toetsen de cijfers aan echte transacties en begeleiden je tot de overdracht. Geen haast om te tekenen.",
@@ -162,6 +167,7 @@ export const services: Service[] = [
   },
   {
     id: "verkopen",
+    href: "/verkopen/",
     name: "Verkopen",
     where: "Voor eigenaren in Dubai",
     line: "Een eerlijke vraagprijs op basis van wat er in jouw gebouw en wijk echt betaald is. En een koper die past.",
@@ -175,6 +181,7 @@ export const services: Service[] = [
   },
   {
     id: "advies",
+    href: "/advies/",
     name: "Advies en portfolio",
     where: "Ook als het antwoord nee is",
     line: "Twijfel je nog? Dan kijken we eerst samen of Dubai bij jouw plan past. Daarna bouwen we, als je wilt, aan een portfolio voor nu en voor later.",
@@ -322,4 +329,75 @@ export const team = {
 export const privateList = {
   name: "Astrum Private List",
   text: "Wat er echt verkocht is, welke projecten eraan komen en kansen die we eerst met deze lijst delen. Persoonlijk samengesteld, zonder ruis.",
+};
+
+/** Wat je per wijk moet weten, in gewone woorden. Algemene kenmerken; Astrum vult per project de echte cijfers in. */
+export const areaDetails: Record<string, { homes: string; note: string }> = {
+  palm: {
+    homes: "Villa’s op de bladeren, appartementen op de stam en aan de kustlijn, hotels en residences op de kroon.",
+    note: "Weinig nieuw aanbod op het eiland zelf, dus bestaande woningen wisselen vaker van eigenaar dan dat er wordt bijgebouwd.",
+  },
+  marina: {
+    homes: "Vooral appartementen in torens, van studio tot penthouse, rond de jachthaven en aan het strand van JBR.",
+    note: "Gewild bij huurders. Het verschil tussen gebouwen is groot, dus we vergelijken per toren wat er echt betaald is.",
+  },
+  jumeirah: {
+    homes: "Villa’s met tuinen, lagere appartementengebouwen en een paar nieuwe projecten aan de kust.",
+    note: "Niet elk deel van Jumeirah is freehold voor buitenlanders. We kijken per project wat voor jou mogelijk is.",
+  },
+  downtown: {
+    homes: "Appartementen in torens rond Burj Khalifa, Dubai Mall en de fonteinen, van één slaapkamer tot penthouse.",
+    note: "Veel vraag naar korte verhuur. Daarvoor heb je een vergunning nodig; dat nemen we mee in je plan.",
+  },
+  creek: {
+    homes: "Nieuwe torens aan het water, grotendeels off-plan, die in fases worden opgeleverd.",
+    note: "Je koopt hier vaak een tijdlijn: wanneer wordt jouw toren opgeleverd en wat staat er dan om je heen?",
+  },
+};
+
+export type Step = { name: string; text: string };
+
+export const pages = {
+  kopen: {
+    title: ["Kopen in Dubai,", "zonder haast"],
+    intro: "We zoeken mee, toetsen de cijfers aan echte transacties en begeleiden je tot de overdracht. Bestaande bouw of off-plan.",
+    kinds: [
+      {
+        name: "Een bestaande woning",
+        text: "Een woning die al af is. Je kunt er direct wonen of hem verhuren, en je ziet wat je koopt. Je betaalt bij de overdracht in één keer, bij een trustee-kantoor.",
+      },
+      {
+        name: "Off-plan, vóór oplevering",
+        text: "Je koopt bij de ontwikkelaar voordat het gebouw af is en betaalt in termijnen. Je geld gaat naar een escrow-rekening onder toezicht van RERA. Je koopt ook een tijdlijn: we kijken naar de staat van dienst van de ontwikkelaar.",
+      },
+    ],
+  },
+  verkopen: {
+    title: ["Verkopen in Dubai,", "voor een eerlijke prijs"],
+    intro: "Een vraagprijs op basis van wat er in jouw gebouw en wijk echt betaald is. En een koper die past.",
+    steps: [
+      { name: "Waarde bepalen", text: "We leggen je woning naast wat er recent echt betaald is voor vergelijkbare woningen, per vierkante voet. Zo komt er een prijs die kopers serieus nemen." },
+      { name: "Voorbereiden", text: "Je eigendomsakte, een getekende opdracht (Form A) en de stukken van het gebouw. Wij zetten ze op een rij." },
+      { name: "Kopers en onderhandelen", text: "We zoeken een koper die past en onderhandelen met de cijfers op tafel, niet met beloftes." },
+      { name: "De overdracht", text: "Met een NOC van de ontwikkelaar ga je naar de trustee. Rust er nog een hypotheek op, dan lossen we die bij de overdracht af. Wij regelen de volgorde." },
+    ] as Step[],
+  },
+  advies: {
+    title: ["Eerst kijken of Dubai", "bij jouw plan past"],
+    intro: "Twijfel je nog? Dan beginnen we daar. Ook als het beste antwoord ‘nog niet’ is.",
+    blocks: [
+      {
+        name: "Past Dubai bij jouw plan?",
+        text: "Wil je er wonen, verhuren of vooral vermogen opbouwen? Hoe lang kun je wachten, en wat mag het kosten, ook ieder jaar? We zetten het naast elkaar, met de echte cijfers. Een gesprek dat eindigt met ‘nog niet’ is ook een goed gesprek.",
+      },
+      {
+        name: "Een portfolio voor nu en later",
+        text: "Verder kijken dan één aankoop. Samen bouwen we aan een portfolio dat bij je past: een woning om te verhuren, later misschien een tweede, met een vast aanspreekpunt in de Emiraten.",
+      },
+      {
+        name: "Op afstand, als dat beter uitkomt",
+        text: "Veel kan vanuit Nederland, met een volmacht en digitale ondertekening. We raden wel aan om minstens één keer zelf te komen kijken.",
+      },
+    ],
+  },
 };

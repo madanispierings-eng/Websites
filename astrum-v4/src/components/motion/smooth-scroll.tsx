@@ -11,7 +11,9 @@ gsap.registerPlugin(ScrollTrigger);
 export function SmoothScroll() {
   React.useEffect(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const lenis = new Lenis({ duration: 1.2, easing: (t) => 1 - Math.pow(1 - t, 4), anchors: true });
+    // A light lerp instead of a long duration: the page follows the wheel or trackpad at once and only the last few
+    // pixels are smoothed, so it never feels as if it drags behind the hand. Touch scrolling stays native.
+    const lenis = new Lenis({ lerp: 0.16, wheelMultiplier: 1, anchors: true });
     lenis.on("scroll", ScrollTrigger.update);
     // A jump Lenis did not make (scrollbar, keys, a script) becomes its new position, so the next wheel tick
     // continues from there instead of pulling the page back.

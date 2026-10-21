@@ -5,17 +5,17 @@ import { useReveal } from "@/components/motion/reveal";
 import { team } from "@/lib/content";
 
 /** Astrum's own people, their own photographs, set at uneven heights beside the words. */
-export function Team() {
+export function Team({ heading: Heading = "h2" }: { heading?: "h1" | "h2" }) {
   const root = React.useRef<HTMLElement>(null);
   useReveal(root);
 
   return (
-    <section ref={root} id="over-ons" className="team page-x" aria-labelledby="team-title">
+    <section ref={root} className="team page-x" aria-labelledby="team-title">
       <div className="team-grid grid-12">
         <div className="team-text" data-r-block>
-          <h2 id="team-title" data-r-title>
+          <Heading id="team-title" data-r-title>
             {team.title}
-          </h2>
+          </Heading>
           <p data-r>{team.intro}</p>
           <blockquote data-r>“{team.quote}”</blockquote>
         </div>

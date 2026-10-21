@@ -11,7 +11,7 @@ gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 /**
  * The shared scroll motion of a section. Markup opts in with data attributes:
  * - data-media (see <Media>): the photograph drifts −5% to 5% of its 112% height and settles from 1.1 to 1 while its
- *   window crosses the screen; the window itself opens from a smaller rounded frame as it enters.
+ *   window crosses the screen; the window itself opens once from a smaller rounded frame as it enters.
  * - data-r-block: a group whose parts enter together, once, as the group reaches 80% of the screen:
  *   data-r-title rises line by line behind a mask, data-r fades up 24px, staggered.
  * Everything is skipped under prefers-reduced-motion, so content is never left hidden.
@@ -31,13 +31,16 @@ export function useReveal(scope: React.RefObject<HTMLElement | null>, extra?: (r
             { yPercent: 5, scale: 1, ease: "none", scrollTrigger: { trigger: win, start: "top bottom", end: "bottom top", scrub: true } },
           );
           if (win.hasAttribute("data-media-noclip")) return;
+          // The window opens once as it enters (not scrubbed: a clip-path redrawn on every scroll frame is costly).
           gsap.fromTo(
             win,
-            { clipPath: "inset(14% 10% 14% 10% round 14px)" },
+            { clipPath: "inset(10% 8% 10% 8% round 14px)" },
             {
               clipPath: "inset(0% 0% 0% 0% round 14px)",
-              ease: "power2.out",
-              scrollTrigger: { trigger: win, start: "top 95%", end: "top 45%", scrub: 0.8 },
+              duration: 1.3,
+              ease: "expo.out",
+              clearProps: "clipPath",
+              scrollTrigger: { trigger: win, start: "top 90%", once: true },
             },
           );
         });

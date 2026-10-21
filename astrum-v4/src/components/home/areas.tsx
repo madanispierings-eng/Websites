@@ -3,13 +3,15 @@
 import * as React from "react";
 import gsap from "gsap";
 import { useReveal } from "@/components/motion/reveal";
-import { areas, photoSrcSet, photoUrl } from "@/lib/content";
+import Link from "next/link";
+import { Arrow } from "@/components/ui/arrow";
+import { areaDetails, areas, photoSrcSet, photoUrl } from "@/lib/content";
 
 /**
  * The districts as a large list of names; the one you point at, focus or tap shows its picture in the window beside
  * the list, wiping up from below, with one plain line about the place.
  */
-export function Areas() {
+export function Areas({ link = false, details = false, heading: Heading = "h2" }: { link?: boolean; details?: boolean; heading?: "h1" | "h2" }) {
   const root = React.useRef<HTMLElement>(null);
   const [active, setActive] = React.useState(0);
   const shown = React.useRef(0);
@@ -35,12 +37,12 @@ export function Areas() {
   };
 
   return (
-    <section ref={root} id="wijken" className="areas page-x" aria-labelledby="areas-title">
+    <section ref={root} className="areas page-x" aria-labelledby="areas-title">
       <div className="areas-grid grid-12">
         <div className="areas-list" data-r-block>
-          <h2 id="areas-title" data-r-title>
+          <Heading id="areas-title" data-r-title>
             Waar je in Dubai kunt wonen
-          </h2>
+          </Heading>
           <p className="areas-intro" data-r>
             Vijf wijken waar Nederlandse kopers vaak naar vragen. Elk met een eigen ritme, eigen prijzen en eigen regels.
           </p>
@@ -61,6 +63,11 @@ export function Areas() {
               </li>
             ))}
           </ul>
+          {link && (
+            <Link href="/wijken/" className="link-draw areas-more" data-r data-magnetic>
+              Meer over de wijken <Arrow />
+            </Link>
+          )}
         </div>
 
         <div className="areas-side">
@@ -84,6 +91,16 @@ export function Areas() {
           </div>
           <p className="areas-line" aria-live="polite">
             <strong>{areas[active].name}</strong> {areas[active].line}
+            {details && (
+              <>
+                <span className="areas-detail">
+                  <b>Wat je er vindt</b> {areaDetails[areas[active].id].homes}
+                </span>
+                <span className="areas-detail">
+                  <b>Goed om te weten</b> {areaDetails[areas[active].id].note}
+                </span>
+              </>
+            )}
             <span className="areas-credit">
               Foto <a href={areas[active].photo.byUrl}>{areas[active].photo.by}</a> via <a href={areas[active].photo.page}>Unsplash</a>
             </span>

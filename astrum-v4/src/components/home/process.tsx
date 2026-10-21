@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import { useReveal } from "@/components/motion/reveal";
 import { photoSrcSet, photoUrl, process } from "@/lib/content";
 
@@ -11,23 +12,28 @@ import { photoSrcSet, photoUrl, process } from "@/lib/content";
  */
 export function Process() {
   const root = React.useRef<HTMLElement>(null);
-  useReveal(root, (el) => {
-    const mm = gsap.matchMedia();
-    mm.add("(min-width: 1024px)", () => {
-      const track = el.querySelector<HTMLElement>(".process-track")!;
-      const distance = () => Math.max(0, track.scrollWidth - track.parentElement!.clientWidth);
-      gsap.to(track, {
-        x: () => -distance(),
-        ease: "none",
-        scrollTrigger: { trigger: el, start: "top top", end: () => `+=${distance()}`, scrub: 0.6, pin: true, invalidateOnRefresh: true },
+  useReveal(root);
+
+  // Its own context, not nested in the reveal's: a pinned trigger made inside another matchMedia context broke
+  // ScrollTrigger's refresh when a page was entered while the previous one was still scrolling.
+  useGSAP(
+    () => {
+      const el = root.current!;
+      const mm = gsap.matchMedia();
+      mm.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+        const track = el.querySelector<HTMLElement>(".process-track")!;
+        const distance = () => Math.max(0, track.scrollWidth - track.parentElement!.clientWidth);
+        const tl = gsap.timeline({
+          scrollTrigger: { trigger: el, start: "top top", end: () => `+=${distance()}`, scrub: 0.6, pin: true, invalidateOnRefresh: true },
+        });
+        tl.to(track, { x: () => -distance(), ease: "none" }, 0);
+        // each picture eases in its own frame while the row travels
+        gsap.utils.toArray<HTMLElement>(".step-img img", el).forEach((img) => tl.fromTo(img, { xPercent: -6 }, { xPercent: 6, ease: "none" }, 0));
       });
-      // each picture eases in its own frame while the row travels
-      gsap.utils.toArray<HTMLElement>(".step-img img", el).forEach((img) => {
-        gsap.fromTo(img, { xPercent: -6 }, { xPercent: 6, ease: "none", scrollTrigger: { trigger: el, start: "top top", end: () => `+=${distance()}`, scrub: true } });
-      });
-    });
-    return () => mm.revert();
-  });
+      return () => mm.revert();
+    },
+    { scope: root },
+  );
 
   return (
     <section ref={root} className="process" aria-labelledby="process-title">

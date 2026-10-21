@@ -40,13 +40,13 @@ export function useReveal(scope: React.RefObject<HTMLElement | null>, extra?: (r
               duration: 1.3,
               ease: "expo.out",
               clearProps: "clipPath",
-              scrollTrigger: { trigger: win, start: "top 90%", once: true },
+              scrollTrigger: { trigger: win, start: "top 90%", toggleActions: "play none none none" },
             },
           );
         });
 
         gsap.utils.toArray<HTMLElement>("[data-r-block]", root).forEach((block) => {
-          const tl = gsap.timeline({ scrollTrigger: { trigger: block, start: "top 80%", once: true } });
+          const tl = gsap.timeline({ scrollTrigger: { trigger: block, start: "top 80%", toggleActions: "play none none none" } });
           block.querySelectorAll<HTMLElement>("[data-r-title]").forEach((title) => {
             SplitText.create(title, {
               type: "lines",

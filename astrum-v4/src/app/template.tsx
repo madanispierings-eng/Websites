@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { resetScroll } from "@/components/motion/smooth-scroll";
 
 // The first page load has its own opening; only later navigations get the transition.
 let navigated = false;
@@ -18,10 +19,12 @@ export default function Template({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     navigated = true;
   }, []);
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     if (!curtain) return;
-    window.scrollTo(0, 0);
-    const id = gsap.delayedCall(0.1, () => ScrollTrigger.refresh());
+    resetScroll();
+    ScrollTrigger.refresh();
+    // once more after the new page's images and fonts have settled
+    const id = gsap.delayedCall(0.3, () => ScrollTrigger.refresh());
     return () => void id.kill();
   }, [curtain, pathname]);
   return (

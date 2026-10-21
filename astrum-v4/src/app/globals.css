@@ -633,7 +633,7 @@ section[id] { scroll-margin-top: 0; }
 @media (max-width: 767px) {
   .statement-usps { grid-template-columns: 1fr; }
   .areas-list, .areas-side { grid-column: 1 / -1; }
-  .areas-side { position: static; order: -1; }
+  .areas-side { position: static; }
   .areas-window { aspect-ratio: 4 / 3; }
   .area-name span { font-size: 2rem; }
   .team-people { grid-template-columns: repeat(2, minmax(0, 1fr)); }

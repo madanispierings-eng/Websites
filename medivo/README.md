@@ -48,7 +48,12 @@ npm run dev
 ```
 
 `/dev/oefenen` toont het oefenscherm met opvultekst en een nep-API, voor ontwikkeling en visuele controle.
-In productie geeft die route een 404.
+
+## Online (Vercel)
+
+Het Vercel-project gebruikt `medivo` als Root Directory en publiceert `main` automatisch. Tot de lancering staat de site
+buiten zoekmachines (`robots.txt` en `X-Robots-Tag`) en is `/dev/oefenen` beschikbaar. Zet bij de lancering
+`MEDIVO_LAUNCHED=1` in de Vercel-omgevingsvariabelen; `/dev/oefenen` geeft dan een 404 en de site wordt indexeerbaar.
 
 ## Supabase opzetten
 

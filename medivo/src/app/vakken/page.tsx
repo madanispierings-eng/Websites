@@ -18,7 +18,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
   return (
     <main id="inhoud" className={cn(container, "flex-1 py-10 lg:py-14")}>
       <h1 className="text-3xl font-bold tracking-[-0.02em] text-navy sm:text-[2.5rem]">
-        Bachelor Geneeskunde · Universiteit Leiden
+        Bachelor Geneeskunde&nbsp;· Universiteit Leiden
       </h1>
       <p className="mt-3 max-w-2xl text-muted-ink">
         Kies een vak en ga naar de samenvattingen, leerdoelen, oude tentamens en oefenvragen.

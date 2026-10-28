@@ -302,7 +302,8 @@ function SessionFooter({ state, dispatch, timer, finishing, onFinish, onRestart 
 }) {
   const remaining = useCountdown(state.finished ? null : timer, onFinish);
   const isExam = state.mode === "exam";
-  const done = answeredCount(state);
+  // After finishing, every question carries review feedback, so count from the review instead of the engine.
+  const done = state.finished ? state.finished.answered : answeredCount(state);
   const total = state.questions.length;
 
   return (
@@ -313,16 +314,18 @@ function SessionFooter({ state, dispatch, timer, finishing, onFinish, onRestart 
             {state.questions.map((q, i) => {
               const a = state.answers[q.id];
               const fb = a?.feedback;
+              const skipped = Boolean(fb) && a?.selectedOptionId == null;
               return (
                 <li key={q.id}>
                   <button
                     type="button"
                     onClick={() => dispatch({ type: "go", index: i })}
                     aria-current={state.index === i ? "step" : undefined}
-                    aria-label={`Vraag ${i + 1}${fb ? (fb.isCorrect ? ", juist" : ", onjuist") : a?.status === "answered" ? ", beantwoord" : ""}`}
+                    aria-label={`Vraag ${i + 1}${skipped ? ", niet beantwoord" : fb ? (fb.isCorrect ? ", juist" : ", onjuist") : a?.status === "answered" ? ", beantwoord" : ""}`}
                     className={cn(
                       "grid size-9 place-items-center rounded-md border text-xs font-semibold tabular-nums",
-                      fb ? (fb.isCorrect ? "border-success bg-success-soft text-success-ink" : "border-danger/50 bg-danger-soft text-danger")
+                      skipped ? "border-dashed border-muted-ink/50 text-muted-ink"
+                        : fb ? (fb.isCorrect ? "border-success bg-success-soft text-success-ink" : "border-danger/50 bg-danger-soft text-danger")
                         : a?.status === "answered" ? "border-accent-blue bg-sky text-navy" : "border-line text-muted-ink",
                       state.index === i && "ring-2 ring-navy ring-offset-1",
                     )}

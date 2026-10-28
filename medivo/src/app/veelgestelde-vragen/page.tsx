@@ -38,8 +38,8 @@ export default function FaqPage() {
         </nav>
         <div className="space-y-10">
           {faq.map((g) => (
-            <section key={g.title} id={g.title.toLowerCase().replace(/[^a-z]+/g, "-")} className="scroll-mt-24" aria-labelledby={`${g.title}-t`}>
-              <h2 id={`${g.title}-t`} className="mb-4 text-xl font-semibold text-navy">{g.title}</h2>
+            <section key={g.title} id={g.title.toLowerCase().replace(/[^a-z]+/g, "-")} className="scroll-mt-24" aria-labelledby={`${g.title.toLowerCase().replace(/[^a-z]+/g, "-")}-t`}>
+              <h2 id={`${g.title.toLowerCase().replace(/[^a-z]+/g, "-")}-t`} className="mb-4 text-xl font-semibold text-navy">{g.title}</h2>
               <FaqList items={g.items} />
             </section>
           ))}

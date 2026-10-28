@@ -18,7 +18,7 @@ export function AuthShell({ title, intro, children }: { title: string; intro: st
         </div>
       </div>
       <div className="relative hidden overflow-hidden lg:block">
-        <Image src="/images/leiden-universiteit.webp" alt="" fill sizes="45vw" className="object-cover" />
+        <Image src="/images/leiden-universiteit.webp" alt="" fill priority sizes="45vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-navy/10 to-transparent" />
         <p className="absolute inset-x-10 bottom-10 max-w-sm text-lg font-medium leading-snug text-white">
           Gestructureerd studeren voor de bachelor Geneeskunde in Leiden.

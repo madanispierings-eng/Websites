@@ -53,7 +53,7 @@ export function SiteFooter() {
             {photoCredits.map((c, i) => (
               <span key={c.file}>
                 <a href={c.url} className="underline-offset-2 hover:underline" rel="noopener noreferrer" target="_blank">
-                  {c.what.toLowerCase()} door {c.author}
+                  {c.what.charAt(0).toLowerCase() + c.what.slice(1)} door {c.author}
                 </a>
                 {i < photoCredits.length - 1 ? ", " : "."}
               </span>

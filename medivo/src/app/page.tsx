@@ -102,7 +102,7 @@ export default async function HomePage() {
             {features.map(({ icon: Icon, label }, i) => (
               <li
                 key={label}
-                className={cn("flex flex-col items-center gap-2.5 bg-white px-4 py-5 text-center", i === features.length - 1 && "col-span-2 sm:col-span-1")}
+                className={cn("flex flex-col items-center gap-2.5 bg-white px-4 py-5 text-center", i === features.length - 1 && "col-span-2 lg:col-span-1")}
               >
                 <Icon className="size-6 text-blue" strokeWidth={1.6} aria-hidden="true" />
                 <span className="text-sm font-medium text-navy">{label}</span>

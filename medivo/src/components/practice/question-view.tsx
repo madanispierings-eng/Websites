@@ -29,6 +29,7 @@ export function QuestionView({
   const total = state.questions.length;
   const headingRef = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
+  const nextRef = useRef<HTMLButtonElement>(null);
 
   // Move focus to the new question for keyboard and screen-reader users, but not on first load.
   useEffect(() => {
@@ -38,6 +39,14 @@ export function QuestionView({
     }
     headingRef.current?.focus();
   }, [state.index]);
+
+  // The submit button unmounts once an answer is checked; keep keyboard focus inside the question instead of dropping it to <body>.
+  useEffect(() => {
+    if (!answered) return;
+    const active = document.activeElement;
+    if (active && active !== document.body) return;
+    (nextRef.current && !nextRef.current.disabled ? nextRef.current : headingRef.current)?.focus();
+  }, [answered, q.id]);
 
   // A–F pick an option, as long as the user is not typing somewhere.
   useEffect(() => {
@@ -150,6 +159,7 @@ export function QuestionView({
               <ArrowLeft aria-hidden="true" /> Vorige vraag
             </Button>
             <Button
+              ref={nextRef}
               type="button"
               variant={answered ? "default" : "secondary"}
               disabled={state.index >= total - 1}

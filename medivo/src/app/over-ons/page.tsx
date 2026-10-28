@@ -48,7 +48,7 @@ export default function AboutPage() {
             </p>
           </div>
           <div className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-[var(--shadow-lift)]">
-            <Image src="/images/leiden-universiteit.webp" alt="Universiteitsgebouw aan het water in Leiden" fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+            <Image src="/images/leiden-universiteit.webp" alt="Universiteitsgebouw aan het water in Leiden" fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
           </div>
         </div>
       </section>

@@ -24,9 +24,11 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
         Kies een vak en ga naar de samenvattingen, leerdoelen, oude tentamens en oefenvragen.
       </p>
       <CourseBrowser courses={courses} initialYear={initialYear} />
-      <p className="mt-10 text-xs text-muted-ink">
-        Bij &lsquo;EC volgt&rsquo; is het aantal studiepunten nog niet gecontroleerd en daarom nog niet vermeld.
-      </p>
+      {courses.some((c) => c.ec === null) ? (
+        <p className="mt-10 text-xs text-muted-ink">
+          Bij &lsquo;EC volgt&rsquo; is het aantal studiepunten nog niet gecontroleerd en daarom nog niet vermeld.
+        </p>
+      ) : null}
     </main>
   );
 }

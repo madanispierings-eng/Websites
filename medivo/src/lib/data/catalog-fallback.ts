@@ -18,11 +18,11 @@ const rows: [slug: string, title: string, year: number, ec: number | null][] = [
   ["vraagstukken-buik", "Vraagstukken Buik", 2, 8],
   ["vraagstukken-bewegen", "Vraagstukken Bewegen", 2, 9],
   ["vraagstukken-borst-en-nier", "Vraagstukken Borst en Nier", 2, 9],
-  ["pharmacology", "Pharmacology", 2, null],
-  ["vraagstukken-voortplanting-en-vroege-levensfasen", "Vraagstukken Voortplanting en Vroege Levensfasen", 3, null],
-  ["vraagstukken-psychische-gezondheid-en-hormonen", "Vraagstukken Psychische Gezondheid en Hormonen", 3, null],
-  ["vraagstukken-latere-levensfasen", "Vraagstukken Latere Levensfasen", 3, null],
-  ["vraagstukken-spoedeisende-zorg", "Vraagstukken Spoedeisende Zorg", 3, null],
+  ["pharmacology", "Pharmacology", 2, 2],
+  ["vraagstukken-voortplanting-en-vroege-levensfasen", "Vraagstukken Voortplanting en Vroege Levensfasen", 3, 9],
+  ["vraagstukken-psychische-gezondheid-en-hormonen", "Vraagstukken Psychische Gezondheid en Hormonen", 3, 6],
+  ["vraagstukken-latere-levensfasen", "Vraagstukken Latere Levensfasen", 3, 9],
+  ["vraagstukken-spoedeisende-zorg", "Vraagstukken Spoedeisende Zorg", 3, 6],
 ];
 
 export const fallbackCourses: Course[] = rows.map(([slug, title, studyYear, ec]) => ({

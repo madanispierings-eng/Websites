@@ -1,6 +1,6 @@
 -- Initial catalogue: bachelor Geneeskunde, Universiteit Leiden.
--- Course titles and EC values as supplied by the Medivo team. EC values that have not been verified are NULL;
--- do not fill them in without checking the official study guide.
+-- Course titles and EC values as supplied by the Medivo team. Use NULL for an EC value that has not been verified;
+-- do not fill one in without checking the official study guide.
 -- Keep in sync with src/lib/data/catalog-fallback.ts (checked by tests/catalog.test.ts).
 
 insert into public.universities (id, slug, name, short_name)
@@ -27,9 +27,9 @@ insert into public.courses (curriculum_version_id, slug, title, study_year, ec, 
   ('00000000-0000-4000-8000-000000000021', 'vraagstukken-buik', 'Vraagstukken Buik', 2, 8, 3, 'published'),
   ('00000000-0000-4000-8000-000000000021', 'vraagstukken-bewegen', 'Vraagstukken Bewegen', 2, 9, 4, 'published'),
   ('00000000-0000-4000-8000-000000000021', 'vraagstukken-borst-en-nier', 'Vraagstukken Borst en Nier', 2, 9, 5, 'published'),
-  ('00000000-0000-4000-8000-000000000021', 'pharmacology', 'Pharmacology', 2, null, 6, 'published'),
-  ('00000000-0000-4000-8000-000000000021', 'vraagstukken-voortplanting-en-vroege-levensfasen', 'Vraagstukken Voortplanting en Vroege Levensfasen', 3, null, 1, 'published'),
-  ('00000000-0000-4000-8000-000000000021', 'vraagstukken-psychische-gezondheid-en-hormonen', 'Vraagstukken Psychische Gezondheid en Hormonen', 3, null, 2, 'published'),
-  ('00000000-0000-4000-8000-000000000021', 'vraagstukken-latere-levensfasen', 'Vraagstukken Latere Levensfasen', 3, null, 3, 'published'),
-  ('00000000-0000-4000-8000-000000000021', 'vraagstukken-spoedeisende-zorg', 'Vraagstukken Spoedeisende Zorg', 3, null, 4, 'published')
+  ('00000000-0000-4000-8000-000000000021', 'pharmacology', 'Pharmacology', 2, 2, 6, 'published'),
+  ('00000000-0000-4000-8000-000000000021', 'vraagstukken-voortplanting-en-vroege-levensfasen', 'Vraagstukken Voortplanting en Vroege Levensfasen', 3, 9, 1, 'published'),
+  ('00000000-0000-4000-8000-000000000021', 'vraagstukken-psychische-gezondheid-en-hormonen', 'Vraagstukken Psychische Gezondheid en Hormonen', 3, 6, 2, 'published'),
+  ('00000000-0000-4000-8000-000000000021', 'vraagstukken-latere-levensfasen', 'Vraagstukken Latere Levensfasen', 3, 9, 3, 'published'),
+  ('00000000-0000-4000-8000-000000000021', 'vraagstukken-spoedeisende-zorg', 'Vraagstukken Spoedeisende Zorg', 3, 6, 4, 'published')
 on conflict (curriculum_version_id, slug) do nothing;

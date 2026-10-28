@@ -18,8 +18,13 @@ describe("course catalogue", () => {
     expect(new Set(fallbackCourses.map((c) => c.slug)).size).toBe(fallbackCourses.length);
   });
 
-  it("only lists EC values that were supplied", () => {
-    expect(fallbackCourses.filter((c) => c.ec !== null).map((c) => c.slug)).toHaveLength(10);
-    expect(fallbackCourses.filter((c) => c.studyYear === 3).every((c) => c.ec === null)).toBe(true);
+  it("has the supplied EC values", () => {
+    const ec = Object.fromEntries(fallbackCourses.map((c) => [c.slug, c.ec]));
+    expect(ec["pharmacology"]).toBe(2);
+    expect(ec["vraagstukken-voortplanting-en-vroege-levensfasen"]).toBe(9);
+    expect(ec["vraagstukken-psychische-gezondheid-en-hormonen"]).toBe(6);
+    expect(ec["vraagstukken-latere-levensfasen"]).toBe(9);
+    expect(ec["vraagstukken-spoedeisende-zorg"]).toBe(6);
+    expect(fallbackCourses.every((c) => c.ec !== null)).toBe(true);
   });
 });

@@ -1,0 +1,11 @@
+# Preview deployment of Medivo on Netlify (Next.js runtime is detected automatically).
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Unfinished preview: keep it out of search engines and show the /dev/oefenen demo screen.
+  MEDIVO_NOINDEX = "1"
+  MEDIVO_DEV_PREVIEW = "1"
+  NEXT_PUBLIC_SITE_URL = "https://medivo-preview.netlify.app"

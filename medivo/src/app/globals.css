@@ -1,0 +1,105 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Medivo design tokens. shadcn's semantic variables are mapped onto the brand palette. */
+@theme inline {
+  --color-navy: #0b2345;
+  --color-navy-soft: #13325e;
+  --color-blue: #1760b5;
+  --color-accent-blue: #2878d5;
+  --color-sky: #eaf2fc;
+  --color-sky-strong: #d6e6fa;
+  --color-canvas: #f5f7fa;
+  --color-line: #e2e8f0;
+  --color-muted-ink: #526581;
+  --color-success: #16a085;
+  --color-success-ink: #0e7a65;
+  --color-success-soft: #e6f6f2;
+  --color-danger: #c0392b;
+  --color-danger-soft: #fbeceb;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-hand: var(--font-caveat), cursive;
+
+  --shadow-card: 0 1px 2px rgb(11 35 69 / 0.04), 0 4px 16px -4px rgb(11 35 69 / 0.08);
+  --shadow-lift: 0 2px 4px rgb(11 35 69 / 0.05), 0 12px 32px -8px rgb(11 35 69 / 0.16);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: #f5f7fa;
+  --foreground: #0b2345;
+  --card: #ffffff;
+  --card-foreground: #0b2345;
+  --popover: #ffffff;
+  --popover-foreground: #0b2345;
+  --primary: #0b2345;
+  --primary-foreground: #ffffff;
+  --secondary: #eaf2fc;
+  --secondary-foreground: #0b2345;
+  --muted: #eef2f7;
+  --muted-foreground: #526581;
+  --accent: #eaf2fc;
+  --accent-foreground: #0b2345;
+  --destructive: #c0392b;
+  --border: #e2e8f0;
+  --input: #d5dde8;
+  --ring: #2878d5;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  /* One visible focus style everywhere, solid so it reads on any background. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent-blue);
+    outline-offset: 2px;
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

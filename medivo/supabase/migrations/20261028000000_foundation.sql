@@ -1,0 +1,652 @@
+-- Medivo foundation schema.
+-- Hierarchy: universities → programs → curriculum_versions → courses (per study year) → topics → learning content.
+-- Security model:
+--   * Published catalogue metadata is public.
+--   * Premium learning content is only readable with an active entitlement (has_course_access).
+--   * Answer keys live in their own table without any student SELECT policy; answers are checked by
+--     submit_answer(), which runs as definer and only reveals the key after a recorded attempt.
+--   * Students read and write only their own progress rows.
+
+create extension if not exists pgcrypto;
+
+-- ---------------------------------------------------------------------------
+-- Enums
+-- ---------------------------------------------------------------------------
+create type public.publication_status as enum ('draft', 'published', 'archived');
+create type public.user_role as enum ('student', 'admin');
+create type public.question_type as enum ('single_choice');
+create type public.practice_mode as enum ('topic', 'mixed', 'exam', 'incorrect');
+create type public.rights_status as enum ('unknown', 'permission_requested', 'licensed', 'own_work', 'public_domain');
+create type public.exam_type as enum ('regular', 'resit', 'midterm', 'practice');
+create type public.entitlement_scope as enum ('course', 'program');
+create type public.entitlement_source as enum ('subscription', 'purchase', 'manual');
+
+-- ---------------------------------------------------------------------------
+-- Catalogue
+-- ---------------------------------------------------------------------------
+create table public.universities (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
+  name text not null,
+  short_name text,
+  created_at timestamptz not null default now()
+);
+
+create table public.programs (
+  id uuid primary key default gen_random_uuid(),
+  university_id uuid not null references public.universities (id) on delete restrict,
+  slug text not null,
+  name text not null,
+  degree_level text not null default 'bachelor',
+  created_at timestamptz not null default now(),
+  unique (university_id, slug)
+);
+
+create table public.curriculum_versions (
+  id uuid primary key default gen_random_uuid(),
+  program_id uuid not null references public.programs (id) on delete restrict,
+  label text not null,
+  is_current boolean not null default false,
+  valid_from date,
+  created_at timestamptz not null default now(),
+  unique (program_id, label)
+);
+-- At most one current curriculum per program.
+create unique index curriculum_versions_one_current on public.curriculum_versions (program_id) where is_current;
+
+create table public.courses (
+  id uuid primary key default gen_random_uuid(),
+  curriculum_version_id uuid not null references public.curriculum_versions (id) on delete restrict,
+  slug text not null,
+  title text not null,
+  study_year smallint not null check (study_year between 1 and 6),
+  ec numeric(4, 1) check (ec is null or ec > 0),
+  description text,
+  sort_order integer not null default 0,
+  hero_image text,
+  status public.publication_status not null default 'draft',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (curriculum_version_id, slug)
+);
+create index courses_curriculum_year on public.courses (curriculum_version_id, study_year, sort_order);
+
+create table public.topics (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid not null references public.courses (id) on delete cascade,
+  parent_id uuid references public.topics (id) on delete cascade,
+  slug text not null,
+  title text not null,
+  sort_order integer not null default 0,
+  status public.publication_status not null default 'draft',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (course_id, slug)
+);
+create index topics_course on public.topics (course_id, parent_id, sort_order);
+
+create table public.learning_objectives (
+  id uuid primary key default gen_random_uuid(),
+  topic_id uuid not null references public.topics (id) on delete cascade,
+  body text not null,
+  source text,
+  sort_order integer not null default 0,
+  status public.publication_status not null default 'draft',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index learning_objectives_topic on public.learning_objectives (topic_id, sort_order);
+
+-- Summaries are structured JSON blocks (validated by the app with Zod), never raw HTML.
+create table public.summaries (
+  id uuid primary key default gen_random_uuid(),
+  topic_id uuid not null references public.topics (id) on delete cascade,
+  title text not null,
+  content jsonb not null default '[]'::jsonb check (jsonb_typeof(content) = 'array'),
+  is_premium boolean not null default true,
+  pdf_path text,
+  pdf_download_allowed boolean not null default false,
+  reviewed_by uuid references auth.users (id),
+  reviewed_at timestamptz,
+  status public.publication_status not null default 'draft',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- AI-assisted or not, nothing is published without a recorded review.
+  constraint summaries_reviewed_before_publish check (status <> 'published' or reviewed_at is not null)
+);
+create index summaries_topic on public.summaries (topic_id);
+
+create table public.exams (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid not null references public.courses (id) on delete cascade,
+  exam_year smallint not null check (exam_year between 1990 and 2100),
+  exam_type public.exam_type not null default 'regular',
+  title text,
+  question_count integer check (question_count is null or question_count >= 0),
+  has_explanations boolean not null default false,
+  source text not null,
+  rights_status public.rights_status not null default 'unknown',
+  is_premium boolean not null default true,
+  status public.publication_status not null default 'draft',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Exams without cleared rights can never be published.
+  constraint exams_rights_before_publish check (
+    status <> 'published' or rights_status in ('licensed', 'own_work', 'public_domain')
+  )
+);
+create index exams_course on public.exams (course_id, exam_year desc);
+
+create table public.questions (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid not null references public.courses (id) on delete cascade,
+  topic_id uuid not null references public.topics (id) on delete restrict,
+  exam_id uuid references public.exams (id) on delete set null,
+  type public.question_type not null default 'single_choice',
+  stem text not null,
+  image_path text,
+  image_alt text,
+  difficulty smallint check (difficulty between 1 and 5),
+  source text not null,
+  copyright_status public.rights_status not null default 'unknown',
+  is_premium boolean not null default true,
+  reviewed_by uuid references auth.users (id),
+  reviewed_at timestamptz,
+  status public.publication_status not null default 'draft',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint questions_publishable check (
+    status <> 'published'
+    or (reviewed_at is not null and copyright_status in ('licensed', 'own_work', 'public_domain'))
+  )
+);
+create index questions_topic on public.questions (topic_id) where status = 'published';
+create index questions_course on public.questions (course_id);
+
+-- Options are safe to show before answering; they carry no correctness flag.
+create table public.question_options (
+  id uuid primary key default gen_random_uuid(),
+  question_id uuid not null references public.questions (id) on delete cascade,
+  label text not null check (label ~ '^[A-Z]$'),
+  body text not null,
+  sort_order integer not null default 0,
+  unique (question_id, label)
+);
+
+-- The answer key. No student policy: only admins and security-definer functions can read it.
+create table public.question_answer_keys (
+  question_id uuid primary key references public.questions (id) on delete cascade,
+  correct_option_id uuid not null references public.question_options (id) on delete restrict,
+  explanation text not null,
+  concept text,
+  -- { "<option uuid>": "why this option is wrong" }
+  option_feedback jsonb not null default '{}'::jsonb check (jsonb_typeof(option_feedback) = 'object')
+);
+
+-- ---------------------------------------------------------------------------
+-- Accounts
+-- ---------------------------------------------------------------------------
+create table public.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  full_name text,
+  university_id uuid references public.universities (id) on delete set null,
+  study_year smallint check (study_year is null or study_year between 1 and 6),
+  role public.user_role not null default 'student',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table public.stripe_customers (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  stripe_customer_id text not null unique
+);
+
+-- Sellable products. Prices live in Stripe so they stay configurable without a deploy.
+create table public.products (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
+  name text not null,
+  scope public.entitlement_scope not null,
+  course_id uuid references public.courses (id) on delete restrict,
+  program_id uuid references public.programs (id) on delete restrict,
+  stripe_product_id text unique,
+  active boolean not null default false,
+  constraint products_scope_target check (
+    (scope = 'course' and course_id is not null and program_id is null)
+    or (scope = 'program' and program_id is not null and course_id is null)
+  )
+);
+
+create table public.subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  product_id uuid references public.products (id) on delete set null,
+  stripe_subscription_id text not null unique,
+  stripe_price_id text,
+  status text not null,
+  current_period_end timestamptz,
+  cancel_at_period_end boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index subscriptions_user on public.subscriptions (user_id);
+
+create table public.entitlements (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  scope public.entitlement_scope not null,
+  course_id uuid references public.courses (id) on delete cascade,
+  program_id uuid references public.programs (id) on delete cascade,
+  source public.entitlement_source not null,
+  subscription_id uuid references public.subscriptions (id) on delete cascade,
+  starts_at timestamptz not null default now(),
+  expires_at timestamptz,
+  created_at timestamptz not null default now(),
+  constraint entitlements_scope_target check (
+    (scope = 'course' and course_id is not null and program_id is null)
+    or (scope = 'program' and program_id is not null and course_id is null)
+  )
+);
+create index entitlements_user on public.entitlements (user_id);
+
+-- ---------------------------------------------------------------------------
+-- Progress
+-- ---------------------------------------------------------------------------
+create table public.course_visits (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  course_id uuid not null references public.courses (id) on delete cascade,
+  last_visited_at timestamptz not null default now(),
+  primary key (user_id, course_id)
+);
+
+create table public.objective_completions (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  objective_id uuid not null references public.learning_objectives (id) on delete cascade,
+  completed_at timestamptz not null default now(),
+  primary key (user_id, objective_id)
+);
+
+create table public.practice_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  course_id uuid not null references public.courses (id) on delete cascade,
+  mode public.practice_mode not null,
+  topic_ids uuid[] not null default '{}',
+  question_ids uuid[] not null,
+  time_limit_seconds integer check (time_limit_seconds is null or time_limit_seconds > 0),
+  started_at timestamptz not null default now(),
+  finished_at timestamptz
+);
+create index practice_sessions_user on public.practice_sessions (user_id, started_at desc);
+
+create table public.question_attempts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  session_id uuid not null references public.practice_sessions (id) on delete cascade,
+  question_id uuid not null references public.questions (id) on delete cascade,
+  selected_option_id uuid not null references public.question_options (id) on delete cascade,
+  is_correct boolean not null,
+  answered_at timestamptz not null default now(),
+  -- One answer per question per session: retries and double clicks cannot skew results.
+  unique (session_id, question_id)
+);
+create index question_attempts_user_question on public.question_attempts (user_id, question_id, answered_at desc);
+
+create table public.bookmarks (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  question_id uuid not null references public.questions (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, question_id)
+);
+
+-- ---------------------------------------------------------------------------
+-- Helpers
+-- ---------------------------------------------------------------------------
+create or replace function public.touch_updated_at() returns trigger
+language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end $$;
+
+do $$
+declare t text;
+begin
+  foreach t in array array['courses', 'topics', 'learning_objectives', 'summaries', 'exams', 'questions', 'profiles', 'subscriptions']
+  loop
+    execute format('create trigger %I_touch before update on public.%I for each row execute function public.touch_updated_at()', t, t);
+  end loop;
+end $$;
+
+create or replace function public.is_admin() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.profiles where id = auth.uid() and role = 'admin');
+$$;
+
+create or replace function public.has_course_access(p_course_id uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select public.is_admin() or exists (
+    select 1
+    from public.entitlements e
+    join public.courses c on c.id = p_course_id
+    join public.curriculum_versions cv on cv.id = c.curriculum_version_id
+    where e.user_id = auth.uid()
+      and e.starts_at <= now()
+      and (e.expires_at is null or e.expires_at > now())
+      and (e.course_id = p_course_id or e.program_id = cv.program_id)
+  );
+$$;
+
+create or replace function public.handle_new_user() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, full_name)
+  values (new.id, nullif(trim(new.raw_user_meta_data ->> 'full_name'), ''));
+  return new;
+end $$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- ---------------------------------------------------------------------------
+-- Row Level Security
+-- ---------------------------------------------------------------------------
+alter table public.universities enable row level security;
+alter table public.programs enable row level security;
+alter table public.curriculum_versions enable row level security;
+alter table public.courses enable row level security;
+alter table public.topics enable row level security;
+alter table public.learning_objectives enable row level security;
+alter table public.summaries enable row level security;
+alter table public.exams enable row level security;
+alter table public.questions enable row level security;
+alter table public.question_options enable row level security;
+alter table public.question_answer_keys enable row level security;
+alter table public.profiles enable row level security;
+alter table public.stripe_customers enable row level security;
+alter table public.products enable row level security;
+alter table public.subscriptions enable row level security;
+alter table public.entitlements enable row level security;
+alter table public.course_visits enable row level security;
+alter table public.objective_completions enable row level security;
+alter table public.practice_sessions enable row level security;
+alter table public.question_attempts enable row level security;
+alter table public.bookmarks enable row level security;
+
+-- Public catalogue
+create policy "catalogue readable" on public.universities for select using (true);
+create policy "catalogue readable" on public.programs for select using (true);
+create policy "catalogue readable" on public.curriculum_versions for select using (true);
+create policy "published courses readable" on public.courses for select using (status = 'published' or public.is_admin());
+create policy "published topics readable" on public.topics for select using (
+  (status = 'published' and exists (select 1 from public.courses c where c.id = course_id and c.status = 'published'))
+  or public.is_admin()
+);
+create policy "published objectives readable" on public.learning_objectives for select using (
+  (status = 'published' and exists (select 1 from public.topics t where t.id = topic_id and t.status = 'published'))
+  or public.is_admin()
+);
+create policy "exam metadata readable" on public.exams for select using (status = 'published' or public.is_admin());
+create policy "products readable" on public.products for select using (active or public.is_admin());
+
+-- Premium content
+create policy "summaries readable with access" on public.summaries for select using (
+  public.is_admin() or (
+    status = 'published'
+    and exists (
+      select 1 from public.topics t
+      where t.id = topic_id and t.status = 'published'
+        and (not is_premium or public.has_course_access(t.course_id))
+    )
+  )
+);
+create policy "questions readable with access" on public.questions for select using (
+  public.is_admin() or (
+    status = 'published' and auth.uid() is not null
+    and (not is_premium or public.has_course_access(course_id))
+  )
+);
+create policy "options follow their question" on public.question_options for select using (
+  exists (select 1 from public.questions q where q.id = question_id)
+);
+create policy "answer keys admin only" on public.question_answer_keys for select using (public.is_admin());
+
+-- Admin management of content
+do $$
+declare t text;
+begin
+  foreach t in array array['universities', 'programs', 'curriculum_versions', 'courses', 'topics', 'learning_objectives',
+                           'summaries', 'exams', 'questions', 'question_options', 'question_answer_keys', 'products', 'entitlements']
+  loop
+    execute format('create policy "admins manage" on public.%I for all using (public.is_admin()) with check (public.is_admin())', t);
+  end loop;
+end $$;
+
+-- Profiles: own row; the role column is not writable by students (see grants below).
+create policy "own profile readable" on public.profiles for select using (id = auth.uid() or public.is_admin());
+create policy "own profile updatable" on public.profiles for update using (id = auth.uid()) with check (id = auth.uid());
+create policy "admins manage profiles" on public.profiles for update using (public.is_admin()) with check (public.is_admin());
+revoke update on public.profiles from authenticated, anon;
+grant update (full_name, university_id, study_year) on public.profiles to authenticated;
+
+-- Billing: read own; writes only by the service role (Stripe webhook).
+create policy "own subscriptions readable" on public.subscriptions for select using (user_id = auth.uid() or public.is_admin());
+create policy "own entitlements readable" on public.entitlements for select using (user_id = auth.uid() or public.is_admin());
+
+-- Progress: own rows only.
+create policy "own visits" on public.course_visits for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "own objective completions" on public.objective_completions for all
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "own bookmarks" on public.bookmarks for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+-- Sessions and attempts are created only through the functions below, so students get read access only.
+create policy "own sessions readable" on public.practice_sessions for select using (user_id = auth.uid());
+create policy "own attempts readable" on public.question_attempts for select using (user_id = auth.uid());
+
+-- ---------------------------------------------------------------------------
+-- Practice engine
+-- ---------------------------------------------------------------------------
+
+-- Number of published questions per topic. Counts are not premium, so anyone may see them.
+create or replace function public.topic_question_counts(p_course_id uuid)
+returns table (topic_id uuid, question_count bigint)
+language sql stable security definer set search_path = public as $$
+  select q.topic_id, count(*)
+  from public.questions q
+  join public.courses c on c.id = q.course_id and c.status = 'published'
+  where q.course_id = p_course_id and q.status = 'published'
+  group by q.topic_id;
+$$;
+
+create or replace function public.start_practice_session(
+  p_course_id uuid,
+  p_mode public.practice_mode,
+  p_topic_ids uuid[] default '{}',
+  p_limit integer default 20,
+  p_time_limit_seconds integer default null
+) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_user uuid := auth.uid();
+  v_ids uuid[];
+  v_session uuid;
+begin
+  if v_user is null then
+    raise exception 'not_authenticated' using errcode = '28000';
+  end if;
+  if p_limit is null or p_limit < 1 or p_limit > 200 then
+    raise exception 'invalid_limit' using errcode = '22023';
+  end if;
+  if p_mode = 'topic' and coalesce(array_length(p_topic_ids, 1), 0) <> 1 then
+    raise exception 'topic_mode_needs_one_topic' using errcode = '22023';
+  end if;
+
+  select array_agg(id) into v_ids from (
+    select q.id
+    from public.questions q
+    join public.topics t on t.id = q.topic_id
+    where q.course_id = p_course_id
+      and q.status = 'published'
+      and (not q.is_premium or public.has_course_access(p_course_id))
+      -- A subtopic counts as part of its parent topic.
+      and (coalesce(array_length(p_topic_ids, 1), 0) = 0 or q.topic_id = any (p_topic_ids) or t.parent_id = any (p_topic_ids))
+      and (
+        p_mode <> 'incorrect' or exists (
+          select 1 from (
+            select distinct on (a.question_id) a.question_id, a.is_correct
+            from public.question_attempts a
+            where a.user_id = v_user and a.question_id = q.id
+            order by a.question_id, a.answered_at desc
+          ) latest where not latest.is_correct
+        )
+      )
+    order by case when p_mode = 'topic' then t.sort_order else 0 end, case when p_mode = 'topic' then q.created_at end, random()
+    limit p_limit
+  ) picked;
+
+  if v_ids is null then
+    raise exception 'no_questions_available' using errcode = 'P0002';
+  end if;
+
+  insert into public.practice_sessions (user_id, course_id, mode, topic_ids, question_ids, time_limit_seconds)
+  values (v_user, p_course_id, p_mode, coalesce(p_topic_ids, '{}'), v_ids,
+          case when p_mode = 'exam' then p_time_limit_seconds end)
+  returning id into v_session;
+
+  return v_session;
+end $$;
+
+-- Records one answer. Idempotent: a repeated submit returns the first recorded answer.
+-- In exam mode feedback stays hidden until finish_practice_session.
+create or replace function public.submit_answer(p_session_id uuid, p_question_id uuid, p_option_id uuid)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_user uuid := auth.uid();
+  v_session public.practice_sessions;
+  v_key public.question_answer_keys;
+  v_attempt public.question_attempts;
+begin
+  select * into v_session from public.practice_sessions where id = p_session_id and user_id = v_user;
+  if not found then
+    raise exception 'session_not_found' using errcode = 'P0002';
+  end if;
+  if v_session.finished_at is not null then
+    raise exception 'session_finished' using errcode = '22023';
+  end if;
+  if not (p_question_id = any (v_session.question_ids)) then
+    raise exception 'question_not_in_session' using errcode = '22023';
+  end if;
+  if v_session.mode = 'exam' and v_session.time_limit_seconds is not null
+     and now() > v_session.started_at + make_interval(secs => v_session.time_limit_seconds) then
+    raise exception 'time_expired' using errcode = '22023';
+  end if;
+  if not exists (select 1 from public.question_options where id = p_option_id and question_id = p_question_id) then
+    raise exception 'invalid_option' using errcode = '22023';
+  end if;
+
+  select * into v_key from public.question_answer_keys where question_id = p_question_id;
+  if not found then
+    raise exception 'answer_key_missing' using errcode = 'P0002';
+  end if;
+
+  insert into public.question_attempts (user_id, session_id, question_id, selected_option_id, is_correct)
+  values (v_user, p_session_id, p_question_id, p_option_id, p_option_id = v_key.correct_option_id)
+  on conflict (session_id, question_id) do nothing;
+
+  select * into v_attempt from public.question_attempts where session_id = p_session_id and question_id = p_question_id;
+
+  if v_session.mode = 'exam' then
+    return jsonb_build_object('recorded', true, 'selected_option_id', v_attempt.selected_option_id);
+  end if;
+
+  return jsonb_build_object(
+    'recorded', true,
+    'selected_option_id', v_attempt.selected_option_id,
+    'is_correct', v_attempt.is_correct,
+    'correct_option_id', v_key.correct_option_id,
+    'explanation', v_key.explanation,
+    'concept', v_key.concept,
+    'option_feedback', v_key.option_feedback
+  );
+end $$;
+
+-- Closes a session and returns the score plus a full review (answer keys included).
+create or replace function public.finish_practice_session(p_session_id uuid)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_user uuid := auth.uid();
+  v_session public.practice_sessions;
+  v_review jsonb;
+begin
+  select * into v_session from public.practice_sessions where id = p_session_id and user_id = v_user;
+  if not found then
+    raise exception 'session_not_found' using errcode = 'P0002';
+  end if;
+
+  update public.practice_sessions set finished_at = coalesce(finished_at, now()) where id = p_session_id;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+      'question_id', qid,
+      'selected_option_id', a.selected_option_id,
+      'is_correct', coalesce(a.is_correct, false),
+      'correct_option_id', k.correct_option_id,
+      'explanation', k.explanation,
+      'concept', k.concept,
+      'option_feedback', k.option_feedback
+    ) order by ord), '[]'::jsonb)
+  into v_review
+  from unnest(v_session.question_ids) with ordinality as s(qid, ord)
+  left join public.question_attempts a on a.session_id = p_session_id and a.question_id = s.qid
+  left join public.question_answer_keys k on k.question_id = s.qid;
+
+  return jsonb_build_object(
+    'total', coalesce(array_length(v_session.question_ids, 1), 0),
+    'answered', (select count(*) from public.question_attempts where session_id = p_session_id),
+    'correct', (select count(*) from public.question_attempts where session_id = p_session_id and is_correct),
+    'review', v_review
+  );
+end $$;
+
+-- Per-topic accuracy for the signed-in student (latest answer per question).
+create or replace function public.my_topic_stats(p_course_id uuid)
+returns table (topic_id uuid, answered bigint, correct bigint)
+language sql stable security definer set search_path = public as $$
+  select q.topic_id, count(*), count(*) filter (where latest.is_correct)
+  from (
+    select distinct on (a.question_id) a.question_id, a.is_correct
+    from public.question_attempts a
+    where a.user_id = auth.uid()
+    order by a.question_id, a.answered_at desc
+  ) latest
+  join public.questions q on q.id = latest.question_id
+  where q.course_id = p_course_id
+  group by q.topic_id;
+$$;
+
+-- Supabase grants EXECUTE to anon through PUBLIC; the practice functions are for signed-in students only.
+revoke execute on function public.start_practice_session(uuid, public.practice_mode, uuid[], integer, integer) from public, anon;
+revoke execute on function public.submit_answer(uuid, uuid, uuid) from public, anon;
+revoke execute on function public.finish_practice_session(uuid) from public, anon;
+revoke execute on function public.my_topic_stats(uuid) from public, anon;
+grant execute on function public.start_practice_session(uuid, public.practice_mode, uuid[], integer, integer) to authenticated;
+grant execute on function public.submit_answer(uuid, uuid, uuid) to authenticated;
+grant execute on function public.finish_practice_session(uuid) to authenticated;
+grant execute on function public.my_topic_stats(uuid) to authenticated;
+
+-- What a course offers, without revealing premium content: counts plus whether the viewer has access.
+create or replace function public.course_content_overview(p_course_id uuid)
+returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'summaries', (select count(*) from public.summaries s join public.topics t on t.id = s.topic_id
+                  where t.course_id = p_course_id and s.status = 'published' and t.status = 'published'),
+    'objectives', (select count(*) from public.learning_objectives o join public.topics t on t.id = o.topic_id
+                   where t.course_id = p_course_id and o.status = 'published' and t.status = 'published'),
+    'exams', (select count(*) from public.exams e where e.course_id = p_course_id and e.status = 'published'),
+    'questions', (select count(*) from public.questions q where q.course_id = p_course_id and q.status = 'published'),
+    'has_access', public.has_course_access(p_course_id)
+  )
+  where exists (select 1 from public.courses where id = p_course_id and status = 'published');
+$$;

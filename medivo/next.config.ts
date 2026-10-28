@@ -7,8 +7,8 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
 ];
 
-// Preview deployments set MEDIVO_NOINDEX=1 so unfinished versions stay out of search engines.
-if (process.env.MEDIVO_NOINDEX === "1") securityHeaders.push({ key: "X-Robots-Tag", value: "noindex, nofollow" });
+// Until launch (MEDIVO_LAUNCHED=1, see src/lib/env.ts) unfinished versions stay out of search engines.
+if (process.env.MEDIVO_LAUNCHED !== "1") securityHeaders.push({ key: "X-Robots-Tag", value: "noindex, nofollow" });
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,

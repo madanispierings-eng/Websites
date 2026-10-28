@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
-import { siteUrl } from "@/lib/env";
+import { isLaunched, siteUrl } from "@/lib/env";
 
 export default function robots(): MetadataRoute.Robots {
-  if (process.env.MEDIVO_NOINDEX === "1") return { rules: { userAgent: "*", disallow: "/" } };
+  if (!isLaunched) return { rules: { userAgent: "*", disallow: "/" } };
   return {
     rules: {
       userAgent: "*",

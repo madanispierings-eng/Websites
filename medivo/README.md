@@ -57,13 +57,15 @@ buiten zoekmachines (`robots.txt` en `X-Robots-Tag`) en is `/dev/oefenen` beschi
 
 ## Supabase opzetten
 
-1. Maak een project aan en zet `NEXT_PUBLIC_SUPABASE_URL` en `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-2. Voer de migraties uit (`supabase db push` met de Supabase CLI, of de bestanden in `supabase/migrations/` op volgorde in de SQL-editor).
-3. Voer `supabase/seed.sql` uit voor de vakkenlijst.
-4. Auth → URL Configuration: zet de Site URL en voeg `<site>/auth/confirm` toe als redirect-URL. Pas de e-mailtemplates
-   aan zodat ze naar `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email` (bevestiging) en
-   `...&type=recovery&volgende=/account/nieuw-wachtwoord` (herstel) linken.
-5. Maak een beheerder: `update public.profiles set role = 'admin' where id = '<user uuid>';`
+1. Maak een project aan (regio in de EU) en zet `NEXT_PUBLIC_SUPABASE_URL` en `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   (lokaal in `.env.local`, online in Vercel → Settings → Environment Variables, daarna opnieuw deployen).
+2. Nieuw project: plak `supabase/setup.sql` (alle migraties plus de vakkenlijst) in de SQL Editor en klik op Run.
+   Bestaand project: voer alleen nieuwe bestanden uit `supabase/migrations/` uit, of gebruik `supabase db push`.
+   Na een nieuwe migratie: `scripts/build-setup-sql.sh` opnieuw draaien.
+3. Authentication → URL Configuration: zet de Site URL op het websiteadres en voeg `<site>/**` toe als Redirect URL.
+   De standaard e-mailtemplates werken (de links komen via `/auth/confirm` binnen).
+4. Maak een beheerder nadat diegene zich heeft geregistreerd:
+   `update public.profiles set role = 'admin' where id = (select id from auth.users where email = '<e-mail>');`
 
 ## Tests
 

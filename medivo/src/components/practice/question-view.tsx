@@ -88,7 +88,8 @@ export function QuestionView({
           className="border-line text-navy"
         >
           {bookmarked ? <BookmarkCheck className="text-blue" aria-hidden="true" /> : <Bookmark aria-hidden="true" />}
-          {bookmarked ? "Gemarkeerd" : "Markeer vraag"}
+          {/* Icon-only on phones so the topic title keeps its width; the label stays available to screen readers. */}
+          <span className="max-sm:sr-only">{bookmarked ? "Gemarkeerd" : "Markeer vraag"}</span>
         </Button>
       </div>
 

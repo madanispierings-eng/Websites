@@ -119,7 +119,7 @@ export default async function HomePage() {
             <h2 id="vakken-titel" className="text-3xl font-bold tracking-[-0.02em] text-navy sm:text-4xl">
               Alle vakken van de bachelor
             </h2>
-            <p className="mt-3 text-muted-ink">Van Van Cel tot Molecuul in jaar 1 tot Spoedeisende Zorg in jaar 3.</p>
+            <p className="mt-3 text-muted-ink">Alle vakken van jaar 1 tot en met jaar 3, per studiejaar geordend.</p>
           </div>
           <Link href="/vakken" className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue hover:underline">
             Naar het vakkenoverzicht <ArrowRight className="size-4" aria-hidden="true" />

@@ -8,7 +8,7 @@ import type { ContentBlock } from "./blocks";
 //   | kop | kop |           (tabel; eerste rij is de kop, een |---| regel wordt overgeslagen)
 //   > Let op: tekst         > Klinisch: tekst        > Belangrijk: tekst
 //   ![beschrijving](bestand)
-//   $$ formule $$
+//   $$ formule $$          (LaTeX, bijv. C = \frac{D}{V_d})
 //   [1] bron
 //   Gewone tekst met **vet**, *cursief* en ==vakterm==.
 

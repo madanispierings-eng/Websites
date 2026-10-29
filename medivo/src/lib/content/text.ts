@@ -28,6 +28,17 @@ export function blockText(block: ContentBlock): string {
     case "image":
       return [block.alt, block.caption ?? ""].join(" ");
     case "formula":
-      return [block.label ?? "", block.expression].join(" ");
+      return [block.label ?? "", texToText(block.expression)].join(" ");
   }
+}
+
+/** Readable text for a LaTeX formula, for search: \frac{a}{b} becomes a / b, commands and braces go. */
+export function texToText(tex: string): string {
+  return tex
+    .replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, "$1 / $2")
+    .replace(/\\text\{([^{}]*)\}/g, "$1")
+    .replace(/\\[a-zA-Z]+/g, " ")
+    .replace(/[{}_^\\]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }

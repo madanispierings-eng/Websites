@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { blocksSchema, type ContentBlock } from "@/lib/content/blocks";
+import { imageUrlsFor } from "@/lib/content/images";
 import { createClient, getViewer } from "@/lib/supabase/server";
 
 export type CourseOverview = {
@@ -42,9 +43,6 @@ export type Summary = {
 const CONTENT_BUCKET = "course-content";
 const SIGNED_URL_SECONDS = 60 * 60;
 
-/** Images are served through /inhoud/…, which signs a fresh URL per request (see that route). */
-const contentImageUrl = (path: string) => `/inhoud/${path.split("/").map(encodeURIComponent).join("/")}`;
-
 /** Summaries the viewer may read (RLS filters out premium content without an entitlement). */
 export const getSummaries = cache(async (courseId: string): Promise<Summary[]> => {
   const supabase = await createClient();
@@ -66,9 +64,7 @@ export const getSummaries = cache(async (courseId: string): Promise<Summary[]> =
     rows.map(async (row) => {
       const parsed = blocksSchema.safeParse(row.content);
       const blocks = parsed.success ? parsed.data : [];
-      const imageUrls = Object.fromEntries(
-        blocks.flatMap((b) => (b.type === "image" ? [[b.path, contentImageUrl(b.path)]] : [])),
-      );
+      const imageUrls = imageUrlsFor(blocks);
       let pdfUrl: string | null = null;
       if (row.pdf_path && row.pdf_download_allowed) {
         const { data: signed } = await supabase.storage.from(CONTENT_BUCKET).createSignedUrl(row.pdf_path, SIGNED_URL_SECONDS, { download: true });

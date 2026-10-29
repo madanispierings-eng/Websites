@@ -48,12 +48,12 @@ export async function getAdminExams(courseId: string) {
     .from("exams")
     .select("id, exam_year, exam_type, title, question_count, has_explanations, source, rights_status, is_premium, status")
     .eq("course_id", courseId)
-    .order("exam_year", { ascending: false });
+    .order("exam_year", { ascending: false, nullsFirst: false });
   return (data ?? []) as ExamRow[];
 }
 
 const examTypeLabel = { regular: "Tentamen", resit: "Hertentamen", midterm: "Deeltoets", practice: "Proeftentamen" } as const;
-export const examLabel = (e: ExamRow) => `${e.exam_year} · ${e.title || examTypeLabel[e.exam_type]}`;
+export const examLabel = (e: ExamRow) => [e.exam_year, e.title || examTypeLabel[e.exam_type]].filter(Boolean).join(" · ");
 
 export async function signedUrls(paths: string[]): Promise<Record<string, string>> {
   if (!paths.length) return {};

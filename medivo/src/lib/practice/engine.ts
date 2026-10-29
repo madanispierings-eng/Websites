@@ -1,7 +1,7 @@
-import type { AnswerFeedback, PracticeMode, PracticeQuestion, SessionReview } from "./types";
+import type { AnswerFeedback, PracticeMode, PracticeQuestion, QuestionResponse, SessionReview } from "./types";
 
 export type AnswerState = {
-  selectedOptionId: string | null;
+  response: QuestionResponse | null;
   status: "idle" | "submitting" | "answered";
   feedback: AnswerFeedback | null;
   error: string | null;
@@ -18,15 +18,16 @@ export type EngineState = {
 };
 
 export type EngineAction =
-  | { type: "select"; optionId: string }
+  | { type: "respond"; response: QuestionResponse }
   | { type: "submit-start" }
-  | { type: "submit-success"; questionId: string; selectedOptionId: string; feedback: AnswerFeedback | null }
+  | { type: "submit-success"; questionId: string; response: QuestionResponse; feedback: AnswerFeedback | null }
   | { type: "submit-failure"; questionId: string; error: string }
+  | { type: "graded"; questionId: string; score: number; isCorrect: boolean }
   | { type: "go"; index: number }
   | { type: "bookmark"; questionId: string; bookmarked: boolean }
   | { type: "finished"; review: SessionReview };
 
-const emptyAnswer: AnswerState = { selectedOptionId: null, status: "idle", feedback: null, error: null };
+const emptyAnswer: AnswerState = { response: null, status: "idle", feedback: null, error: null };
 
 export function createEngine(
   sessionId: string,
@@ -42,23 +43,57 @@ export const currentQuestion = (s: EngineState) => s.questions[s.index] ?? null;
 export const answerFor = (s: EngineState, questionId: string) => s.answers[questionId] ?? emptyAnswer;
 export const answeredCount = (s: EngineState) => Object.values(s.answers).filter((a) => a.status === "answered").length;
 
-/** True when a submit for the current question may be sent: a choice is made and nothing is in flight or recorded. */
+/** Whether a response fits the question: known options and choices only, and something actually filled in. */
+export function isComplete(q: PracticeQuestion, r: QuestionResponse | null): boolean {
+  if (!r) return false;
+  const optionIds = new Set(q.options.map((o) => o.id));
+  switch (q.type) {
+    case "single_choice":
+      return "option_id" in r && optionIds.has(r.option_id);
+    case "multiple_choice":
+      return "option_ids" in r && r.option_ids.length > 0 && r.option_ids.every((id) => optionIds.has(id));
+    case "dropdowns":
+      return (
+        "answers" in r &&
+        r.answers.length === q.items.length &&
+        r.answers.some((a) => a !== null) &&
+        r.answers.every((a, i) => a === null || q.items[i].choices.includes(a))
+      );
+    case "numeric":
+      return "value" in r && r.value.trim().length > 0 && r.value.length <= 60;
+    case "open":
+      return "text" in r && r.text.trim().length > 0 && r.text.length <= 8000;
+  }
+}
+
+/** True when a submit for the current question may be sent: an answer is given and nothing is in flight or recorded. */
 export function canSubmit(s: EngineState) {
   const q = currentQuestion(s);
   if (!q || s.finished) return false;
   const a = answerFor(s, q.id);
-  return a.selectedOptionId !== null && a.status === "idle";
+  return a.status === "idle" && isComplete(q, a.response);
 }
+
+/** Some but not all points: partly right on a dropdown question, or a partial self-mark on an open one. */
+export const isPartial = (fb: AnswerFeedback) => fb.score !== null && fb.score > 0 && fb.score < fb.maxScore;
 
 export function engineReducer(state: EngineState, action: EngineAction): EngineState {
   switch (action.type) {
-    case "select": {
+    case "respond": {
       const q = currentQuestion(state);
       if (!q || state.finished) return state;
       const a = answerFor(state, q.id);
-      // Once submitted (or while submitting) the choice is locked.
-      if (a.status !== "idle" || !q.options.some((o) => o.id === action.optionId)) return state;
-      return { ...state, answers: { ...state.answers, [q.id]: { ...a, selectedOptionId: action.optionId, error: null } } };
+      // Once submitted (or while submitting) the answer is locked. Half-filled answers are fine while editing.
+      if (a.status !== "idle") return state;
+      const r = action.response;
+      const shapeOk =
+        (q.type === "single_choice" && "option_id" in r && q.options.some((o) => o.id === r.option_id)) ||
+        (q.type === "multiple_choice" && "option_ids" in r && r.option_ids.every((id) => q.options.some((o) => o.id === id))) ||
+        (q.type === "dropdowns" && "answers" in r && r.answers.length === q.items.length) ||
+        (q.type === "numeric" && "value" in r) ||
+        (q.type === "open" && "text" in r);
+      if (!shapeOk) return state;
+      return { ...state, answers: { ...state.answers, [q.id]: { ...a, response: r, error: null } } };
     }
     case "submit-start": {
       if (!canSubmit(state)) return state;
@@ -71,12 +106,7 @@ export function engineReducer(state: EngineState, action: EngineAction): EngineS
         ...state,
         answers: {
           ...state.answers,
-          [action.questionId]: {
-            selectedOptionId: action.selectedOptionId,
-            status: "answered",
-            feedback: action.feedback,
-            error: null,
-          },
+          [action.questionId]: { response: action.response, status: "answered", feedback: action.feedback, error: null },
         },
       };
     }
@@ -84,6 +114,19 @@ export function engineReducer(state: EngineState, action: EngineAction): EngineS
       const a = answerFor(state, action.questionId);
       if (a.status !== "submitting") return state;
       return { ...state, answers: { ...state.answers, [action.questionId]: { ...a, status: "idle", error: action.error } } };
+    }
+    case "graded": {
+      const a = answerFor(state, action.questionId);
+      if (!a.feedback) return state;
+      const feedback = { ...a.feedback, score: action.score, isCorrect: action.isCorrect };
+      const finished = state.finished
+        ? {
+            ...state.finished,
+            scored: state.finished.scored - (a.feedback.score ?? 0) + action.score,
+            correct: state.finished.correct - (a.feedback.isCorrect ? 1 : 0) + (action.isCorrect ? 1 : 0),
+          }
+        : null;
+      return { ...state, finished, answers: { ...state.answers, [action.questionId]: { ...a, feedback } } };
     }
     case "go": {
       if (action.index < 0 || action.index >= state.questions.length) return state;
@@ -94,18 +137,8 @@ export function engineReducer(state: EngineState, action: EngineAction): EngineS
     case "finished": {
       const answers = { ...state.answers };
       for (const r of action.review.review) {
-        answers[r.questionId] = {
-          selectedOptionId: r.selectedOptionId,
-          status: "answered",
-          feedback: {
-            isCorrect: r.isCorrect,
-            correctOptionId: r.correctOptionId,
-            explanation: r.explanation,
-            concept: r.concept,
-            optionFeedback: r.optionFeedback,
-          },
-          error: null,
-        };
+        const { questionId, response, ...feedback } = r;
+        answers[questionId] = { response, status: "answered", feedback, error: null };
       }
       return { ...state, answers, finished: action.review, index: 0 };
     }

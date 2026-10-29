@@ -1,7 +1,8 @@
 import "server-only";
 import { z } from "zod";
+import { contentImageUrl } from "@/lib/content/images";
 import { createClient, getViewer } from "@/lib/supabase/server";
-import type { ActionResult, AnswerFeedback, PracticeQuestion, SessionReview } from "./types";
+import type { ActionResult, AnswerFeedback, AnswerKey, DropdownItem, PracticeQuestion, QuestionResponse, QuestionType, SessionReview } from "./types";
 
 const uuid = z.string().uuid();
 
@@ -14,7 +15,11 @@ const errorMessages: Record<string, string> = {
   time_expired: "De tijd is om. Je antwoorden tot nu toe zijn opgeslagen.",
   question_not_in_session: "Deze vraag hoort niet bij je sessie.",
   invalid_option: "Kies een van de antwoordopties.",
+  invalid_answer: "Vul een antwoord in.",
   answer_key_missing: "Bij deze vraag ontbreekt het antwoordmodel. We zijn op de hoogte gebracht.",
+  grade_after_finish: "Open vragen kijk je na nadat je het tentamen hebt ingeleverd.",
+  not_gradable: "Deze vraag kun je niet zelf nakijken.",
+  invalid_score: "Kies een score tussen 0 en het maximum, in stappen van een halve punt.",
 };
 
 function fail<T>(raw: string | undefined): ActionResult<T> {
@@ -30,9 +35,24 @@ async function context() {
 const startInput = z.object({
   mode: z.enum(["topic", "mixed", "exam", "incorrect"]),
   topicIds: z.array(uuid).max(50),
-  limit: z.number().int().min(1).max(100),
+  limit: z.number().int().min(1).max(200),
   timeLimitSeconds: z.number().int().min(60).max(4 * 60 * 60).nullable(),
+  examId: uuid.nullable(),
 });
+
+const responseSchema: z.ZodType<QuestionResponse> = z.union([
+  z.object({ option_id: uuid }).strict(),
+  z.object({ option_ids: z.array(uuid).min(1).max(26) }).strict(),
+  z.object({ answers: z.array(z.string().max(500).nullable()).min(1).max(40) }).strict(),
+  z.object({ value: z.string().trim().min(1).max(60) }).strict(),
+  z.object({ text: z.string().trim().min(1).max(8000) }).strict(),
+]);
+
+type QuestionRow = {
+  id: string; topic_id: string; type: QuestionType; stem: string; context: string | null; points: number | string;
+  content: { items?: DropdownItem[]; unit?: string } | null; image_path: string | null; image_alt: string | null;
+  topics: { title: string } | null; question_options: { id: string; label: string; body: string; sort_order: number }[];
+};
 
 export async function startSession(courseId: string, input: unknown) {
   type Out = { sessionId: string; questions: PracticeQuestion[]; startedAt: string; timeLimitSeconds: number | null; bookmarkedIds: string[] };
@@ -48,6 +68,7 @@ export async function startSession(courseId: string, input: unknown) {
     p_topic_ids: parsed.data.topicIds,
     p_limit: parsed.data.limit,
     p_time_limit_seconds: parsed.data.timeLimitSeconds,
+    p_exam_id: parsed.data.examId,
   });
   if (error) return fail<Out>(error.message);
 
@@ -61,26 +82,11 @@ export async function startSession(courseId: string, input: unknown) {
   const ids: string[] = session.question_ids;
   const { data: rows, error: qErr } = await supabase
     .from("questions")
-    .select("id, topic_id, stem, image_path, image_alt, topics(title), question_options(id, label, body, sort_order)")
+    .select("id, topic_id, type, stem, context, points, content, image_path, image_alt, topics(title), question_options(id, label, body, sort_order)")
     .in("id", ids);
   if (qErr) return fail<Out>(qErr.message);
 
-  const byId = new Map(
-    (rows as unknown as {
-      id: string; topic_id: string; stem: string; image_path: string | null; image_alt: string | null;
-      topics: { title: string } | null; question_options: { id: string; label: string; body: string; sort_order: number }[];
-    }[]).map((r) => [r.id, r]),
-  );
-
-  const imagePaths = [...byId.values()].flatMap((r) => (r.image_path ? [r.image_path] : []));
-  const signed: Record<string, string> = {};
-  if (imagePaths.length) {
-    const { data } = await supabase.storage.from("course-content").createSignedUrls(imagePaths, 60 * 60 * 2);
-    data?.forEach((s) => {
-      if (s.path && s.signedUrl) signed[s.path] = s.signedUrl;
-    });
-  }
-
+  const byId = new Map((rows as unknown as QuestionRow[]).map((r) => [r.id, r]));
   const questions: PracticeQuestion[] = ids.flatMap((id) => {
     const r = byId.get(id);
     if (!r) return [];
@@ -88,10 +94,15 @@ export async function startSession(courseId: string, input: unknown) {
       id: r.id,
       topicId: r.topic_id,
       topicTitle: r.topics?.title ?? "",
+      type: r.type,
+      context: r.context,
       stem: r.stem,
-      imageUrl: r.image_path ? signed[r.image_path] ?? null : null,
+      points: Number(r.points),
+      imageUrl: r.image_path ? contentImageUrl(r.image_path) : null,
       imageAlt: r.image_alt,
       options: [...r.question_options].sort((a, b) => a.sort_order - b.sort_order).map(({ id, label, body }) => ({ id, label, body })),
+      items: r.content?.items ?? [],
+      unit: r.content?.unit ?? null,
     }];
   });
 
@@ -110,36 +121,56 @@ export async function startSession(courseId: string, input: unknown) {
 }
 
 type RawFeedback = {
-  is_correct: boolean; correct_option_id: string; explanation: string; concept: string | null;
-  option_feedback: Record<string, string>;
+  is_correct: boolean; score: number | string | null; max_score: number | string; correct_option_id: string | null;
+  answer: AnswerKey | null; explanation: string; concept: string | null; option_feedback: Record<string, string> | null;
 };
 
 const toFeedback = (r: RawFeedback): AnswerFeedback => ({
   isCorrect: r.is_correct,
+  score: r.score === null ? null : Number(r.score),
+  maxScore: Number(r.max_score),
   correctOptionId: r.correct_option_id,
-  explanation: r.explanation,
+  answer: r.answer ?? {},
+  explanation: r.explanation ?? "",
   concept: r.concept,
   optionFeedback: r.option_feedback ?? {},
 });
 
 export async function submitAnswer(input: unknown) {
-  type Out = { selectedOptionId: string; feedback: AnswerFeedback | null };
-  const parsed = z.object({ sessionId: uuid, questionId: uuid, optionId: uuid }).safeParse(input);
-  if (!parsed.success) return fail<Out>(undefined);
+  type Out = { response: QuestionResponse; feedback: AnswerFeedback | null };
+  const parsed = z.object({ sessionId: uuid, questionId: uuid, response: responseSchema }).safeParse(input);
+  if (!parsed.success) return fail<Out>("invalid_answer");
   const ctx = await context();
   if (!ctx) return fail<Out>("not_authenticated");
 
-  const { data, error } = await ctx.supabase.rpc("submit_answer", {
+  const { data, error } = await ctx.supabase.rpc("submit_response", {
     p_session_id: parsed.data.sessionId,
     p_question_id: parsed.data.questionId,
-    p_option_id: parsed.data.optionId,
+    p_response: parsed.data.response,
   });
   if (error) return fail<Out>(error.message);
-  const r = data as RawFeedback & { selected_option_id: string };
+  const r = data as RawFeedback & { response: QuestionResponse };
   return {
     ok: true as const,
-    data: { selectedOptionId: r.selected_option_id, feedback: "correct_option_id" in r ? toFeedback(r) : null },
+    data: { response: r.response, feedback: "explanation" in r ? toFeedback(r) : null },
   };
+}
+
+export async function selfGrade(input: unknown) {
+  type Out = { score: number; isCorrect: boolean };
+  const parsed = z.object({ sessionId: uuid, questionId: uuid, score: z.number().min(0).max(100) }).safeParse(input);
+  if (!parsed.success) return fail<Out>("invalid_score");
+  const ctx = await context();
+  if (!ctx) return fail<Out>("not_authenticated");
+
+  const { data, error } = await ctx.supabase.rpc("self_grade", {
+    p_session_id: parsed.data.sessionId,
+    p_question_id: parsed.data.questionId,
+    p_score: parsed.data.score,
+  });
+  if (error) return fail<Out>(error.message);
+  const r = data as { score: number | string; is_correct: boolean };
+  return { ok: true as const, data: { score: Number(r.score), isCorrect: r.is_correct } };
 }
 
 export async function finishSession(input: unknown) {
@@ -150,14 +181,24 @@ export async function finishSession(input: unknown) {
 
   const { data, error } = await ctx.supabase.rpc("finish_practice_session", { p_session_id: parsed.data.sessionId });
   if (error) return fail<SessionReview>(error.message);
-  const r = data as { total: number; answered: number; correct: number; review: (RawFeedback & { question_id: string; selected_option_id: string | null })[] };
+  const r = data as {
+    total: number; answered: number; correct: number; points: number | string; scored: number | string;
+    review: (RawFeedback & { question_id: string; response: QuestionResponse | null })[];
+  };
   return {
     ok: true as const,
     data: {
       total: r.total,
       answered: r.answered,
       correct: r.correct,
-      review: r.review.map((x) => ({ ...toFeedback(x), questionId: x.question_id, selectedOptionId: x.selected_option_id })),
+      points: Number(r.points),
+      scored: Number(r.scored),
+      review: r.review.map((x) => ({
+        ...toFeedback(x),
+        questionId: x.question_id,
+        // An unanswered question has no attempt; the database reports its response as null.
+        response: x.response && Object.keys(x.response).length ? x.response : null,
+      })),
     },
   };
 }

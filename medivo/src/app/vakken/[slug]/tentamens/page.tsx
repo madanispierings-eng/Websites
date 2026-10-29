@@ -5,6 +5,7 @@ import { ClipboardList } from "lucide-react";
 import { CourseSubheader } from "@/components/course/course-subheader";
 import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { getCourse, getExams } from "@/lib/data/catalog";
 import type { Exam } from "@/lib/data/types";
 import { container } from "@/lib/site";
@@ -48,18 +49,24 @@ export default async function ExamsPage({ params }: Props) {
                   <th scope="col" className="px-5 py-3 font-semibold">Vragen</th>
                   <th scope="col" className="px-5 py-3 font-semibold">Uitwerkingen</th>
                   <th scope="col" className="px-5 py-3 font-semibold">Bron</th>
+                  <th scope="col" className="px-5 py-3 font-semibold"><span className="sr-only">Oefenen</span></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {exams.map((e) => (
                   <tr key={e.id}>
-                    <td className="px-5 py-4 font-semibold tabular-nums text-navy">{e.examYear}</td>
+                    <td className="px-5 py-4 font-semibold tabular-nums text-navy">{e.examYear ?? "–"}</td>
                     <td className="px-5 py-4 text-navy">{e.title ?? typeLabel[e.examType]}</td>
                     <td className="px-5 py-4 tabular-nums text-muted-ink">{e.questionCount ?? "–"}</td>
                     <td className="px-5 py-4">
                       {e.hasExplanations ? <Badge className="bg-success-soft text-success-ink">Met uitleg</Badge> : <span className="text-muted-ink">Geen</span>}
                     </td>
                     <td className="px-5 py-4 text-muted-ink">{e.source}</td>
+                    <td className="px-5 py-4 text-right">
+                      <Button asChild size="sm" className="font-semibold">
+                        <Link href={`/vakken/${course.slug}/oefenen?tentamen=${e.id}`}>Oefenen</Link>
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

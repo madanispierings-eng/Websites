@@ -15,3 +15,6 @@ export async function finishSession(input: unknown) {
 export async function toggleBookmark(input: unknown) {
   return practice.toggleBookmark(input);
 }
+export async function selfGrade(input: unknown) {
+  return practice.selfGrade(input);
+}

@@ -198,7 +198,8 @@ export async function saveExam(_: FormState, formData: FormData): Promise<FormSt
     .object({
       id: optionalUuid,
       courseId: uuid,
-      examYear: z.coerce.number().int().min(1990, "Vul een geldig jaar in.").max(2100, "Vul een geldig jaar in."),
+      // Optional: reconstructed exams often have no known year.
+      examYear: z.union([z.literal(""), z.coerce.number().int().min(1990, "Vul een geldig jaar in.").max(2100, "Vul een geldig jaar in.")]),
       examType: z.enum(["regular", "resit", "midterm", "practice"]),
       title: z.string().trim().max(200),
       questionCount: z.union([z.literal(""), z.coerce.number().int().min(0).max(1000)]),
@@ -214,7 +215,7 @@ export async function saveExam(_: FormState, formData: FormData): Promise<FormSt
   const d = parsed.data;
   const row = {
     course_id: d.courseId,
-    exam_year: d.examYear,
+    exam_year: d.examYear === "" ? null : d.examYear,
     exam_type: d.examType,
     title: d.title || null,
     question_count: d.questionCount === "" ? null : d.questionCount,

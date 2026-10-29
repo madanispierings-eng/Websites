@@ -92,7 +92,8 @@ export const getExams = cache(async (courseId: string): Promise<Exam[]> => {
     .from("exams")
     .select("id, exam_year, exam_type, title, question_count, has_explanations, source")
     .eq("course_id", courseId)
-    .order("exam_year", { ascending: false });
+    .order("exam_year", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: true });
   if (error) throw new Error(`Tentamens konden niet worden geladen: ${error.message}`);
   return data.map((e) => ({
     id: e.id,
@@ -113,3 +114,13 @@ export const getQuestionCounts = cache(async (courseId: string): Promise<Record<
   if (error) throw new Error(`Aantallen oefenvragen konden niet worden geladen: ${error.message}`);
   return Object.fromEntries((data as { topic_id: string; question_count: number }[]).map((r) => [r.topic_id, Number(r.question_count)]));
 });
+
+const examTypeLabel: Record<Exam["examType"], string> = {
+  regular: "Tentamen",
+  resit: "Hertentamen",
+  midterm: "Deeltoets",
+  practice: "Proeftentamen",
+};
+
+/** "Tentamen 2025", or the exam's own title; reconstructed exams may have no year. */
+export const examTitle = (e: Exam) => e.title ?? [examTypeLabel[e.examType], e.examYear].filter(Boolean).join(" ");

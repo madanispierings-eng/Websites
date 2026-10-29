@@ -82,7 +82,7 @@ export function ObjectivesForm({ topicId, lines, published, source }: { topicId:
 
 export type ExamRow = {
   id: string;
-  exam_year: number;
+  exam_year: number | null;
   exam_type: "regular" | "resit" | "midterm" | "practice";
   title: string | null;
   question_count: number | null;
@@ -104,7 +104,7 @@ export function ExamForm({ courseId, exam }: { courseId: string; exam?: ExamRow 
       <div className="grid gap-4 sm:grid-cols-[7rem_12rem_minmax(0,1fr)]">
         <FieldLabel htmlFor={`${p}-year`}>
           Jaar
-          <input id={`${p}-year`} name="examYear" type="number" required defaultValue={exam?.exam_year ?? new Date().getFullYear()} className={inputClass} />
+          <input id={`${p}-year`} name="examYear" type="number" placeholder="Onbekend" defaultValue={exam ? exam.exam_year ?? "" : new Date().getFullYear()} className={inputClass} />
         </FieldLabel>
         <FieldLabel htmlFor={`${p}-type`}>
           Soort

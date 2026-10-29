@@ -16,3 +16,10 @@ De skills staan in `.claude/skills/` (bronnen in `skills-lock.json`); bijwerken 
 # Scrapen
 
 Gebruik voor het binnenhalen van (complete) websites de `website-scraper` agent. Respecteer `robots.txt` en test eerst op een klein aantal pagina's.
+
+# Medivo: database en publiceren
+
+- Supabase-project `medivo` (`cnslqzwikmtxomukziub`). Gegevens lezen en schrijven gaat via de REST-API (`SUPABASE_SECRET_KEY`), de opbouw (migraties) via de Management API op `api.supabase.com` (toegangstoken als network secret).
+- Nieuwe migraties in `medivo/supabase/migrations/` mag je zelf op de live database uitvoeren, zonder eerst te vragen, mits ze eerst lokaal slagen met `scripts/test-db.sh` en als één transactie. Draai daarna `scripts/build-setup-sql.sh`.
+- Inhoud (samenvattingen, oefenvragen, tentamens) direct publiceren, geen concepten. Zet `reviewed_at` en `reviewed_by` op het admin-account van de eigenaar.
+- Vraag wel eerst bij migraties die gegevens verwijderen of overschrijven.

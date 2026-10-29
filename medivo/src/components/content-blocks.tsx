@@ -1,6 +1,7 @@
 import { Info, Stethoscope, TriangleAlert } from "lucide-react";
 import type { ContentBlock } from "@/lib/content/blocks";
 import { slugify } from "@/lib/content/text";
+import { Formula } from "@/components/formula";
 import { cn } from "@/lib/utils";
 
 const calloutTone = {
@@ -100,7 +101,7 @@ export function ContentBlocks({ blocks, imageUrls, idPrefix }: { blocks: Content
           case "formula":
             return (
               <figure key={id} id={id} className="rounded-lg border border-line bg-canvas px-4 py-3">
-                <code className="block overflow-x-auto whitespace-pre font-mono text-[0.95rem] text-navy">{block.expression}</code>
+                <Formula expression={block.expression} />
                 {block.label ? <figcaption className="mt-1 text-xs text-muted-ink">{block.label}</figcaption> : null}
               </figure>
             );

@@ -33,7 +33,7 @@ export type Summary = {
   topicId: string;
   title: string;
   blocks: ContentBlock[];
-  /** Signed URLs for images in private storage, keyed by storage path. */
+  /** Image addresses keyed by storage path; /inhoud/… signs a fresh URL on every load. */
   imageUrls: Record<string, string>;
   pdfUrl: string | null;
   invalid: boolean;
@@ -41,6 +41,9 @@ export type Summary = {
 
 const CONTENT_BUCKET = "course-content";
 const SIGNED_URL_SECONDS = 60 * 60;
+
+/** Images are served through /inhoud/…, which signs a fresh URL per request (see that route). */
+const contentImageUrl = (path: string) => `/inhoud/${path.split("/").map(encodeURIComponent).join("/")}`;
 
 /** Summaries the viewer may read (RLS filters out premium content without an entitlement). */
 export const getSummaries = cache(async (courseId: string): Promise<Summary[]> => {
@@ -63,14 +66,9 @@ export const getSummaries = cache(async (courseId: string): Promise<Summary[]> =
     rows.map(async (row) => {
       const parsed = blocksSchema.safeParse(row.content);
       const blocks = parsed.success ? parsed.data : [];
-      const paths = blocks.flatMap((b) => (b.type === "image" ? [b.path] : []));
-      const imageUrls: Record<string, string> = {};
-      if (paths.length) {
-        const { data: signed } = await supabase.storage.from(CONTENT_BUCKET).createSignedUrls(paths, SIGNED_URL_SECONDS);
-        signed?.forEach((s) => {
-          if (s.path && s.signedUrl) imageUrls[s.path] = s.signedUrl;
-        });
-      }
+      const imageUrls = Object.fromEntries(
+        blocks.flatMap((b) => (b.type === "image" ? [[b.path, contentImageUrl(b.path)]] : [])),
+      );
       let pdfUrl: string | null = null;
       if (row.pdf_path && row.pdf_download_allowed) {
         const { data: signed } = await supabase.storage.from(CONTENT_BUCKET).createSignedUrl(row.pdf_path, SIGNED_URL_SECONDS, { download: true });

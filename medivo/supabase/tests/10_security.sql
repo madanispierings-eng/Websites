@@ -158,5 +158,69 @@ begin
   if n <> 1 then raise exception 'FAIL: admin could not edit course'; end if;
 end $$;
 
+-- Admin authoring: question, options and key are saved together.
+do $$
+declare v_q uuid; v_course uuid; n int; v_key public.question_answer_keys;
+begin
+  select course_id into v_course from public.topics where slug = 'test-onderwerp';
+  v_q := public.admin_save_question(jsonb_build_object(
+    'course_id', v_course, 'topic_id', 'bbbbbbbb-0000-4000-8000-000000000001', 'stem', 'Nieuwe testvraag',
+    'source', 'eigen werk', 'copyright_status', 'own_work', 'is_premium', false, 'reviewed', false, 'status', 'draft',
+    'options', jsonb_build_array(jsonb_build_object('label', 'A', 'body', 'a'), jsonb_build_object('label', 'B', 'body', 'b'),
+                                 jsonb_build_object('label', 'C', 'body', 'c')),
+    'correct_label', 'B', 'explanation', 'Uitleg', 'option_feedback', jsonb_build_object('A', 'waarom A niet')));
+  select count(*) into n from public.question_options where question_id = v_q;
+  if n <> 3 then raise exception 'FAIL: % options saved', n; end if;
+  select * into v_key from public.question_answer_keys where question_id = v_q;
+  if v_key.correct_option_id <> (select id from public.question_options where question_id = v_q and label = 'B')
+  then raise exception 'FAIL: wrong key'; end if;
+  if (select count(*) from jsonb_object_keys(v_key.option_feedback)) <> 1 then raise exception 'FAIL: feedback not mapped'; end if;
+
+  -- Publishing without review is refused by the table constraint.
+  begin
+    perform public.admin_save_question(jsonb_build_object(
+      'id', v_q, 'course_id', v_course, 'topic_id', 'bbbbbbbb-0000-4000-8000-000000000001', 'stem', 'x', 'source', 'eigen werk',
+      'copyright_status', 'own_work', 'reviewed', false, 'status', 'published',
+      'options', jsonb_build_array(jsonb_build_object('label', 'A', 'body', 'a'), jsonb_build_object('label', 'B', 'body', 'b')),
+      'correct_label', 'A', 'explanation', 'x'));
+    raise exception 'FAIL: unreviewed question published';
+  exception when check_violation then null;
+  end;
+
+  -- Reviewed and published, option C removed, correct answer changed.
+  perform public.admin_save_question(jsonb_build_object(
+    'id', v_q, 'course_id', v_course, 'topic_id', 'bbbbbbbb-0000-4000-8000-000000000001', 'stem', 'Aangepast', 'source', 'eigen werk',
+    'copyright_status', 'own_work', 'is_premium', false, 'reviewed', true, 'status', 'published',
+    'options', jsonb_build_array(jsonb_build_object('label', 'A', 'body', 'a2'), jsonb_build_object('label', 'B', 'body', 'b')),
+    'correct_label', 'A', 'explanation', 'Nieuwe uitleg'));
+  select count(*) into n from public.question_options where question_id = v_q;
+  if n <> 2 then raise exception 'FAIL: removed option kept (% left)', n; end if;
+  if (select status from public.questions where id = v_q) <> 'published' then raise exception 'FAIL: not published'; end if;
+end $$;
+
+-- Removing an option a student answered is refused (it would delete their answer).
+do $$ begin
+  begin
+    perform public.admin_save_question(jsonb_build_object(
+      'id', 'cccccccc-0000-4000-8000-000000000001', 'course_id', (select course_id from public.topics where slug = 'test-onderwerp'),
+      'topic_id', 'bbbbbbbb-0000-4000-8000-000000000001', 'stem', 'Testvraag 1', 'source', 'test', 'copyright_status', 'own_work',
+      'is_premium', false, 'reviewed', true, 'status', 'published',
+      'options', jsonb_build_array(jsonb_build_object('label', 'B', 'body', 'b'), jsonb_build_object('label', 'C', 'body', 'c')),
+      'correct_label', 'B', 'explanation', 'x'));
+    raise exception 'FAIL: answered option removed';
+  exception when invalid_parameter_value then null;
+  end;
+end $$;
+
+-- Students cannot author questions.
+set local request.jwt.claim.sub = 'aaaaaaaa-0000-4000-8000-000000000001';
+do $$ begin
+  begin
+    perform public.admin_save_question('{"options": []}'::jsonb);
+    raise exception 'FAIL: student saved a question';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
 rollback;
 \echo 'All database security checks passed.'

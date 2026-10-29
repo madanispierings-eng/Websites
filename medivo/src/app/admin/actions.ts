@@ -26,7 +26,7 @@ export async function updateCourse(_: FormState, formData: FormData): Promise<Fo
     .update({ description: description || null, ec: ec === "" ? null : ec, status })
     .eq("id", id);
   if (error) return { error: `Opslaan mislukt: ${error.message}` };
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath("/vakken", "layout");
   return { success: "Opgeslagen." };
 }

@@ -5,7 +5,6 @@ import { Download, Search } from "lucide-react";
 import { ContentBlocks } from "@/components/content-blocks";
 import { blockText } from "@/lib/content/text";
 import type { Summary } from "@/lib/data/learning";
-import { cn } from "@/lib/utils";
 
 type Chapter = Summary & { anchor: string; topicTitle: string };
 
@@ -128,7 +127,7 @@ export function SummaryReader({ chapters }: { chapters: Chapter[] }) {
                   </a>
                 ) : null}
               </div>
-              <div className={cn("mt-6 max-w-[68ch]")}>
+              <div className="mt-6">
                 {c.invalid ? (
                   <p className="text-sm text-danger">Dit hoofdstuk kon niet worden weergegeven. We zijn op de hoogte gebracht.</p>
                 ) : (

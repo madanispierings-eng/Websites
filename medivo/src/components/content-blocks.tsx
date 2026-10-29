@@ -68,15 +68,16 @@ export function ContentBlocks({ blocks, imageUrls, idPrefix }: { blocks: Content
               <figure key={id} id={id} className="space-y-2">
                 {src ? (
                   // Signed, short-lived URL from private storage; next/image would cache it past its expiry.
+                  // Slides and figures support the text, so they stay at a reading size instead of the full column.
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={src} alt={block.alt} loading="lazy" className="w-full rounded-lg border border-line bg-white" />
+                  <img src={src} alt={block.alt} loading="lazy" className="mx-auto block h-auto max-h-[26rem] w-auto max-w-[min(100%,36rem)] rounded-lg border border-line bg-white" />
                 ) : (
                   <div className="grid aspect-video place-items-center rounded-lg border border-dashed border-line text-sm text-muted-ink">
                     Afbeelding niet beschikbaar
                   </div>
                 )}
                 {block.caption || block.credit ? (
-                  <figcaption className="text-sm text-muted-ink">
+                  <figcaption className="text-center text-sm text-muted-ink">
                     {block.caption}
                     {block.credit ? <span className="block text-xs">Bron: {block.credit}</span> : null}
                   </figcaption>

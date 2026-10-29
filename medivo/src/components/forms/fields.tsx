@@ -39,8 +39,9 @@ export function Field({
   );
 }
 
-export function SubmitButton({ children, className }: { children: React.ReactNode; className?: string }) {
-  const { pending } = useFormStatus();
+export function SubmitButton({ children, className, pending: pendingProp }: { children: React.ReactNode; className?: string; pending?: boolean }) {
+  const status = useFormStatus();
+  const pending = pendingProp ?? status.pending;
   return (
     <Button type="submit" disabled={pending} aria-disabled={pending} className={cn("h-11 w-full font-semibold", className)}>
       {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}

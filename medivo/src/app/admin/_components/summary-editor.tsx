@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useDeferredValue, useRef, useState, useTransition } from "react";
+import { useDeferredValue, useRef, useState, useTransition } from "react";
 import { ImagePlus, Loader2 } from "lucide-react";
 import { ContentBlocks } from "@/components/content-blocks";
 import { FormMessage, SubmitButton } from "@/components/forms/fields";
@@ -9,6 +9,7 @@ import { parseMarkup } from "@/lib/content/markup";
 import type { FormState } from "@/app/(auth)/actions";
 import { saveSummary, uploadImage } from "../content-actions";
 import { PublishFields } from "./publish-fields";
+import { useFormAction } from "@/components/forms/use-form-action";
 import { FieldLabel, inputClass, textareaClass } from "./ui";
 
 const snippets = [
@@ -34,7 +35,7 @@ export function SummaryEditor({
   summary: { id: string; title: string; markup: string; isPremium: boolean; reviewed: boolean; status: "draft" | "published" | "archived" } | null;
   initialImageUrls: Record<string, string>;
 }) {
-  const [state, action] = useActionState<FormState & { id?: string }, FormData>(saveSummary, {});
+  const [state, onSubmit, pending] = useFormAction<FormState & { id?: string }>(saveSummary, {});
   const [text, setText] = useState(summary?.markup ?? "");
   const [imageUrls, setImageUrls] = useState(initialImageUrls);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -74,7 +75,7 @@ export function SummaryEditor({
   }
 
   return (
-    <form action={action} className="grid gap-5">
+    <form onSubmit={onSubmit} className="grid gap-5">
       <FormMessage error={state.error} success={state.success} />
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="topicId" value={topicId} />
@@ -147,7 +148,7 @@ export function SummaryEditor({
       </div>
 
       <PublishFields prefix="sum" status={summary?.status ?? "draft"} reviewed={summary?.reviewed} isPremium={summary?.isPremium ?? false} />
-      <SubmitButton className="w-auto justify-self-start px-5">Samenvatting opslaan</SubmitButton>
+      <SubmitButton pending={pending} className="w-auto justify-self-start px-5">Samenvatting opslaan</SubmitButton>
     </form>
   );
 }

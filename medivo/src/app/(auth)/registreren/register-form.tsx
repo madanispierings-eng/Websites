@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useFormAction } from "@/components/forms/use-form-action";
 import { Field, FormMessage, SubmitButton } from "@/components/forms/fields";
 import { signUp, type FormState } from "../actions";
 
 export function RegisterForm() {
-  const [state, action] = useActionState<FormState, FormData>(signUp, {});
+  const [state, onSubmit, pending] = useFormAction<FormState>(signUp, {});
   if (state.success) return <FormMessage success={state.success} />;
   return (
-    <form action={action} className="grid gap-5" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-5" noValidate>
       <FormMessage error={state.error} />
       <Field name="fullName" label="Naam" autoComplete="name" required error={state.fieldErrors?.fullName} />
       <Field name="email" type="email" label="E-mailadres" autoComplete="email" required error={state.fieldErrors?.email} />
@@ -39,7 +39,7 @@ export function RegisterForm() {
         </label>
         {state.fieldErrors?.consent ? <p id="consent-fout" className="text-sm text-danger">{state.fieldErrors.consent}</p> : null}
       </div>
-      <SubmitButton>Account aanmaken</SubmitButton>
+      <SubmitButton pending={pending}>Account aanmaken</SubmitButton>
       <p className="text-center text-sm text-muted-ink">
         Al een account?{" "}
         <Link href="/inloggen" className="font-semibold text-blue hover:underline">Inloggen</Link>

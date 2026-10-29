@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useFormAction } from "@/components/forms/use-form-action";
 import { Field, FormMessage, SubmitButton } from "@/components/forms/fields";
 import { signIn, type FormState } from "../actions";
 
 export function LoginForm({ next, notice }: { next?: string; notice?: string }) {
-  const [state, action] = useActionState<FormState, FormData>(signIn, {});
+  const [state, onSubmit, pending] = useFormAction<FormState>(signIn, {});
   return (
-    <form action={action} className="grid gap-5" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-5" noValidate>
       <FormMessage error={state.error ?? notice} />
       <input type="hidden" name="volgende" value={next ?? ""} />
       <Field name="email" type="email" label="E-mailadres" autoComplete="email" required error={state.fieldErrors?.email} />
@@ -18,7 +18,7 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
           Wachtwoord vergeten?
         </Link>
       </div>
-      <SubmitButton>Inloggen</SubmitButton>
+      <SubmitButton pending={pending}>Inloggen</SubmitButton>
       <p className="text-center text-sm text-muted-ink">
         Nog geen account?{" "}
         <Link href="/registreren" className="font-semibold text-blue hover:underline">Registreren</Link>

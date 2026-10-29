@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
 import { FormMessage, SubmitButton } from "@/components/forms/fields";
 import type { FormState } from "@/app/(auth)/actions";
 import { createTopic, saveExam, saveObjectives, updateTopic } from "../content-actions";
 import { PublishFields } from "./publish-fields";
+import { useFormAction } from "@/components/forms/use-form-action";
 import { FieldLabel, inputClass, textareaClass } from "./ui";
 
 type TopicOption = { id: string; title: string };
@@ -18,10 +18,10 @@ export function TopicForm({
   topic?: { id: string; title: string; parentId: string | null; sortOrder: number; status: "draft" | "published" | "archived" };
   parents: TopicOption[];
 }) {
-  const [state, action] = useActionState<FormState, FormData>(topic ? updateTopic : createTopic, {});
+  const [state, onSubmit, pending] = useFormAction<FormState>(topic ? updateTopic : createTopic, {});
   const p = topic ? `topic-${topic.id}` : "topic-new";
   return (
-    <form action={action} className="grid gap-4">
+    <form onSubmit={onSubmit} className="grid gap-4">
       <FormMessage error={state.error} success={state.success} />
       <input type="hidden" name="courseId" value={courseId} />
       {topic ? <input type="hidden" name="id" value={topic.id} /> : null}
@@ -52,15 +52,15 @@ export function TopicForm({
           </select>
         </FieldLabel>
       ) : null}
-      <SubmitButton className="w-auto justify-self-start px-5">{topic ? "Opslaan" : "Onderwerp toevoegen"}</SubmitButton>
+      <SubmitButton pending={pending} className="w-auto justify-self-start px-5">{topic ? "Opslaan" : "Onderwerp toevoegen"}</SubmitButton>
     </form>
   );
 }
 
 export function ObjectivesForm({ topicId, lines, published, source }: { topicId: string; lines: string; published: boolean; source: string }) {
-  const [state, action] = useActionState<FormState, FormData>(saveObjectives, {});
+  const [state, onSubmit, pending] = useFormAction<FormState>(saveObjectives, {});
   return (
-    <form action={action} className="grid gap-4">
+    <form onSubmit={onSubmit} className="grid gap-4">
       <FormMessage error={state.error} success={state.success} />
       <input type="hidden" name="topicId" value={topicId} />
       <FieldLabel htmlFor="obj-lines" hint="Eén leerdoel per regel.">
@@ -75,7 +75,7 @@ export function ObjectivesForm({ topicId, lines, published, source }: { topicId:
         <input type="checkbox" name="published" defaultChecked={published} className="size-4 accent-navy" />
         Gepubliceerd (zichtbaar voor studenten)
       </label>
-      <SubmitButton className="w-auto justify-self-start px-5">Leerdoelen opslaan</SubmitButton>
+      <SubmitButton pending={pending} className="w-auto justify-self-start px-5">Leerdoelen opslaan</SubmitButton>
     </form>
   );
 }
@@ -94,10 +94,10 @@ export type ExamRow = {
 };
 
 export function ExamForm({ courseId, exam }: { courseId: string; exam?: ExamRow }) {
-  const [state, action] = useActionState<FormState, FormData>(saveExam, {});
+  const [state, onSubmit, pending] = useFormAction<FormState>(saveExam, {});
   const p = exam ? `exam-${exam.id}` : "exam-new";
   return (
-    <form action={action} className="grid gap-4">
+    <form onSubmit={onSubmit} className="grid gap-4">
       <FormMessage error={state.error} success={state.success} />
       <input type="hidden" name="courseId" value={courseId} />
       {exam ? <input type="hidden" name="id" value={exam.id} /> : null}
@@ -135,7 +135,7 @@ export function ExamForm({ courseId, exam }: { courseId: string; exam?: ExamRow 
         Met uitwerkingen
       </label>
       <PublishFields prefix={p} status={exam?.status ?? "draft"} isPremium={exam?.is_premium ?? false} rights={exam?.rights_status ?? "own_work"} showReview={false} />
-      <SubmitButton className="w-auto justify-self-start px-5">{exam ? "Tentamen opslaan" : "Tentamen toevoegen"}</SubmitButton>
+      <SubmitButton pending={pending} className="w-auto justify-self-start px-5">{exam ? "Tentamen opslaan" : "Tentamen toevoegen"}</SubmitButton>
     </form>
   );
 }

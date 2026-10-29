@@ -1,14 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
+import { useFormAction } from "@/components/forms/use-form-action";
 import { Field, FormMessage, SubmitButton } from "@/components/forms/fields";
 import type { FormState } from "@/app/(auth)/actions";
 import { updateProfile } from "./actions";
 
 export function ProfileForm({ fullName, studyYear, email }: { fullName: string | null; studyYear: number | null; email: string }) {
-  const [state, action] = useActionState<FormState, FormData>(updateProfile, {});
+  const [state, onSubmit, pending] = useFormAction<FormState>(updateProfile, {});
   return (
-    <form action={action} className="grid gap-4">
+    <form onSubmit={onSubmit} className="grid gap-4">
       <FormMessage error={state.error} success={state.success} />
       <Field name="fullName" label="Naam" defaultValue={fullName ?? ""} autoComplete="name" />
       <div className="grid gap-1.5">
@@ -22,7 +22,7 @@ export function ProfileForm({ fullName, studyYear, email }: { fullName: string |
           {[1, 2, 3].map((y) => <option key={y} value={y}>Jaar {y}</option>)}
         </select>
       </div>
-      <SubmitButton className="w-auto justify-self-start px-5">Opslaan</SubmitButton>
+      <SubmitButton pending={pending} className="w-auto justify-self-start px-5">Opslaan</SubmitButton>
     </form>
   );
 }

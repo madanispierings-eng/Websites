@@ -11,9 +11,19 @@ const calloutTone = {
 };
 
 /** Renders structured summary content. Every string becomes a text node; there is no HTML injection path. */
-export function ContentBlocks({ blocks, imageUrls, idPrefix }: { blocks: ContentBlock[]; imageUrls: Record<string, string>; idPrefix: string }) {
+export function ContentBlocks({
+  blocks,
+  imageUrls,
+  idPrefix,
+  className,
+}: {
+  blocks: ContentBlock[];
+  imageUrls: Record<string, string>;
+  idPrefix: string;
+  className?: string;
+}) {
   return (
-    <div className="space-y-5 text-[1.02rem] leading-[1.75] text-navy/90">
+    <div className={cn("space-y-5 text-[1.02rem] leading-[1.75] text-navy/90", className)}>
       {blocks.map((block, i) => {
         const id = `${idPrefix}-b${i}`;
         switch (block.type) {

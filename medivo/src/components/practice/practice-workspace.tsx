@@ -3,20 +3,24 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useReducer, useRef, useState, useTransition } from "react";
-import { ChevronDown, Clock, Layers, ListChecks, Loader2, RotateCcw, Shuffle, Timer } from "lucide-react";
+import { ChevronDown, ClipboardList, Clock, Layers, ListChecks, Loader2, RotateCcw, Shuffle, Timer } from "lucide-react";
 import { QuestionView } from "@/components/practice/question-view";
 import { TopicSidebar, type TopicStats } from "@/components/practice/topic-sidebar";
 import { Button } from "@/components/ui/button";
-import { answeredCount, createEngine, currentQuestion, engineReducer, type EngineAction, type EngineState } from "@/lib/practice/engine";
-import type { PracticeApi, PracticeMode } from "@/lib/practice/types";
+import { answeredCount, createEngine, currentQuestion, engineReducer, isPartial, type EngineAction, type EngineState } from "@/lib/practice/engine";
+import type { PracticeApi, PracticeExam, PracticeMode } from "@/lib/practice/types";
 import type { TopicNode } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
 
-const modes: { value: PracticeMode; label: string; body: string; icon: typeof Layers }[] = [
+/** What the student picks; "past" is a whole old exam, run as an exam or with feedback per question. */
+export type WorkspaceMode = PracticeMode | "past";
+
+const modes: { value: WorkspaceMode; label: string; body: string; icon: typeof Layers }[] = [
   { value: "topic", label: "Per onderwerp", body: "Vragen uit één onderwerp, met direct uitleg.", icon: ListChecks },
   { value: "mixed", label: "Gemengd", body: "Vragen uit meerdere onderwerpen door elkaar.", icon: Shuffle },
   { value: "exam", label: "Tentamenmodus", body: "Geen tussentijdse feedback, optioneel met timer. Score en uitleg aan het eind.", icon: Timer },
   { value: "incorrect", label: "Fout beantwoord", body: "Alleen vragen die je de laatste keer fout had.", icon: RotateCcw },
+  { value: "past", label: "Oud tentamen", body: "Een volledig oud tentamen in de originele volgorde, met alle vraagtypes.", icon: ClipboardList },
 ];
 
 type Holder = EngineState | null;
@@ -34,18 +38,24 @@ export function PracticeWorkspace({
   stats,
   initialMode,
   initialTopicId,
+  exams = [],
+  initialExamId = null,
   api,
 }: {
   courseTitle: string;
   topics: TopicNode[];
   counts: Record<string, number>;
   stats: TopicStats;
-  initialMode: PracticeMode;
+  initialMode: WorkspaceMode;
   initialTopicId: string | null;
+  exams?: PracticeExam[];
+  initialExamId?: string | null;
   api: PracticeApi;
 }) {
   const router = useRouter();
-  const [mode, setMode] = useState<PracticeMode>(initialMode);
+  const [mode, setMode] = useState<WorkspaceMode>(initialMode === "past" && !exams.length ? "topic" : initialMode);
+  const [examId, setExamId] = useState<string | null>(initialExamId ?? exams[0]?.id ?? null);
+  const [pastAsExam, setPastAsExam] = useState(true);
   const [topicId, setTopicId] = useState<string | null>(initialTopicId);
   const [mixedTopics, setMixedTopics] = useState<string[]>([]);
   const [examCount, setExamCount] = useState(20);
@@ -63,15 +73,19 @@ export function PracticeWorkspace({
   function start() {
     setStartError(null);
     const topicIds = mode === "topic" ? (topicId ? [topicId] : []) : mode === "mixed" ? mixedTopics : [];
+    // A past exam runs as the "exam" mode (feedback at the end) or as "mixed" (feedback per question), in exam order.
+    const sessionMode: PracticeMode = mode === "past" ? (pastAsExam ? "exam" : "mixed") : mode;
+    const timed = mode === "exam" || (mode === "past" && pastAsExam);
     startTransition(async () => {
       const res = await api.startSession({
-        mode,
+        mode: sessionMode,
         topicIds,
-        limit: mode === "exam" ? examCount : mode === "topic" ? 100 : 25,
-        timeLimitSeconds: mode === "exam" && examMinutes ? examMinutes * 60 : null,
+        limit: mode === "past" ? 200 : mode === "exam" ? examCount : mode === "topic" ? 100 : 25,
+        timeLimitSeconds: timed && examMinutes ? examMinutes * 60 : null,
+        examId: mode === "past" ? examId : null,
       });
       if (!res.ok) return setStartError(res.error);
-      dispatch({ type: "init", state: createEngine(res.data.sessionId, mode, res.data.questions, res.data.bookmarkedIds) });
+      dispatch({ type: "init", state: createEngine(res.data.sessionId, sessionMode, res.data.questions, res.data.bookmarkedIds) });
       setTimer(res.data.timeLimitSeconds ? { startedAt: Date.parse(res.data.startedAt), limit: res.data.timeLimitSeconds } : null);
       setShowTopics(false);
     });
@@ -80,12 +94,12 @@ export function PracticeWorkspace({
   const submit = useCallback(async () => {
     if (!engine) return;
     const q = currentQuestion(engine);
-    const selected = q && engine.answers[q.id]?.selectedOptionId;
-    if (!q || !selected) return;
+    const response = q && engine.answers[q.id]?.response;
+    if (!q || !response) return;
     dispatch({ type: "submit-start" });
     try {
-      const res = await api.submitAnswer({ sessionId: engine.sessionId, questionId: q.id, optionId: selected });
-      if (res.ok) dispatch({ type: "submit-success", questionId: q.id, selectedOptionId: res.data.selectedOptionId, feedback: res.data.feedback });
+      const res = await api.submitAnswer({ sessionId: engine.sessionId, questionId: q.id, response });
+      if (res.ok) dispatch({ type: "submit-success", questionId: q.id, response: res.data.response, feedback: res.data.feedback });
       else dispatch({ type: "submit-failure", questionId: q.id, error: res.error });
     } catch {
       dispatch({ type: "submit-failure", questionId: q.id, error: "Geen verbinding. Je antwoord is niet verstuurd; probeer het opnieuw." });
@@ -102,6 +116,18 @@ export function PracticeWorkspace({
       setTimer(null);
     }
   }, [api, engine, finishing]);
+
+  const selfGrade = useCallback(async (questionId: string, score: number) => {
+    if (!engine) return null;
+    try {
+      const res = await api.selfGrade({ sessionId: engine.sessionId, questionId, score });
+      if (!res.ok) return res.error;
+      dispatch({ type: "graded", questionId, score: res.data.score, isCorrect: res.data.isCorrect });
+      return null;
+    } catch {
+      return "Geen verbinding. Probeer het opnieuw.";
+    }
+  }, [api, engine]);
 
   async function bookmark(questionId: string, next: boolean) {
     dispatch({ type: "bookmark", questionId, bookmarked: next });
@@ -160,6 +186,7 @@ export function PracticeWorkspace({
             dispatch={dispatch}
             onSubmit={submit}
             onBookmark={bookmark}
+            onSelfGrade={selfGrade}
             footer={
               <SessionFooter
                 state={engine}
@@ -175,7 +202,7 @@ export function PracticeWorkspace({
           <section aria-labelledby="modus-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-7">
             <h2 id="modus-titel" className="text-lg font-semibold text-navy">Kies hoe je wilt oefenen</h2>
             <div role="radiogroup" aria-labelledby="modus-titel" className="mt-4 grid gap-3 sm:grid-cols-2">
-              {modes.map((m) => (
+              {modes.filter((m) => m.value !== "past" || exams.length > 0).map((m) => (
                 <label
                   key={m.value}
                   className={cn(
@@ -228,6 +255,46 @@ export function PracticeWorkspace({
                 </fieldset>
               ) : null}
 
+              {mode === "past" ? (
+                <div className="space-y-4">
+                  <label className="grid max-w-md gap-1.5 text-sm font-semibold text-navy">
+                    Tentamen
+                    <select value={examId ?? ""} onChange={(e) => setExamId(e.target.value)} className="h-10 rounded-lg border border-input bg-white px-3 text-base font-normal sm:text-sm">
+                      {exams.map((e) => (
+                        <option key={e.id} value={e.id}>{e.label}{e.questionCount ? ` · ${e.questionCount} vragen` : ""}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <fieldset>
+                    <legend className="text-sm font-semibold text-navy">Hoe wil je het maken?</legend>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {[
+                        { v: true, l: "Als tentamen", b: "uitleg en nakijken aan het eind" },
+                        { v: false, l: "Met directe uitleg", b: "na elke vraag" },
+                      ].map((o) => (
+                        <label key={String(o.v)} className={cn("cursor-pointer rounded-lg border px-3 py-2 text-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent-blue", pastAsExam === o.v ? "border-accent-blue bg-sky text-navy" : "border-line text-muted-ink hover:text-navy")}>
+                          <input type="radio" name="tentamenvorm" className="sr-only" checked={pastAsExam === o.v} onChange={() => setPastAsExam(o.v)} />
+                          <span className="font-semibold">{o.l}</span> · {o.b}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                  {pastAsExam ? (
+                    <label className="grid w-fit gap-1.5 text-sm font-semibold text-navy">
+                      Tijdslimiet
+                      <select
+                        value={examMinutes ?? 0}
+                        onChange={(e) => setExamMinutes(Number(e.target.value) || null)}
+                        className="h-10 rounded-lg border border-input bg-white px-3 text-base font-normal sm:text-sm"
+                      >
+                        <option value={0}>Geen timer</option>
+                        {[60, 120, 180].map((n) => <option key={n} value={n}>{n / 60} uur</option>)}
+                      </select>
+                    </label>
+                  ) : null}
+                </div>
+              ) : null}
+
               {mode === "exam" ? (
                 <div className="flex flex-wrap gap-6">
                   <label className="grid gap-1.5 text-sm font-semibold text-navy">
@@ -259,11 +326,11 @@ export function PracticeWorkspace({
               <Button
                 type="button"
                 onClick={start}
-                disabled={starting || totalQuestions === 0 || (mode === "topic" && !topicId)}
+                disabled={starting || (mode !== "past" && totalQuestions === 0) || (mode === "topic" && !topicId) || (mode === "past" && !examId)}
                 className="mt-5 h-11 px-6 font-semibold"
               >
                 {starting ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
-                {mode === "exam" ? "Start tentamen" : "Start met oefenen"}
+                {mode === "exam" || (mode === "past" && pastAsExam) ? "Start tentamen" : "Start met oefenen"}
               </Button>
             </div>
           </section>
@@ -314,17 +381,19 @@ function SessionFooter({ state, dispatch, timer, finishing, onFinish, onRestart 
             {state.questions.map((q, i) => {
               const a = state.answers[q.id];
               const fb = a?.feedback;
-              const skipped = Boolean(fb) && a?.selectedOptionId == null;
+              const skipped = Boolean(fb) && a?.response == null;
+              const pending = Boolean(fb) && !skipped && (fb!.score === null || isPartial(fb!));
               return (
                 <li key={q.id}>
                   <button
                     type="button"
                     onClick={() => dispatch({ type: "go", index: i })}
                     aria-current={state.index === i ? "step" : undefined}
-                    aria-label={`Vraag ${i + 1}${skipped ? ", niet beantwoord" : fb ? (fb.isCorrect ? ", juist" : ", onjuist") : a?.status === "answered" ? ", beantwoord" : ""}`}
+                    aria-label={`Vraag ${i + 1}${skipped ? ", niet beantwoord" : fb ? (fb.score === null ? ", nog nakijken" : fb.isCorrect ? ", juist" : isPartial(fb) ? ", deels juist" : ", onjuist") : a?.status === "answered" ? ", beantwoord" : ""}`}
                     className={cn(
                       "grid size-9 place-items-center rounded-md border text-xs font-semibold tabular-nums",
                       skipped ? "border-dashed border-muted-ink/50 text-muted-ink"
+                        : pending ? "border-[#e8c48a] bg-[#fdf6ec] text-navy"
                         : fb ? (fb.isCorrect ? "border-success bg-success-soft text-success-ink" : "border-danger/50 bg-danger-soft text-danger")
                         : a?.status === "answered" ? "border-accent-blue bg-sky text-navy" : "border-line text-muted-ink",
                       state.index === i && "ring-2 ring-navy ring-offset-1",
@@ -375,14 +444,19 @@ function SessionFooter({ state, dispatch, timer, finishing, onFinish, onRestart 
 
 function ResultsBanner({ state, onRestart }: { state: EngineState; onRestart: () => void }) {
   const r = state.finished!;
-  const pct = r.total ? Math.round((r.correct / r.total) * 100) : 0;
+  const pct = r.points ? Math.round((r.scored / r.points) * 100) : 0;
+  const toGrade = Object.values(state.answers).filter((a) => a.feedback && a.response !== null && a.feedback.score === null).length;
+  const nl = (n: number) => n.toLocaleString("nl-NL", { maximumFractionDigits: 2 });
   return (
     <section aria-labelledby="resultaat-titel" className="mb-5 flex flex-wrap items-center gap-5 rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
       <div className="grid size-20 shrink-0 place-items-center rounded-full border-4 border-success/30 text-xl font-bold tabular-nums text-navy">{pct}%</div>
       <div className="flex-1">
         <h2 id="resultaat-titel" className="text-lg font-semibold text-navy">Sessie afgerond</h2>
         <p className="mt-1 text-sm text-muted-ink">
-          {r.correct} van {r.total} goed · {r.answered} beantwoord. Loop hieronder de vragen na om de uitleg te lezen.
+          {nl(r.scored)} van {nl(r.points)} punten · {r.correct} van {r.total} vragen volledig goed · {r.answered} beantwoord.{" "}
+          {toGrade
+            ? `Kijk nog ${toGrade} open ${toGrade === 1 ? "vraag" : "vragen"} na met het antwoordmodel (oranje in het overzicht); je score loopt mee.`
+            : "Loop hieronder de vragen na om de uitleg te lezen."}
         </p>
       </div>
       <div className="flex gap-2">

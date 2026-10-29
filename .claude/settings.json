@@ -49,5 +49,10 @@
         "repo": "anthropics/claude-plugins-official"
       }
     }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(curl -sS -X POST https://api.supabase.com/v1/projects/cnslqzwikmtxomukziub/database/query *)"
+    ]
   }
 }

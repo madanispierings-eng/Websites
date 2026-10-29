@@ -26,7 +26,7 @@ export type LearningObjective = { id: string; topicId: string; body: string; sou
 
 export type Exam = {
   id: string;
-  examYear: number;
+  examYear: number | null;
   examType: "regular" | "resit" | "midterm" | "practice";
   title: string | null;
   questionCount: number | null;

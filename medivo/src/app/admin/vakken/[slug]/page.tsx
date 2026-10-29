@@ -63,7 +63,7 @@ export default async function AdminCoursePage({ params }: { params: Promise<{ sl
               <li key={e.id}>
                 <details className="rounded-lg border border-line">
                   <summary className="flex cursor-pointer flex-wrap items-center gap-3 px-4 py-3 text-sm">
-                    <span className="font-medium tabular-nums text-navy">{e.exam_year}</span>
+                    <span className="font-medium tabular-nums text-navy">{e.exam_year ?? "–"}</span>
                     <span className="flex-1 text-navy">{e.title ?? ""}</span>
                     <span className="text-xs text-muted-ink">{rightsLabel[e.rights_status]}</span>
                     <StatusBadge status={e.status} />

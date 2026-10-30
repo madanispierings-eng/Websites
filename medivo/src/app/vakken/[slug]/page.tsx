@@ -48,7 +48,7 @@ export default async function CoursePage({ params }: Props) {
       <section className="relative mt-5 overflow-hidden rounded-2xl bg-navy text-white">
         <div className="absolute inset-y-0 right-0 w-full sm:w-[62%]">
           <Image src={image.src} alt="" fill priority sizes="(min-width: 640px) 62vw, 100vw" className="object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/80 to-navy/50 sm:via-navy/75 sm:to-navy/20 lg:via-navy/55 lg:to-navy/0" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/85 to-navy/65 sm:via-navy/85 sm:to-navy/30 lg:via-navy/55 lg:to-navy/0" aria-hidden="true" />
         </div>
         <div className="relative max-w-2xl px-6 py-10 sm:px-10 sm:py-12">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/75">{yearLabel(course.studyYear)}</p>
@@ -58,7 +58,7 @@ export default async function CoursePage({ params }: Props) {
             <li className="inline-flex items-center gap-2"><Landmark className="size-[1.1rem]" aria-hidden="true" />{course.university}</li>
             <li className="inline-flex items-center gap-2"><FileText className="size-[1.1rem]" aria-hidden="true" />{yearLabel(course.studyYear)}</li>
           </ul>
-          <p className="mt-5 max-w-xl leading-relaxed text-white/85">
+          <p className="mt-5 max-w-xl leading-relaxed text-white/90">
             {course.description ??
               `Studiemateriaal voor ${course.title}, ${yearLabel(course.studyYear).toLowerCase()} van de ${course.program.charAt(0).toLowerCase()}${course.program.slice(1)} aan de ${course.university}.`}
           </p>
@@ -66,16 +66,22 @@ export default async function CoursePage({ params }: Props) {
       </section>
 
       {/* The five sections */}
-      <section aria-label="Onderdelen" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {courseSections.map((s) => {
+      <section aria-label="Onderdelen" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-5">
+        {courseSections.map((s, i) => {
           const n = s.count(overview);
           return (
             <Link
               key={s.key}
               href={`${base}/${s.key}`}
-              className="group flex overflow-hidden rounded-xl border border-line bg-white shadow-[var(--shadow-card)] transition-shadow max-sm:flex-row sm:flex-col hover:shadow-[var(--shadow-lift)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
+              className={cn(
+                "group flex overflow-hidden rounded-xl border border-line bg-white shadow-[var(--shadow-card)] transition-shadow max-sm:flex-row sm:flex-col hover:shadow-[var(--shadow-lift)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue",
+                // Three over two on tablets, with the bottom two centred; one row of five on wide screens.
+                "lg:col-span-2 xl:col-span-1",
+                i === 3 && "lg:col-start-2 xl:col-start-auto",
+                i === 4 && "sm:col-span-2",
+              )}
             >
-              <div className="relative shrink-0 overflow-hidden bg-sky max-sm:w-28 sm:aspect-[16/7]">
+              <div className={cn("relative shrink-0 overflow-hidden bg-sky max-sm:w-28 sm:aspect-[16/7]", i === 4 && "sm:aspect-[32/7] lg:aspect-[16/7]")}>
                 <Image
                   src={s.image}
                   alt=""

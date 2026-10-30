@@ -194,7 +194,7 @@ function TopicPicker({ topics, cards, progress, now, selected, disabled, onSelec
   const current = rows.find((r) => r.id === selected) ?? rows[0];
 
   return (
-    <div className="lg:sticky lg:top-24 lg:self-start">
+    <div className="min-w-0 lg:sticky lg:top-24 lg:self-start">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -294,7 +294,16 @@ function StudySession({ state, setState, cards, backFirst, review, onReviewed, o
   const byId = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
   const id = currentCardId(s);
   const card = id ? byId.get(id) ?? null : null;
-  const cardRef = useRef<HTMLButtonElement>(null);
+  const cardRef = useRef<HTMLButtonElement | null>(null);
+  // Set when the next card to mount should take focus (session start, after an answer, new round).
+  const focusNext = useRef(true);
+  const setCardRef = useCallback((el: HTMLButtonElement | null) => {
+    cardRef.current = el;
+    if (el && focusNext.current) {
+      focusNext.current = false;
+      el.focus({ preventScroll: true });
+    }
+  }, []);
   const summaryRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => setState(s), [s, setState]);
@@ -310,8 +319,8 @@ function StudySession({ state, setState, cards, backFirst, review, onReviewed, o
       review({ flashcardId: id, known })
         .then((res) => (res.ok ? onReviewed(id, res.data) : setError(res.error)))
         .catch(() => setError("Geen verbinding: je laatste antwoord is niet opgeslagen."));
-      // Keep keyboard focus on the card for the next one.
-      requestAnimationFrame(() => cardRef.current?.focus());
+      // Keep keyboard focus on the card: the next one takes focus as soon as it mounts.
+      focusNext.current = true;
     },
     [id, s.flipped, review, onReviewed],
   );
@@ -343,10 +352,10 @@ function StudySession({ state, setState, cards, backFirst, review, onReviewed, o
           {s.roundDone ? `Ronde ${s.round} klaar` : `Kaart ${s.index + 1} van ${total}`}
           {s.round > 1 && !s.roundDone ? <span className="text-muted-ink"> · ronde {s.round}</span> : null}
         </p>
-        <div className="h-1.5 min-w-24 flex-1 overflow-hidden rounded-full bg-sky" aria-hidden="true">
+        <div className="h-1.5 min-w-24 flex-1 overflow-hidden rounded-full bg-sky max-sm:order-last max-sm:basis-full" aria-hidden="true">
           <div className="h-full rounded-full bg-success transition-[width] duration-300" style={{ width: `${(s.index / Math.max(total, 1)) * 100}%` }} />
         </div>
-        <span className="inline-flex items-center gap-3 text-sm tabular-nums">
+        <span className="inline-flex items-center gap-3 text-sm tabular-nums max-sm:ml-auto">
           <span className="inline-flex items-center gap-1 text-[#8a4f0c]"><X className="size-4" aria-hidden="true" />{s.again.length}<span className="sr-only"> nog niet</span></span>
           <span className="inline-flex items-center gap-1 text-success-ink"><Check className="size-4" aria-hidden="true" />{s.known.length}<span className="sr-only"> geweten</span></span>
         </span>
@@ -364,7 +373,14 @@ function StudySession({ state, setState, cards, backFirst, review, onReviewed, o
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             {s.again.length ? (
-              <Button type="button" onClick={() => dispatch({ type: "next-round" })} className="h-11 px-5 font-semibold">
+              <Button
+                type="button"
+                onClick={() => {
+                  focusNext.current = true;
+                  dispatch({ type: "next-round" });
+                }}
+                className="h-11 px-5 font-semibold"
+              >
                 <RotateCcw aria-hidden="true" /> Oefen de {s.again.length} opnieuw
               </Button>
             ) : null}
@@ -373,7 +389,7 @@ function StudySession({ state, setState, cards, backFirst, review, onReviewed, o
         </div>
       ) : card ? (
         <>
-          <div className="mt-6 [perspective:1600px]">
+          <div className="mt-6">
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={`${s.round}-${s.index}`}
@@ -383,11 +399,11 @@ function StudySession({ state, setState, cards, backFirst, review, onReviewed, o
                 transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
               >
                 <button
-                  ref={cardRef}
+                  ref={setCardRef}
                   type="button"
                   onClick={() => dispatch({ type: "flip" })}
                   aria-label={s.flipped ? "Kaart omdraaien naar de voorkant" : "Kaart omdraaien om het antwoord te zien"}
-                  className="group relative block min-h-[17rem] w-full rounded-2xl text-left outline-none focus-visible:ring-2 focus-visible:ring-accent-blue focus-visible:ring-offset-2 sm:min-h-[20rem]"
+                  className="group relative block min-h-[17rem] w-full rounded-2xl text-left outline-none [perspective:1600px] focus-visible:ring-2 focus-visible:ring-accent-blue focus-visible:ring-offset-2 sm:min-h-[20rem]"
                 >
                   <div
                     className={cn(

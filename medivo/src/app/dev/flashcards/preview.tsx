@@ -14,11 +14,16 @@ const cards: Flashcard[] = [
   ...Array.from({ length: 12 }, (_, i) => ({
     id: `a${i}`,
     topicId: "t1",
-    front: `Begrip ${i + 1}`,
-    back: i === 2 ? "Uitleg met een formule:\n\n$$ t_{1/2} = \\frac{0{,}7 \\cdot V_d}{Cl} $$" : `Korte uitleg bij begrip ${i + 1} (opvultekst), zoals die in de begrippenlijst van de samenvatting staat.`,
+    front: `Voorbeeldvraag ${i + 1} over de stof (opvultekst)?`,
+    back:
+      i === 2
+        ? "Antwoord met een formule:\n\n$$ t_{1/2} = \\frac{0{,}7 \\cdot V_d}{Cl} $$\n\nEn een toelichting in een zin (opvultekst)."
+        : i === 0
+          ? "Antwoord als lijst:\n\n- Eerste punt van het antwoord (opvultekst)\n- Tweede punt, iets langer, zodat het over twee regels loopt (opvultekst)\n- Derde punt (opvultekst)"
+          : `Kort antwoord op vraag ${i + 1} (opvultekst), in een of twee zinnen zoals op de echte kaarten.`,
   })),
-  ...Array.from({ length: 5 }, (_, i) => ({ id: `b${i}`, topicId: "t2", front: `Begrip ${i + 1} met een langere naam (opvultekst)`, back: "Uitleg (opvultekst)." })),
-  ...Array.from({ length: 4 }, (_, i) => ({ id: `c${i}`, topicId: "t3", front: `Begrip ${i + 1}`, back: "Uitleg (opvultekst)." })),
+  ...Array.from({ length: 5 }, (_, i) => ({ id: `b${i}`, topicId: "t2", front: `Langere voorbeeldvraag ${i + 1} die over meerdere regels loopt, zoals een casusvraag (opvultekst)?`, back: "Antwoord (opvultekst)." })),
+  ...Array.from({ length: 4 }, (_, i) => ({ id: `c${i}`, topicId: "t3", front: `Vraag ${i + 1} (opvultekst)?`, back: "Antwoord (opvultekst)." })),
 ];
 
 const day = 24 * 3600 * 1000;

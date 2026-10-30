@@ -42,7 +42,7 @@ export default async function FlashcardsPage({ params, searchParams }: Props) {
         course={course}
         active="flashcards"
         title="Flashcards"
-        intro="Leer de begrippen per onderwerp. Draai de kaart om en geef eerlijk aan of je het wist: wat je nog niet weet komt vaker terug."
+        intro="Korte vragen over wat je moet kennen voor het tentamen, per onderwerp. Bedenk je antwoord, draai de kaart om en geef eerlijk aan of je het wist: wat je nog niet weet komt vaker terug."
       />
       <div className={cn(container, "py-8 lg:py-10")}>
         {overview.flashcards === 0 ? (

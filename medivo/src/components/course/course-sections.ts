@@ -43,7 +43,7 @@ export const courseSections: CourseSection[] = [
   {
     key: "flashcards",
     title: "Flashcards",
-    body: "Begrippen actief herhalen, per onderwerp.",
+    body: "Kennisvragen actief herhalen, per onderwerp.",
     icon: Layers,
     image: "/images/onderdelen/flashcards.webp",
     count: (o) => o.flashcards,

@@ -127,10 +127,10 @@ export default async function HomePage() {
         </div>
         {years.map(({ year, courses }) => (
           <div key={year} className="mt-10">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-muted-ink">Jaar {year}</h3>
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <h3 className="text-xl font-semibold text-navy">Jaar {year}</h3>
+            <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {courses.map((c) => (
-                <CourseCard key={c.id} course={c} />
+                <CourseCard key={c.id} course={c} showYear={false} titleAs="h4" />
               ))}
             </div>
           </div>

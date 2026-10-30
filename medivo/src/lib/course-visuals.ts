@@ -20,7 +20,3 @@ const images: Record<string, { src: string; alt: string }> = {
 export function courseImage(slug: string) {
   return images[slug] ?? { src: "/images/microscoop.webp", alt: "Microscoop" };
 }
-
-export function courseHeroImage(slug: string) {
-  return courseImage(slug).src;
-}

@@ -30,6 +30,11 @@ export const photoCredits = [
   { file: "vakken/vraagstukken-psychische-gezondheid-en-hormonen.webp", what: "Gesprek met een hulpverlener", author: "Vitaly Gariev", url: "https://unsplash.com/photos/m-82PNzgFq4" },
   { file: "vakken/vraagstukken-latere-levensfasen.webp", what: "Handen van een oudere op een wandelstok", author: "Alexas_Fotos", url: "https://unsplash.com/photos/6W1voPFLfrc" },
   { file: "vakken/vraagstukken-spoedeisende-zorg.webp", what: "Ambulance onderweg", author: "Ian Taylor", url: "https://unsplash.com/photos/4hWvAJP8ofM" },
+  { file: "onderdelen/samenvatting.webp", what: "open boek", author: "Olga Tutunaru", url: "https://unsplash.com/photos/JMATuFkXeHU" },
+  { file: "onderdelen/leerdoelen.webp", what: "afvinklijst", author: "Jakub Żerdzicki", url: "https://unsplash.com/photos/fXlL5I0IvK0" },
+  { file: "onderdelen/tentamens.webp", what: "antwoordformulier", author: "Nguyen Dang Hoang Nhu", url: "https://unsplash.com/photos/cbEvoHbJnIE" },
+  { file: "onderdelen/flashcards.webp", what: "stapel kaartjes", author: "Kate Trysh", url: "https://unsplash.com/photos/WX5jK0BT5JQ" },
+  { file: "onderdelen/oefenen.webp", what: "stethoscoop op studieboeken", author: "Bermix Studio", url: "https://unsplash.com/photos/vT-Hkq0_FBU" },
 ] as const;
 
 export const container = "mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-8";

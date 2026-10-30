@@ -402,5 +402,91 @@ do $$ begin
   end;
 end $$;
 
+
+-- ---- flashcards: Leitner review and own progress ----
+reset role;
+insert into public.flashcards (id, course_id, topic_id, front, back, source, copyright_status, is_premium, reviewed_at, status)
+select v.id::uuid, c.id, 'bbbbbbbb-0000-4000-8000-000000000001', 'Voorkant', 'Achterkant', 'test', 'own_work', false, now(), v.status::public.publication_status
+from public.courses c, (values
+  ('fcfcfcfc-0000-4000-8000-000000000001', 'published'),
+  ('fcfcfcfc-0000-4000-8000-000000000002', 'draft')
+) as v(id, status)
+where c.slug = 'van-cel-tot-molecuul';
+
+set local role authenticated;
+set local request.jwt.claim.sub = 'aaaaaaaa-0000-4000-8000-000000000001';
+do $$
+declare
+  v_course uuid := (select id from public.courses where slug = 'van-cel-tot-molecuul');
+  c1 uuid := 'fcfcfcfc-0000-4000-8000-000000000001';
+  v_res jsonb; v_prog jsonb;
+begin
+  if (select count(*) from public.flashcards where id in (c1, 'fcfcfcfc-0000-4000-8000-000000000002')) <> 1 then raise exception 'FAIL: draft flashcard visible'; end if;
+  begin
+    perform public.review_flashcard('fcfcfcfc-0000-4000-8000-000000000002', true);
+    raise exception 'FAIL: reviewed a draft card';
+  exception when no_data_found then null;
+  end;
+
+  v_res := public.review_flashcard(c1, true);
+  if (v_res ->> 'box')::int <> 1 or (v_res ->> 'due_at')::timestamptz < now() + interval '23 hours' then raise exception 'FAIL: first known %', v_res; end if;
+  -- Known again the same day: no promotion.
+  v_res := public.review_flashcard(c1, true);
+  if (v_res ->> 'box')::int <> 1 then raise exception 'FAIL: promoted before due %', v_res; end if;
+  -- Not known: back to box 0 and due now.
+  v_res := public.review_flashcard(c1, false);
+  if (v_res ->> 'box')::int <> 0 or (v_res ->> 'due_at')::timestamptz > now() then raise exception 'FAIL: not known %', v_res; end if;
+  v_res := public.review_flashcard(c1, true);
+  if (v_res ->> 'box')::int <> 1 or (v_res ->> 'reviews')::int <> 4 then raise exception 'FAIL: relearn %', v_res; end if;
+  if (select lapses from public.flashcard_progress where flashcard_id = c1) <> 1 then raise exception 'FAIL: lapses'; end if;
+
+  -- Students cannot write their progress directly.
+  begin
+    update public.flashcard_progress set box = 5 where flashcard_id = c1;
+    if (select box from public.flashcard_progress where flashcard_id = c1) = 5 then raise exception 'FAIL: progress written directly'; end if;
+  exception when insufficient_privilege then null;
+  end;
+
+  v_prog := public.my_course_progress(v_course);
+  if (select (t ->> 'flashcards_total')::int from jsonb_array_elements(v_prog -> 'topics') t where t ->> 'id' = 'bbbbbbbb-0000-4000-8000-000000000001') < 1
+     or (select (t ->> 'flashcards_learning')::int from jsonb_array_elements(v_prog -> 'topics') t where t ->> 'id' = 'bbbbbbbb-0000-4000-8000-000000000001') <> 1
+  then raise exception 'FAIL: course progress %', v_prog; end if;
+  if (v_prog ->> 'answers_given')::int < 1 then raise exception 'FAIL: answers_given %', v_prog; end if;
+  if (select (overview ->> 'flashcards')::int from (select public.course_content_overview(v_course) as overview) o) < 1 then raise exception 'FAIL: overview flashcards'; end if;
+end $$;
+
+-- Due cards are promoted.
+reset role;
+update public.flashcard_progress set due_at = now() - interval '1 minute' where flashcard_id = 'fcfcfcfc-0000-4000-8000-000000000001';
+set local role authenticated;
+do $$
+declare v_res jsonb;
+begin
+  v_res := public.review_flashcard('fcfcfcfc-0000-4000-8000-000000000001', true);
+  if (v_res ->> 'box')::int <> 2 or (v_res ->> 'due_at')::timestamptz < now() + interval '71 hours' then raise exception 'FAIL: due promotion %', v_res; end if;
+  if (select (t ->> 'flashcards_mastered')::int from jsonb_array_elements(public.my_course_progress((select id from public.courses where slug = 'van-cel-tot-molecuul')) -> 'topics') t
+      where t ->> 'id' = 'bbbbbbbb-0000-4000-8000-000000000001') <> 1 then raise exception 'FAIL: mastered count'; end if;
+end $$;
+
+-- Another student sees none of it.
+set local request.jwt.claim.sub = 'aaaaaaaa-0000-4000-8000-000000000002';
+do $$ begin
+  if exists (select 1 from public.flashcard_progress) then raise exception 'FAIL: other student progress visible'; end if;
+  if (public.my_course_progress((select id from public.courses where slug = 'van-cel-tot-molecuul')) ->> 'answers_given')::int <> 0 then raise exception 'FAIL: other student progress counted'; end if;
+end $$;
+
+-- Anonymous visitors cannot review cards or read progress.
+reset request.jwt.claim.sub;
+set local role anon;
+do $$ begin
+  if exists (select 1 from public.flashcards) then raise exception 'FAIL: anon reads flashcards'; end if;
+  begin
+    perform public.my_course_progress('00000000-0000-4000-8000-000000000000');
+    raise exception 'FAIL: anon progress';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+set local role authenticated;
+
 rollback;
 \echo 'All database security checks passed.'

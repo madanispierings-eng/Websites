@@ -49,7 +49,6 @@ export function FlashcardStudio({
   const [progress, setProgress] = useState(initialProgress);
   const [onlyDue, setOnlyDue] = useState(true);
   const [shuffle, setShuffle] = useState(true);
-  const [backFirst, setBackFirst] = useState(false);
   const [study, setStudy] = useState<StudyState | null>(null);
   const [sessionKey, setSessionKey] = useState(0);
   // "now" is fixed per render pass of the overview so counts do not jitter while studying.
@@ -92,7 +91,6 @@ export function FlashcardStudio({
             state={study}
             setState={setStudy}
             cards={cards}
-            backFirst={backFirst}
             review={review}
             onReviewed={(id, p) => setProgress((cur) => ({ ...cur, [id]: p }))}
             onStop={stop}
@@ -133,10 +131,6 @@ export function FlashcardStudio({
               <label className="inline-flex cursor-pointer items-center gap-2">
                 <input type="checkbox" checked={shuffle} onChange={(e) => setShuffle(e.target.checked)} className="size-4 accent-accent-blue" />
                 <Shuffle className="size-4 text-muted-ink" aria-hidden="true" /> Schudden
-              </label>
-              <label className="inline-flex cursor-pointer items-center gap-2">
-                <input type="checkbox" checked={backFirst} onChange={(e) => setBackFirst(e.target.checked)} className="size-4 accent-accent-blue" />
-                Eerst de uitleg, dan het begrip raden
               </label>
             </div>
 
@@ -262,10 +256,12 @@ function CardList({ deck, progress }: { deck: Flashcard[]; progress: Record<stri
         {shown.map((c) => {
           const s = cardStatus(progress[c.id]);
           return (
-            <li key={c.id} className="grid gap-1 px-4 py-3 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto] sm:items-start sm:gap-4">
-              <MarkupText source={c.front} idPrefix={`lijst-${c.id}-v`} className="space-y-1 text-[0.95rem] font-semibold leading-snug text-navy" />
-              <MarkupText source={c.back} idPrefix={`lijst-${c.id}-a`} className="space-y-1 text-[0.95rem] leading-relaxed text-navy/85" />
-              <span className={cn("w-fit rounded-full px-2 py-0.5 text-xs font-medium", statusMeta[s].pill)}>{statusMeta[s].label}</span>
+            <li key={c.id} className="px-4 py-3.5">
+              <div className="flex items-start justify-between gap-3">
+                <MarkupText source={c.front} idPrefix={`lijst-${c.id}-v`} className="space-y-1 text-[0.95rem] font-semibold leading-snug text-navy" />
+                <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-xs font-medium", statusMeta[s].pill)}>{statusMeta[s].label}</span>
+              </div>
+              <MarkupText source={c.back} idPrefix={`lijst-${c.id}-a`} className="mt-1.5 space-y-2 text-[0.95rem] leading-relaxed text-navy/85" />
             </li>
           );
         })}
@@ -279,11 +275,10 @@ function CardList({ deck, progress }: { deck: Flashcard[]; progress: Record<stri
   );
 }
 
-function StudySession({ state, setState, cards, backFirst, review, onReviewed, onStop }: {
+function StudySession({ state, setState, cards, review, onReviewed, onStop }: {
   state: StudyState;
   setState: (s: StudyState) => void;
   cards: Flashcard[];
-  backFirst: boolean;
   review: Review;
   onReviewed: (id: string, p: CardProgress) => void;
   onStop: () => void;
@@ -342,8 +337,8 @@ function StudySession({ state, setState, cards, backFirst, review, onReviewed, o
   }, [answer, s.roundDone]);
 
   const total = s.queue.length;
-  const front = card ? (backFirst ? card.back : card.front) : "";
-  const back = card ? (backFirst ? card.front : card.back) : "";
+  const front = card?.front ?? "";
+  const back = card?.back ?? "";
 
   return (
     <section aria-label="Flashcards leren" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-7">
@@ -412,19 +407,18 @@ function StudySession({ state, setState, cards, backFirst, review, onReviewed, o
                       s.flipped && "[transform:rotateY(180deg)]",
                     )}
                   >
-                    <CardFace label={backFirst ? "Uitleg" : "Begrip"} hint="Klik of druk op spatie om om te draaien" hidden={s.flipped}>
+                    <CardFace label="Vraag" hint="Bedenk je antwoord, en klik of druk op spatie om om te draaien" hidden={s.flipped}>
                       <MarkupText
                         source={front}
                         idPrefix={`kaart-${card.id}-v`}
-                        className={cn("space-y-2 text-center text-navy", backFirst ? "text-lg leading-relaxed" : "text-2xl font-semibold leading-snug sm:text-[1.75rem]")}
+                        className="max-w-2xl space-y-2 text-balance text-center text-xl font-semibold leading-snug text-navy sm:text-2xl"
                       />
                     </CardFace>
-                    <CardFace label={backFirst ? "Begrip" : "Uitleg"} back hidden={!s.flipped}>
-                      <MarkupText
-                        source={back}
-                        idPrefix={`kaart-${card.id}-a`}
-                        className={cn("space-y-2 text-center text-navy", backFirst ? "text-2xl font-semibold leading-snug" : "text-lg leading-relaxed")}
-                      />
+                    <CardFace label="Antwoord" back hidden={!s.flipped}>
+                      <div className="w-full max-w-2xl">
+                        <MarkupText source={front} idPrefix={`kaart-${card.id}-vk`} className="mb-3 border-b border-accent-blue/15 pb-3 text-sm font-medium leading-snug text-muted-ink" />
+                        <MarkupText source={back} idPrefix={`kaart-${card.id}-a`} className="space-y-2.5 text-left text-[1.02rem] leading-relaxed text-navy" />
+                      </div>
                     </CardFace>
                   </div>
                 </button>
@@ -467,7 +461,7 @@ function CardFace({ label, hint, back, hidden, children }: { label: string; hint
     >
       <span className="text-xs font-semibold uppercase tracking-[0.06em] text-muted-ink">{label}</span>
       <div className="flex flex-1 items-center justify-center py-6">{children}</div>
-      {hint ? <span className="text-center text-xs text-muted-ink">{hint}</span> : null}
+      {hint ? <span className="text-balance text-center text-xs text-muted-ink">{hint}</span> : null}
     </div>
   );
 }

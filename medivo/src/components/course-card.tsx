@@ -1,33 +1,49 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
-import { courseVisual, tintClasses } from "@/lib/course-visuals";
+import { ArrowRight } from "lucide-react";
+import { courseImage } from "@/lib/course-visuals";
 import type { Course } from "@/lib/data/types";
 import { ecLabel, yearLabel } from "@/lib/site";
-import { cn } from "@/lib/utils";
 
-export function CourseCard({ course }: { course: Course }) {
-  const { icon: Icon, tint } = courseVisual(course.slug);
-  const t = tintClasses[tint];
+export function CourseCard({
+  course,
+  showYear = true,
+  titleAs: Title = "h3",
+}: {
+  course: Course;
+  /** Off where the cards are already grouped under a year heading. */
+  showYear?: boolean;
+  titleAs?: "h3" | "h4";
+}) {
+  const image = courseImage(course.slug);
   return (
     <Link
       href={`/vakken/${course.slug}`}
-      className={cn(
-        "group relative flex min-h-40 flex-col rounded-xl border p-5 transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] motion-reduce:hover:translate-y-0",
-        t.card,
-        t.ring,
-      )}
+      className="group flex flex-col overflow-hidden rounded-xl bg-white transition-colors duration-200 hover:bg-sky/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
     >
-      <Icon className={cn("size-9", t.icon)} strokeWidth={1.5} aria-hidden="true" />
-      <h3 className="mt-auto pt-6 text-[0.95rem] font-semibold leading-snug text-navy">{course.title}</h3>
-      <p className="mt-1 flex items-center gap-2 text-xs text-muted-ink">
-        <span>{yearLabel(course.studyYear)}</span>
-        <span aria-hidden="true">·</span>
-        <span>{ecLabel(course.ec)}</span>
-      </p>
-      <ChevronRight
-        className="absolute bottom-5 right-4 size-4 text-navy/60 transition-transform duration-200 group-hover:translate-x-0.5"
-        aria-hidden="true"
-      />
+      <div className="relative aspect-[16/9] overflow-hidden bg-sky sm:aspect-[3/2]">
+        {/* The title says what the course is; the photograph only sets the scene. */}
+        <Image
+          src={image.src}
+          alt=""
+          fill
+          sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+        />
+      </div>
+      <div className="flex flex-1 items-end justify-between gap-3 px-5 pb-5 pt-4">
+        <div>
+          <Title className="text-[1.05rem] font-semibold leading-snug text-navy">{course.title}</Title>
+          <p className="mt-1 text-sm text-muted-ink">
+            {showYear ? `${yearLabel(course.studyYear)} · ` : ""}
+            {ecLabel(course.ec)}
+          </p>
+        </div>
+        <ArrowRight
+          className="mb-0.5 size-4 shrink-0 text-navy/50 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-navy motion-reduce:transition-none"
+          aria-hidden="true"
+        />
+      </div>
     </Link>
   );
 }

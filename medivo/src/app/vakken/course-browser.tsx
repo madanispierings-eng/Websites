@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { CourseCard } from "@/components/course-card";
 import type { Course } from "@/lib/data/types";
+import { ecLabel, yearLabel } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -16,6 +17,14 @@ export function CourseBrowser({ courses, initialYear }: { courses: Course[]; ini
   const visible = courses.filter(
     (c) => (year === null || c.studyYear === year) && normalize(c.title).includes(normalize(query.trim())),
   );
+  // One section per study year, in curriculum order; the total EC only when every course has a known value.
+  const groups = years
+    .map((y) => {
+      const list = visible.filter((c) => c.studyYear === y);
+      const ec = list.every((c) => c.ec !== null) ? list.reduce((sum, c) => sum + (c.ec ?? 0), 0) : null;
+      return { year: y, courses: list, ec };
+    })
+    .filter((g) => g.courses.length > 0);
 
   function chooseYear(next: number | null) {
     setYear(next);
@@ -42,7 +51,7 @@ export function CourseBrowser({ courses, initialYear }: { courses: Course[]; ini
             className="h-11 w-full rounded-lg border border-input bg-white pl-10 pr-3 text-base text-navy shadow-xs placeholder:text-muted-ink/80 sm:text-sm"
           />
         </div>
-        <div role="group" aria-label="Filter op studiejaar" className="flex flex-wrap gap-1.5">
+        <div role="group" aria-label="Filter op studiejaar" className="flex flex-wrap gap-1.5 md:shrink-0 md:flex-nowrap">
           {[null, ...years].map((y) => (
             <button
               key={y ?? "alle"}
@@ -65,9 +74,24 @@ export function CourseBrowser({ courses, initialYear }: { courses: Course[]; ini
       </p>
 
       {visible.length ? (
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-          {visible.map((c) => (
-            <CourseCard key={c.id} course={c} />
+        <div className="mt-12 space-y-16">
+          {groups.map((g) => (
+            <section key={g.year} aria-labelledby={`jaar-${g.year}`}>
+              <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                <h2 id={`jaar-${g.year}`} className="text-2xl font-bold tracking-[-0.01em] text-navy sm:text-[1.75rem]">
+                  {yearLabel(g.year)}
+                </h2>
+                <p className="text-sm text-muted-ink">
+                  {g.courses.length === 1 ? "1 vak" : `${g.courses.length} vakken`}
+                  {g.ec !== null ? ` · ${ecLabel(g.ec)}` : ""}
+                </p>
+              </div>
+              <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {g.courses.map((c) => (
+                  <CourseCard key={c.id} course={c} showYear={false} />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       ) : (

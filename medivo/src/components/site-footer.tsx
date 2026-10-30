@@ -48,12 +48,12 @@ export function SiteFooter() {
       <div className="border-t border-line">
         <div className={cn(container, "space-y-2 py-6 text-xs leading-relaxed text-muted-ink")}>
           <p>{site.disclaimer}</p>
-          <p>
+          <p className="max-w-4xl">
             Foto&apos;s via Unsplash:{" "}
             {photoCredits.map((c, i) => (
               <span key={c.file}>
                 <a href={c.url} className="underline-offset-2 hover:underline" rel="noopener noreferrer" target="_blank">
-                  {c.what.charAt(0).toLowerCase() + c.what.slice(1)} door {c.author}
+                  {lowerFirst(c.what)} door {c.author}
                 </a>
                 {i < photoCredits.length - 1 ? ", " : "."}
               </span>
@@ -64,4 +64,9 @@ export function SiteFooter() {
       </div>
     </footer>
   );
+}
+
+/** "Medicatie" becomes "medicatie" mid-sentence, but abbreviations such as "MRI-beelden" stay as they are. */
+function lowerFirst(text: string) {
+  return /^[A-Z][A-Z]/.test(text) ? text : text.charAt(0).toLowerCase() + text.slice(1);
 }

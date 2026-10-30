@@ -18,3 +18,6 @@ export async function toggleBookmark(input: unknown) {
 export async function selfGrade(input: unknown) {
   return practice.selfGrade(input);
 }
+export async function revealAnswer(input: unknown) {
+  return practice.revealAnswer(input);
+}

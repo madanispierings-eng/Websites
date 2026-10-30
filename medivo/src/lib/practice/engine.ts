@@ -1,10 +1,14 @@
-import type { AnswerFeedback, PracticeMode, PracticeQuestion, QuestionResponse, SessionReview } from "./types";
+import type { AnswerFeedback, PracticeMode, PracticeQuestion, QuestionResponse, RetryInfo, SessionReview } from "./types";
 
 export type AnswerState = {
   response: QuestionResponse | null;
   status: "idle" | "submitting" | "answered";
   feedback: AnswerFeedback | null;
   error: string | null;
+  /** Set after a wrong first answer on a question with a hint: the second attempt is open. */
+  retry: (RetryInfo & { first: QuestionResponse }) | null;
+  /** The student opened the hint of an open question before answering. */
+  hintOpened: boolean;
 };
 
 export type EngineState = {
@@ -20,14 +24,16 @@ export type EngineState = {
 export type EngineAction =
   | { type: "respond"; response: QuestionResponse }
   | { type: "submit-start" }
-  | { type: "submit-success"; questionId: string; response: QuestionResponse; feedback: AnswerFeedback | null }
+  | { type: "submit-success"; questionId: string; response: QuestionResponse; feedback: AnswerFeedback | null; retry?: RetryInfo | null }
+  | { type: "revealed"; questionId: string; feedback: AnswerFeedback }
+  | { type: "open-hint"; questionId: string }
   | { type: "submit-failure"; questionId: string; error: string }
   | { type: "graded"; questionId: string; score: number; isCorrect: boolean }
   | { type: "go"; index: number }
   | { type: "bookmark"; questionId: string; bookmarked: boolean }
   | { type: "finished"; review: SessionReview };
 
-const emptyAnswer: AnswerState = { response: null, status: "idle", feedback: null, error: null };
+const emptyAnswer: AnswerState = { response: null, status: "idle", feedback: null, error: null, retry: null, hintOpened: false };
 
 export function createEngine(
   sessionId: string,
@@ -42,6 +48,12 @@ export function createEngine(
 export const currentQuestion = (s: EngineState) => s.questions[s.index] ?? null;
 export const answerFor = (s: EngineState, questionId: string) => s.answers[questionId] ?? emptyAnswer;
 export const answeredCount = (s: EngineState) => Object.values(s.answers).filter((a) => a.status === "answered").length;
+
+/** Whether the hint panel belongs on screen: during a second attempt, or opened by hand on an open question. */
+export const hintVisible = (s: EngineState, q: PracticeQuestion) => {
+  const a = answerFor(s, q.id);
+  return Boolean(q.hint) && s.mode !== "exam" && (a.retry !== null || a.hintOpened || Boolean(a.feedback?.usedHint));
+};
 
 /** Whether a response fits the question: known options and choices only, and something actually filled in. */
 export function isComplete(q: PracticeQuestion, r: QuestionResponse | null): boolean {
@@ -93,6 +105,8 @@ export function engineReducer(state: EngineState, action: EngineAction): EngineS
         (q.type === "numeric" && "value" in r) ||
         (q.type === "open" && "text" in r);
       if (!shapeOk) return state;
+      // A second attempt cannot pick the option that was already wrong.
+      if (a.retry && "option_id" in r && a.retry.wrongOptionIds.includes(r.option_id)) return state;
       return { ...state, answers: { ...state.answers, [q.id]: { ...a, response: r, error: null } } };
     }
     case "submit-start": {
@@ -101,14 +115,35 @@ export function engineReducer(state: EngineState, action: EngineAction): EngineS
       return { ...state, answers: { ...state.answers, [q.id]: { ...answerFor(state, q.id), status: "submitting", error: null } } };
     }
     case "submit-success": {
+      const a = answerFor(state, action.questionId);
+      if (action.retry) {
+        // Wrong, with a hint: back to editing. A single choice starts empty again; other types keep the answer to adjust.
+        const response = "option_id" in action.response ? null : action.response;
+        return {
+          ...state,
+          answers: { ...state.answers, [action.questionId]: { ...a, response, status: "idle", feedback: null, error: null, retry: { ...action.retry, first: action.response } } },
+        };
+      }
       // The server is the source of truth: a duplicate submit returns the first recorded answer.
       return {
         ...state,
         answers: {
           ...state.answers,
-          [action.questionId]: { response: action.response, status: "answered", feedback: action.feedback, error: null },
+          [action.questionId]: { ...a, response: action.response, status: "answered", feedback: action.feedback, error: null, retry: null },
         },
       };
+    }
+    case "revealed": {
+      const a = answerFor(state, action.questionId);
+      if (a.status === "answered") return state;
+      return {
+        ...state,
+        answers: { ...state.answers, [action.questionId]: { ...a, status: "answered", feedback: action.feedback, error: null, retry: null } },
+      };
+    }
+    case "open-hint": {
+      const a = answerFor(state, action.questionId);
+      return { ...state, answers: { ...state.answers, [action.questionId]: { ...a, hintOpened: true } } };
     }
     case "submit-failure": {
       const a = answerFor(state, action.questionId);
@@ -138,7 +173,7 @@ export function engineReducer(state: EngineState, action: EngineAction): EngineS
       const answers = { ...state.answers };
       for (const r of action.review.review) {
         const { questionId, response, ...feedback } = r;
-        answers[questionId] = { response, status: "answered", feedback, error: null };
+        answers[questionId] = { ...answerFor(state, questionId), response, status: "answered", feedback, error: null, retry: null };
       }
       return { ...state, answers, finished: action.review, index: 0 };
     }

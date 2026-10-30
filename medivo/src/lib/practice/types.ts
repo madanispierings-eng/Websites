@@ -1,3 +1,5 @@
+import type { ContentBlock } from "@/lib/content/blocks";
+
 export type PracticeMode = "topic" | "mixed" | "exam" | "incorrect";
 
 /**
@@ -25,6 +27,8 @@ export type PracticeQuestion = {
   options: PracticeOption[];
   items: DropdownItem[];
   unit: string | null;
+  /** The summary section that helps with this question, shown after a wrong first answer. */
+  hint: { title: string; blocks: ContentBlock[] } | null;
 };
 
 /** What the student answered; the shape depends on the question type and is checked by the database. */
@@ -55,14 +59,20 @@ export type AnswerFeedback = {
   explanation: string;
   concept: string | null;
   optionFeedback: Record<string, string>;
+  /** Answered after reading the hint (a second attempt, or the answer shown after a wrong first one). */
+  usedHint: boolean;
 };
 
-export type SubmitResult = { response: QuestionResponse; feedback: AnswerFeedback | null };
+/** A wrong first answer with a hint available: what may be shown without giving the answer away. */
+export type RetryInfo = { wrongOptionIds: string[]; wrongItems: number[] };
+
+export type SubmitResult = { response: QuestionResponse; feedback: AnswerFeedback | null; retry: RetryInfo | null };
 
 export type SessionReview = {
   total: number;
   answered: number;
   correct: number;
+  withHint: number;
   points: number;
   scored: number;
   review: (AnswerFeedback & { questionId: string; response: QuestionResponse | null })[];
@@ -84,6 +94,7 @@ export type PracticeApi = {
     ActionResult<{ sessionId: string; questions: PracticeQuestion[]; startedAt: string; timeLimitSeconds: number | null; bookmarkedIds: string[] }>
   >;
   submitAnswer: (input: { sessionId: string; questionId: string; response: QuestionResponse }) => Promise<ActionResult<SubmitResult>>;
+  revealAnswer: (input: { sessionId: string; questionId: string }) => Promise<ActionResult<{ feedback: AnswerFeedback }>>;
   selfGrade: (input: { sessionId: string; questionId: string; score: number }) => Promise<ActionResult<{ score: number; isCorrect: boolean }>>;
   finishSession: (input: { sessionId: string }) => Promise<ActionResult<SessionReview>>;
   toggleBookmark: (input: { questionId: string; bookmarked: boolean }) => Promise<ActionResult<{ bookmarked: boolean }>>;

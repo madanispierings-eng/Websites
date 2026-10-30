@@ -19,7 +19,7 @@ const modes: { value: WorkspaceMode; label: string; body: string; icon: typeof L
   { value: "topic", label: "Per onderwerp", body: "Vragen uit één onderwerp, met direct uitleg.", icon: ListChecks },
   { value: "mixed", label: "Gemengd", body: "Vragen uit meerdere onderwerpen door elkaar.", icon: Shuffle },
   { value: "exam", label: "Tentamenmodus", body: "Geen tussentijdse feedback, optioneel met timer. Score en uitleg aan het eind.", icon: Timer },
-  { value: "incorrect", label: "Fout beantwoord", body: "Alleen vragen die je de laatste keer fout had.", icon: RotateCcw },
+  { value: "incorrect", label: "Fout beantwoord", body: "Vragen die je de laatste keer fout had, of alleen met hint goed.", icon: RotateCcw },
   { value: "past", label: "Oud tentamen", body: "Een volledig oud tentamen in de originele volgorde, met alle vraagtypes.", icon: ClipboardList },
 ];
 
@@ -99,7 +99,7 @@ export function PracticeWorkspace({
     dispatch({ type: "submit-start" });
     try {
       const res = await api.submitAnswer({ sessionId: engine.sessionId, questionId: q.id, response });
-      if (res.ok) dispatch({ type: "submit-success", questionId: q.id, response: res.data.response, feedback: res.data.feedback });
+      if (res.ok) dispatch({ type: "submit-success", questionId: q.id, response: res.data.response, feedback: res.data.feedback, retry: res.data.retry });
       else dispatch({ type: "submit-failure", questionId: q.id, error: res.error });
     } catch {
       dispatch({ type: "submit-failure", questionId: q.id, error: "Geen verbinding. Je antwoord is niet verstuurd; probeer het opnieuw." });
@@ -123,6 +123,18 @@ export function PracticeWorkspace({
       const res = await api.selfGrade({ sessionId: engine.sessionId, questionId, score });
       if (!res.ok) return res.error;
       dispatch({ type: "graded", questionId, score: res.data.score, isCorrect: res.data.isCorrect });
+      return null;
+    } catch {
+      return "Geen verbinding. Probeer het opnieuw.";
+    }
+  }, [api, engine]);
+
+  const reveal = useCallback(async (questionId: string) => {
+    if (!engine) return null;
+    try {
+      const res = await api.revealAnswer({ sessionId: engine.sessionId, questionId });
+      if (!res.ok) return res.error;
+      dispatch({ type: "revealed", questionId, feedback: res.data.feedback });
       return null;
     } catch {
       return "Geen verbinding. Probeer het opnieuw.";
@@ -187,6 +199,7 @@ export function PracticeWorkspace({
             onSubmit={submit}
             onBookmark={bookmark}
             onSelfGrade={selfGrade}
+            onReveal={reveal}
             footer={
               <SessionFooter
                 state={engine}
@@ -318,7 +331,7 @@ export function PracticeWorkspace({
               ) : null}
 
               {mode === "incorrect" ? (
-                <p className="text-sm text-muted-ink">We verzamelen de vragen die je bij je laatste poging fout had, uit alle onderwerpen van dit vak.</p>
+                <p className="text-sm text-muted-ink">We verzamelen de vragen die je bij je laatste poging fout had of alleen met hint goed, uit alle onderwerpen van dit vak.</p>
               ) : null}
 
               {startError ? <p role="alert" className="mt-4 text-sm text-danger">{startError}</p> : null}
@@ -389,7 +402,7 @@ function SessionFooter({ state, dispatch, timer, finishing, onFinish, onRestart 
                     type="button"
                     onClick={() => dispatch({ type: "go", index: i })}
                     aria-current={state.index === i ? "step" : undefined}
-                    aria-label={`Vraag ${i + 1}${skipped ? ", niet beantwoord" : fb ? (fb.score === null ? ", nog nakijken" : fb.isCorrect ? ", juist" : isPartial(fb) ? ", deels juist" : ", onjuist") : a?.status === "answered" ? ", beantwoord" : ""}`}
+                    aria-label={`Vraag ${i + 1}${skipped ? ", niet beantwoord" : fb ? (fb.score === null ? ", nog nakijken" : fb.isCorrect ? (fb.usedHint ? ", juist met hint" : ", juist") : isPartial(fb) ? ", deels juist" : ", onjuist") : a?.status === "answered" ? ", beantwoord" : ""}`}
                     className={cn(
                       "grid size-9 place-items-center rounded-md border text-xs font-semibold tabular-nums",
                       skipped ? "border-dashed border-muted-ink/50 text-muted-ink"
@@ -453,7 +466,8 @@ function ResultsBanner({ state, onRestart }: { state: EngineState; onRestart: ()
       <div className="flex-1">
         <h2 id="resultaat-titel" className="text-lg font-semibold text-navy">Sessie afgerond</h2>
         <p className="mt-1 text-sm text-muted-ink">
-          {nl(r.scored)} van {nl(r.points)} punten · {r.correct} van {r.total} vragen volledig goed · {r.answered} beantwoord.{" "}
+          {nl(r.scored)} van {nl(r.points)} punten · {r.correct} van {r.total} vragen volledig goed
+          {r.withHint ? ` (waarvan ${r.withHint} met hint)` : ""} · {r.answered} beantwoord.{" "}
           {toGrade
             ? `Kijk nog ${toGrade} open ${toGrade === 1 ? "vraag" : "vragen"} na met het antwoordmodel (oranje in het overzicht); je score loopt mee.`
             : "Loop hieronder de vragen na om de uitleg te lezen."}

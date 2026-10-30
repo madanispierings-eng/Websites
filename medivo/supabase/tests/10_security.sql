@@ -216,6 +216,78 @@ begin
   if n <> 0 then raise exception 'FAIL: ungraded after self-grade'; end if;
 end $$;
 
+-- ---- a second attempt with a hint from the summary ----
+reset role;
+insert into public.questions (id, course_id, topic_id, type, stem, content, points, hint, source, copyright_status, is_premium, reviewed_at, status)
+select v.id::uuid, c.id, 'bbbbbbbb-0000-4000-8000-000000000001', v.type::public.question_type, 'Hintvraag', v.content::jsonb, 1,
+       '{"summary_id":"00000000-0000-4000-8000-000000000000","heading":"1.1 Testparagraaf"}', 'test', 'own_work', false, now(), 'published'
+from public.courses c, (values
+  ('abababab-0000-4000-8000-000000000001', 'single_choice', '{}'),
+  ('abababab-0000-4000-8000-000000000002', 'dropdowns', '{"items":[{"prompt":"x","choices":["laag","hoog"]},{"prompt":"y","choices":["ja","nee"]}]}')
+) as v(id, type, content)
+where c.slug = 'van-cel-tot-molecuul';
+insert into public.question_options (id, question_id, label, body, sort_order)
+select ('acacacac-0000-4000-8000-00000000000' || o)::uuid, 'abababab-0000-4000-8000-000000000001', chr(64 + o), 'Optie', o from generate_series(1, 4) o;
+insert into public.question_answer_keys (question_id, correct_option_id, answer, explanation) values
+  ('abababab-0000-4000-8000-000000000001', 'acacacac-0000-4000-8000-000000000002', '{}', 'B'),
+  ('abababab-0000-4000-8000-000000000002', null, '{"answers":["hoog","ja"]}', 'hoog, ja');
+
+set local role authenticated;
+set local request.jwt.claim.sub = 'aaaaaaaa-0000-4000-8000-000000000001';
+do $$
+declare
+  v_course uuid := (select id from public.courses where slug = 'van-cel-tot-molecuul');
+  q_sc uuid := 'abababab-0000-4000-8000-000000000001';
+  q_dd uuid := 'abababab-0000-4000-8000-000000000002';
+  opt_a uuid := 'acacacac-0000-4000-8000-000000000001';
+  opt_b uuid := 'acacacac-0000-4000-8000-000000000002';
+  v_session uuid; v_res jsonb; n int;
+begin
+  v_session := public.start_practice_session(v_course, 'topic', array['bbbbbbbb-0000-4000-8000-000000000001'::uuid], 100);
+
+  -- Wrong first answer: a second attempt, and nothing that gives the answer away.
+  v_res := public.submit_response(v_session, q_sc, jsonb_build_object('option_id', opt_a));
+  if not (v_res ->> 'retry')::boolean then raise exception 'FAIL: no retry offered %', v_res; end if;
+  if v_res ? 'correct_option_id' or v_res ? 'answer' or v_res ? 'explanation' or v_res ? 'is_correct' then raise exception 'FAIL: retry leaked %', v_res; end if;
+  if v_res -> 'wrong_option_ids' <> jsonb_build_array(opt_a) then raise exception 'FAIL: wrong option not marked %', v_res; end if;
+
+  -- Second attempt correct: counts as correct, marked with hint.
+  v_res := public.submit_response(v_session, q_sc, jsonb_build_object('option_id', opt_b));
+  if not (v_res ->> 'is_correct')::boolean or not (v_res ->> 'used_hint')::boolean or (v_res ->> 'attempts')::int <> 2 then raise exception 'FAIL: second attempt %', v_res; end if;
+  -- A third submit changes nothing.
+  v_res := public.submit_response(v_session, q_sc, jsonb_build_object('option_id', opt_a));
+  if not (v_res ->> 'is_correct')::boolean then raise exception 'FAIL: third submit changed the result'; end if;
+
+  -- Drop-downs: the wrong items are named, not their answers; then the student asks for the answer.
+  v_res := public.submit_response(v_session, q_dd, '{"answers":["hoog","nee"]}');
+  if v_res -> 'wrong_items' <> '[1]'::jsonb or v_res ? 'answer' then raise exception 'FAIL: dropdown retry %', v_res; end if;
+  v_res := public.reveal_answer(v_session, q_dd);
+  if v_res -> 'answer' -> 'answers' <> '["hoog","ja"]'::jsonb or (v_res ->> 'is_correct')::boolean or not (v_res ->> 'used_hint')::boolean then raise exception 'FAIL: reveal %', v_res; end if;
+  begin
+    perform public.submit_response(v_session, q_dd, '{"answers":["hoog","ja"]}');
+  exception when others then raise exception 'FAIL: submit after reveal errored';
+  end;
+  if (select is_correct from public.question_attempts where session_id = v_session and question_id = q_dd) then raise exception 'FAIL: answer changed after reveal'; end if;
+
+  -- Progress counts only first-go answers; "with hint" answers return in incorrect practice.
+  select correct into n from public.my_topic_stats(v_course) where topic_id = 'bbbbbbbb-0000-4000-8000-000000000001';
+  if (select count(*) from public.question_attempts a where a.session_id = v_session and a.is_correct and not a.used_hint) <> 0 then raise exception 'FAIL: fixture'; end if;
+  v_session := public.start_practice_session(v_course, 'incorrect');
+  if not exists (select 1 from public.practice_sessions where id = v_session and q_sc = any (question_ids)) then raise exception 'FAIL: hint answer not in incorrect mode'; end if;
+
+  -- Exam mode: no second attempt.
+  v_session := public.start_practice_session(v_course, 'exam', array['bbbbbbbb-0000-4000-8000-000000000001'::uuid], 100, 600);
+  v_res := public.submit_response(v_session, q_sc, jsonb_build_object('option_id', opt_a));
+  if v_res ? 'retry' then raise exception 'FAIL: retry in exam mode'; end if;
+  if (select final from public.question_attempts where session_id = v_session and question_id = q_sc) is not true then raise exception 'FAIL: exam attempt not final'; end if;
+
+  -- A second attempt left open is closed when the session is finished.
+  v_session := public.start_practice_session(v_course, 'mixed', '{}', 100);
+  perform public.submit_response(v_session, q_sc, jsonb_build_object('option_id', opt_a));
+  v_res := public.finish_practice_session(v_session);
+  if exists (select 1 from public.question_attempts where session_id = v_session and not final) then raise exception 'FAIL: open attempt after finish'; end if;
+end $$;
+
 -- ---- as another student: cannot see or use the first student's data ----
 set local request.jwt.claim.sub = 'aaaaaaaa-0000-4000-8000-000000000002';
 do $$
@@ -243,7 +315,7 @@ begin
   if n <> 15 then raise exception 'FAIL: anon sees % courses', n; end if;
   select count(*) into n from public.questions;
   if n <> 0 then raise exception 'FAIL: anon sees % questions', n; end if;
-  if (public.course_content_overview((select id from public.courses where slug = 'van-cel-tot-molecuul')) ->> 'questions')::int <> 6
+  if (public.course_content_overview((select id from public.courses where slug = 'van-cel-tot-molecuul')) ->> 'questions')::int <> 8
   then raise exception 'FAIL: overview counts wrong'; end if;
   begin
     perform public.start_practice_session((select id from public.courses limit 1), 'mixed');
@@ -260,7 +332,7 @@ do $$
 declare n int;
 begin
   select count(*) into n from public.question_answer_keys;
-  if n <> 6 then raise exception 'FAIL: admin sees % answer keys', n; end if;
+  if n <> 8 then raise exception 'FAIL: admin sees % answer keys', n; end if;
   update public.courses set description = 'Bijgewerkt' where slug = 'pharmacology';
   get diagnostics n = row_count;
   if n <> 1 then raise exception 'FAIL: admin could not edit course'; end if;

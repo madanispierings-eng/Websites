@@ -238,12 +238,13 @@ export function QuestionView({
 
 function HintPanel({ questionId, hint, reduce }: { questionId: string; hint: NonNullable<PracticeQuestion["hint"]>; reduce: boolean }) {
   const ref = useRef<HTMLElement>(null);
-  // On narrow screens the panel sits under the question: bring its top into view, without stealing focus.
+  // On narrow screens the panel sits under the question: scroll just far enough to show it, so the retry message and
+  // buttons above stay in view where they fit. Focus stays where it is.
   useEffect(() => {
     const el = ref.current;
     if (!el || window.matchMedia("(min-width: 80rem)").matches) return;
     const top = el.getBoundingClientRect().top;
-    if (top > window.innerHeight) el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    if (top > window.innerHeight) el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" });
   }, [reduce]);
 
   return (
@@ -318,7 +319,7 @@ function AnswerInput({ q, answer, locked, isExam, dispatch }: {
                     isCorrect && "border-success bg-success-soft",
                     isWrongPick && "border-danger/60 bg-danger-soft",
                     fb && !isCorrect && !isWrongPick && "border-line opacity-80",
-                    ruledOut && "cursor-not-allowed border-danger/30 bg-danger-soft/40 text-navy/60 hover:border-danger/30 hover:bg-danger-soft/40",
+                    ruledOut && "cursor-not-allowed border-danger/30 bg-danger-soft/40 text-navy/70 hover:border-danger/30 hover:bg-danger-soft/40",
                     locked && "cursor-default",
                   )}
                 >
@@ -334,8 +335,15 @@ function AnswerInput({ q, answer, locked, isExam, dispatch }: {
                     className="mt-1 size-4 shrink-0 accent-accent-blue"
                   />
                   <span className="font-semibold">{o.label}.</span>
-                  <span className={cn("flex-1", ruledOut && "line-through decoration-danger/70")}>{o.body}</span>
-                  {ruledOut ? <span className="text-xs font-medium text-danger">Jouw eerste antwoord</span> : null}
+                  {ruledOut ? (
+                    // The note wraps under the option on narrow screens instead of squeezing the struck-through text.
+                    <span className="flex flex-1 flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                      <span className="line-through decoration-danger/70">{o.body}</span>
+                      <span className="whitespace-nowrap text-xs font-medium text-danger">Jouw eerste antwoord</span>
+                    </span>
+                  ) : (
+                    <span className="flex-1">{o.body}</span>
+                  )}
                   {isCorrect && selected ? <CircleCheck className="mt-0.5 size-5 shrink-0 text-success" aria-label="Juist" /> : null}
                   {missed ? <span className="text-xs font-medium text-success-ink">Ook juist</span> : null}
                   {isCorrect && !selected && !multi ? <CircleCheck className="mt-0.5 size-5 shrink-0 text-success" aria-label="Juiste antwoord" /> : null}
@@ -385,6 +393,8 @@ function AnswerInput({ q, answer, locked, isExam, dispatch }: {
                     </select>
                     {ok === true ? <CircleCheck className="size-5 shrink-0 text-success" aria-label="Juist" /> : null}
                     {ok === false ? <CircleX className="size-5 shrink-0 text-danger" aria-label="Onjuist" /> : null}
+                    {/* Keep every select the same width while only some rows carry a mark. */}
+                    {ok === null && answer.retry ? <span className="size-5 shrink-0" aria-hidden="true" /> : null}
                   </div>
                   {ok === false && key ? <p className="mt-1 text-xs text-success-ink">Juist: {key[i]}</p> : null}
                   {flagged ? <p className="mt-1 text-xs text-danger">Klopt niet, kies opnieuw</p> : null}

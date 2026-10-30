@@ -10,7 +10,7 @@ import { getTopicStats } from "@/lib/data/learning";
 import { container } from "@/lib/site";
 import { getViewer } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
-import { finishSession, selfGrade, startSession, submitAnswer, toggleBookmark } from "./actions";
+import { finishSession, revealAnswer, selfGrade, startSession, submitAnswer, toggleBookmark } from "./actions";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ modus?: string; onderwerp?: string; tentamen?: string }> };
 
@@ -63,7 +63,7 @@ export default async function PracticePage({ params, searchParams }: Props) {
             initialTopicId={initialTopicId}
             exams={exams.map((e) => ({ id: e.id, label: examTitle(e), questionCount: e.questionCount }))}
             initialExamId={initialExamId}
-            api={{ startSession: startSession.bind(null, course.id), submitAnswer, selfGrade, finishSession, toggleBookmark }}
+            api={{ startSession: startSession.bind(null, course.id), submitAnswer, revealAnswer, selfGrade, finishSession, toggleBookmark }}
           />
         )}
       </div>

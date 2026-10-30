@@ -1,8 +1,10 @@
 import "server-only";
 import { z } from "zod";
+import { blocksSchema, type ContentBlock } from "@/lib/content/blocks";
 import { contentImageUrl } from "@/lib/content/images";
+import { sectionUnder } from "@/lib/content/sections";
 import { createClient, getViewer } from "@/lib/supabase/server";
-import type { ActionResult, AnswerFeedback, AnswerKey, DropdownItem, PracticeQuestion, QuestionResponse, QuestionType, SessionReview } from "./types";
+import type { ActionResult, AnswerFeedback, AnswerKey, DropdownItem, PracticeQuestion, QuestionResponse, QuestionType, RetryInfo, SessionReview } from "./types";
 
 const uuid = z.string().uuid();
 
@@ -20,6 +22,7 @@ const errorMessages: Record<string, string> = {
   grade_after_finish: "Open vragen kijk je na nadat je het tentamen hebt ingeleverd.",
   not_gradable: "Deze vraag kun je niet zelf nakijken.",
   invalid_score: "Kies een score tussen 0 en het maximum, in stappen van een halve punt.",
+  nothing_to_reveal: "Deze vraag heeft geen openstaande tweede poging.",
 };
 
 function fail<T>(raw: string | undefined): ActionResult<T> {
@@ -51,6 +54,7 @@ const responseSchema: z.ZodType<QuestionResponse> = z.union([
 type QuestionRow = {
   id: string; topic_id: string; type: QuestionType; stem: string; context: string | null; points: number | string;
   content: { items?: DropdownItem[]; unit?: string } | null; image_path: string | null; image_alt: string | null;
+  hint: { summary_id: string; heading: string } | null;
   topics: { title: string } | null; question_options: { id: string; label: string; body: string; sort_order: number }[];
 };
 
@@ -82,11 +86,12 @@ export async function startSession(courseId: string, input: unknown) {
   const ids: string[] = session.question_ids;
   const { data: rows, error: qErr } = await supabase
     .from("questions")
-    .select("id, topic_id, type, stem, context, points, content, image_path, image_alt, topics(title), question_options(id, label, body, sort_order)")
+    .select("id, topic_id, type, stem, context, points, content, image_path, image_alt, hint, topics(title), question_options(id, label, body, sort_order)")
     .in("id", ids);
   if (qErr) return fail<Out>(qErr.message);
 
   const byId = new Map((rows as unknown as QuestionRow[]).map((r) => [r.id, r]));
+  const hints = await loadHints(supabase, [...byId.values()]);
   const questions: PracticeQuestion[] = ids.flatMap((id) => {
     const r = byId.get(id);
     if (!r) return [];
@@ -103,6 +108,7 @@ export async function startSession(courseId: string, input: unknown) {
       options: [...r.question_options].sort((a, b) => a.sort_order - b.sort_order).map(({ id, label, body }) => ({ id, label, body })),
       items: r.content?.items ?? [],
       unit: r.content?.unit ?? null,
+      hint: hints.get(r.id) ?? null,
     }];
   });
 
@@ -120,7 +126,26 @@ export async function startSession(courseId: string, input: unknown) {
   };
 }
 
+/**
+ * The summary sections the questions point at. Read with the student's own session, so a summary the student
+ * may not read yields no hint (the question then works without a second attempt on screen).
+ */
+async function loadHints(supabase: NonNullable<Awaited<ReturnType<typeof context>>>["supabase"], rows: QuestionRow[]) {
+  const out = new Map<string, { title: string; blocks: ContentBlock[] }>();
+  const summaryIds = [...new Set(rows.flatMap((r) => (r.hint ? [r.hint.summary_id] : [])))];
+  if (!summaryIds.length) return out;
+  const { data } = await supabase.from("summaries").select("id, content").in("id", summaryIds);
+  const content = new Map((data ?? []).map((s) => [s.id as string, blocksSchema.safeParse(s.content)]));
+  for (const r of rows) {
+    const parsed = r.hint ? content.get(r.hint.summary_id) : undefined;
+    const blocks = r.hint && parsed?.success ? sectionUnder(parsed.data, r.hint.heading) : null;
+    if (r.hint && blocks?.length) out.set(r.id, { title: r.hint.heading, blocks });
+  }
+  return out;
+}
+
 type RawFeedback = {
+  used_hint?: boolean;
   is_correct: boolean; score: number | string | null; max_score: number | string; correct_option_id: string | null;
   answer: AnswerKey | null; explanation: string; concept: string | null; option_feedback: Record<string, string> | null;
 };
@@ -134,10 +159,11 @@ const toFeedback = (r: RawFeedback): AnswerFeedback => ({
   explanation: r.explanation ?? "",
   concept: r.concept,
   optionFeedback: r.option_feedback ?? {},
+  usedHint: Boolean(r.used_hint),
 });
 
 export async function submitAnswer(input: unknown) {
-  type Out = { response: QuestionResponse; feedback: AnswerFeedback | null };
+  type Out = { response: QuestionResponse; feedback: AnswerFeedback | null; retry: RetryInfo | null };
   const parsed = z.object({ sessionId: uuid, questionId: uuid, response: responseSchema }).safeParse(input);
   if (!parsed.success) return fail<Out>("invalid_answer");
   const ctx = await context();
@@ -149,11 +175,30 @@ export async function submitAnswer(input: unknown) {
     p_response: parsed.data.response,
   });
   if (error) return fail<Out>(error.message);
-  const r = data as RawFeedback & { response: QuestionResponse };
+  const r = data as RawFeedback & { response: QuestionResponse; retry?: boolean; wrong_option_ids?: string[]; wrong_items?: number[] };
   return {
     ok: true as const,
-    data: { response: r.response, feedback: "explanation" in r ? toFeedback(r) : null },
+    data: {
+      response: r.response,
+      feedback: "explanation" in r ? toFeedback(r) : null,
+      retry: r.retry ? { wrongOptionIds: r.wrong_option_ids ?? [], wrongItems: r.wrong_items ?? [] } : null,
+    },
   };
+}
+
+export async function revealAnswer(input: unknown) {
+  type Out = { feedback: AnswerFeedback };
+  const parsed = z.object({ sessionId: uuid, questionId: uuid }).safeParse(input);
+  if (!parsed.success) return fail<Out>(undefined);
+  const ctx = await context();
+  if (!ctx) return fail<Out>("not_authenticated");
+
+  const { data, error } = await ctx.supabase.rpc("reveal_answer", {
+    p_session_id: parsed.data.sessionId,
+    p_question_id: parsed.data.questionId,
+  });
+  if (error) return fail<Out>(error.message);
+  return { ok: true as const, data: { feedback: toFeedback(data as RawFeedback) } };
 }
 
 export async function selfGrade(input: unknown) {
@@ -182,7 +227,7 @@ export async function finishSession(input: unknown) {
   const { data, error } = await ctx.supabase.rpc("finish_practice_session", { p_session_id: parsed.data.sessionId });
   if (error) return fail<SessionReview>(error.message);
   const r = data as {
-    total: number; answered: number; correct: number; points: number | string; scored: number | string;
+    total: number; answered: number; correct: number; with_hint?: number; points: number | string; scored: number | string;
     review: (RawFeedback & { question_id: string; response: QuestionResponse | null })[];
   };
   return {
@@ -191,6 +236,7 @@ export async function finishSession(input: unknown) {
       total: r.total,
       answered: r.answered,
       correct: r.correct,
+      withHint: r.with_hint ?? 0,
       points: Number(r.points),
       scored: Number(r.scored),
       review: r.review.map((x) => ({

@@ -16,7 +16,15 @@ const topics: TopicNode[] = [
   { id: "t3", parentId: null, slug: "onderwerp-3", title: "Onderwerp 3 met een wat langere titel", sortOrder: 3, children: [] },
 ];
 
-const base = { topicId: "t1a", topicTitle: "Subonderwerp 1a", context: null, imageUrl: null, imageAlt: null, options: [], items: [], unit: null, points: 1 };
+const hint: PracticeQuestion["hint"] = {
+  title: "1.2 Voorbeeldparagraaf uit de samenvatting",
+  blocks: [
+    { type: "paragraph", spans: [{ text: "Hier verschijnt het stuk uit de samenvatting dat bij de vraag hoort. " }, { text: "Kernbegrip", marks: ["term"] }, { text: " staat vetgedrukt (opvultekst)." }] },
+    { type: "list", ordered: false, items: ["Eerste punt uit de paragraaf (opvultekst)", "Tweede punt uit de paragraaf (opvultekst)"] },
+    { type: "paragraph", spans: [{ text: "Een tweede alinea, zodat het paneel ook bij een langere paragraaf te beoordelen is. Opvultekst opvultekst opvultekst opvultekst opvultekst." }] },
+  ],
+};
+const base = { topicId: "t1a", topicTitle: "Subonderwerp 1a", context: null, imageUrl: null, imageAlt: null, options: [], items: [], unit: null, points: 1, hint };
 const abcd = (id: string, n = 4) => ["A", "B", "C", "D", "E"].slice(0, n).map((l) => ({ id: `${id}${l}`, label: l, body: `Antwoordoptie ${l} (opvultekst)` }));
 
 const questions: PracticeQuestion[] = [
@@ -71,11 +79,12 @@ const feedback = (q: PracticeQuestion, r: QuestionResponse | null, score: number
       : "Hier verschijnt de uitleg bij het juiste antwoord. In deze voorbeeldweergave is het opvultekst.",
   concept: q.type === "single_choice" ? "Hier staat het onderliggende concept." : null,
   optionFeedback: q.type === "single_choice" ? { [`${q.id}A`]: "Uitleg waarom A niet klopt (opvultekst)." } : {},
+  usedHint: false,
 });
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 let mode = "topic";
-const answers = new Map<string, { response: QuestionResponse; score: number | null }>();
+const answers = new Map<string, { response: QuestionResponse; score: number | null; final: boolean; usedHint: boolean }>();
 
 const api: PracticeApi = {
   async startSession(input) {
@@ -87,9 +96,31 @@ const api: PracticeApi = {
   async submitAnswer({ questionId, response }) {
     await wait(250);
     const q = questions.find((x) => x.id === questionId)!;
-    if (!answers.has(questionId)) answers.set(questionId, { response, score: grade(q, response) });
+    const prev = answers.get(questionId);
+    const score = grade(q, response);
+    if (!prev) {
+      // Like the database: a wrong first answer with a hint (outside exam mode) opens a second attempt.
+      const retry = mode !== "exam" && q.hint !== null && score !== null && score < q.points;
+      answers.set(questionId, { response, score, final: !retry, usedHint: false });
+      if (retry) {
+        const wrongItems = "answers" in response ? response.answers.flatMap((a, i) => (a === keys.q3.answers![i] ? [] : [i])) : [];
+        return { ok: true, data: { response, feedback: null, retry: { wrongOptionIds: "option_id" in response ? [response.option_id] : [], wrongItems } } };
+      }
+    } else if (!prev.final) {
+      answers.set(questionId, { response, score, final: true, usedHint: true });
+    }
     const a = answers.get(questionId)!;
-    return { ok: true, data: { response: a.response, feedback: mode === "exam" ? null : feedback(q, a.response, a.score) } };
+    const fb = { ...feedback(q, a.response, a.score), usedHint: a.usedHint };
+    return { ok: true, data: { response: a.response, feedback: mode === "exam" ? null : fb, retry: null } };
+  },
+  async revealAnswer({ questionId }) {
+    await wait(200);
+    const q = questions.find((x) => x.id === questionId)!;
+    const a = answers.get(questionId);
+    if (!a) return { ok: false, error: "Deze vraag heeft geen openstaande tweede poging." };
+    a.final = true;
+    a.usedHint = true;
+    return { ok: true, data: { feedback: { ...feedback(q, a.response, a.score), usedHint: true } } };
   },
   async selfGrade({ questionId, score }) {
     await wait(200);
@@ -102,7 +133,7 @@ const api: PracticeApi = {
     await wait(300);
     const review = questions.map((q) => {
       const a = answers.get(q.id);
-      return { ...feedback(q, a?.response ?? null, a ? a.score : 0), questionId: q.id, response: a?.response ?? null };
+      return { ...feedback(q, a?.response ?? null, a ? a.score : 0), usedHint: Boolean(a?.usedHint), questionId: q.id, response: a?.response ?? null };
     });
     return {
       ok: true,
@@ -110,6 +141,7 @@ const api: PracticeApi = {
         total: questions.length,
         answered: answers.size,
         correct: review.filter((r) => r.isCorrect).length,
+        withHint: review.filter((r) => r.isCorrect && r.usedHint).length,
         points: questions.reduce((s, q) => s + q.points, 0),
         scored: review.reduce((s, r) => s + (r.score ?? 0), 0),
         review,

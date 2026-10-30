@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { answerFor, canSubmit, createEngine, engineReducer, isComplete, type EngineState } from "@/lib/practice/engine";
+import { answerFor, canSubmit, createEngine, engineReducer, hintVisible, isComplete, type EngineState } from "@/lib/practice/engine";
 import type { AnswerFeedback, PracticeQuestion } from "@/lib/practice/types";
 
 // Neutral fixtures: the engine is content-agnostic.
@@ -16,11 +16,12 @@ const q = (id: string, extra: Partial<PracticeQuestion> = {}): PracticeQuestion 
   options: ["a", "b", "c", "d"].map((o) => ({ id: `${id}-${o}`, label: o.toUpperCase(), body: o })),
   items: [],
   unit: null,
+  hint: null,
   ...extra,
 });
 
 const feedback: AnswerFeedback = {
-  isCorrect: false, score: 0, maxScore: 1, correctOptionId: "q1-b", answer: {}, explanation: "x", concept: null, optionFeedback: {},
+  isCorrect: false, score: 0, maxScore: 1, correctOptionId: "q1-b", answer: {}, explanation: "x", concept: null, optionFeedback: {}, usedHint: false,
 };
 
 function run(state: EngineState, ...actions: Parameters<typeof engineReducer>[1][]) {
@@ -111,6 +112,7 @@ describe("practice engine", () => {
         total: 2,
         answered: 1,
         correct: 1,
+        withHint: 0,
         points: 2,
         scored: 1,
         review: [
@@ -122,5 +124,63 @@ describe("practice engine", () => {
     expect(s.finished?.correct).toBe(1);
     expect(answerFor(s, "q2").feedback?.correctOptionId).toBe("q2-a");
     expect(canSubmit(s)).toBe(false);
+  });
+
+  describe("second attempt with a hint", () => {
+    const hint = { title: "1.1 Paragraaf", blocks: [] };
+    const hinted = createEngine("s4", "topic", [q("q1", { hint }), q("d", { type: "dropdowns", options: [], items: [{ prompt: "x", choices: ["a", "b"] }, { prompt: "y", choices: ["a", "b"] }] })]);
+    const afterWrong = run(
+      hinted,
+      { type: "respond", response: { option_id: "q1-a" } },
+      { type: "submit-start" },
+      { type: "submit-success", questionId: "q1", response: { option_id: "q1-a" }, feedback: null, retry: { wrongOptionIds: ["q1-a"], wrongItems: [] } },
+    );
+
+    it("reopens the question without feedback and clears a single choice", () => {
+      const a = answerFor(afterWrong, "q1");
+      expect(a).toMatchObject({ status: "idle", feedback: null, response: null });
+      expect(a.retry?.wrongOptionIds).toEqual(["q1-a"]);
+      expect(hintVisible(afterWrong, afterWrong.questions[0])).toBe(true);
+    });
+
+    it("does not let the wrong option be picked again", () => {
+      expect(run(afterWrong, { type: "respond", response: { option_id: "q1-a" } })).toBe(afterWrong);
+      const s = run(afterWrong, { type: "respond", response: { option_id: "q1-b" } });
+      expect(canSubmit(s)).toBe(true);
+    });
+
+    it("records the second answer as final", () => {
+      const s = run(
+        afterWrong,
+        { type: "respond", response: { option_id: "q1-b" } },
+        { type: "submit-start" },
+        { type: "submit-success", questionId: "q1", response: { option_id: "q1-b" }, feedback: { ...feedback, isCorrect: true, score: 1, usedHint: true } },
+      );
+      expect(answerFor(s, "q1")).toMatchObject({ status: "answered", retry: null });
+      expect(answerFor(s, "q1").feedback?.usedHint).toBe(true);
+      expect(canSubmit(s)).toBe(false);
+    });
+
+    it("shows the answer when the student gives up", () => {
+      const s = run(afterWrong, { type: "revealed", questionId: "q1", feedback: { ...feedback, usedHint: true } });
+      expect(answerFor(s, "q1")).toMatchObject({ status: "answered", retry: null });
+    });
+
+    it("keeps a dropdown answer to adjust", () => {
+      const s = run(
+        { ...hinted, index: 1 },
+        { type: "respond", response: { answers: ["a", "b"] } },
+        { type: "submit-start" },
+        { type: "submit-success", questionId: "d", response: { answers: ["a", "b"] }, feedback: null, retry: { wrongOptionIds: [], wrongItems: [1] } },
+      );
+      expect(answerFor(s, "d")).toMatchObject({ status: "idle", response: { answers: ["a", "b"] } });
+      expect(answerFor(s, "d").retry?.wrongItems).toEqual([1]);
+    });
+
+    it("never shows a hint in exam mode", () => {
+      const exam = createEngine("s5", "exam", [q("q1", { hint })]);
+      const s = run(exam, { type: "open-hint", questionId: "q1" });
+      expect(hintVisible(s, s.questions[0])).toBe(false);
+    });
   });
 });

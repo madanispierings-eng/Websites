@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, CircleAlert, CircleCheck, CircleX, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Bookmark, BookmarkCheck, CircleAlert, CircleCheck, CircleX, Lightbulb, Loader2 } from "lucide-react";
+import { ContentBlocks } from "@/components/content-blocks";
 import { MarkupText } from "@/components/markup-text";
 import { Button } from "@/components/ui/button";
-import { answerFor, canSubmit, currentQuestion, isPartial, type AnswerState, type EngineAction, type EngineState } from "@/lib/practice/engine";
+import { imageUrlsFor } from "@/lib/content/images";
+import { answerFor, canSubmit, currentQuestion, hintVisible, isPartial, type AnswerState, type EngineAction, type EngineState } from "@/lib/practice/engine";
 import type { AnswerFeedback, PracticeQuestion, QuestionType } from "@/lib/practice/types";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +27,7 @@ export function QuestionView({
   onSubmit,
   onBookmark,
   onSelfGrade,
+  onReveal,
   footer,
 }: {
   state: EngineState;
@@ -32,6 +35,7 @@ export function QuestionView({
   onSubmit: () => void;
   onBookmark: (questionId: string, next: boolean) => void;
   onSelfGrade: (questionId: string, score: number) => Promise<string | null>;
+  onReveal: (questionId: string) => Promise<string | null>;
   footer?: React.ReactNode;
 }) {
   const reduce = useReducedMotion();
@@ -45,6 +49,10 @@ export function QuestionView({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
   const nextRef = useRef<HTMLButtonElement>(null);
+  const [revealing, setRevealing] = useState(false);
+  const [revealError, setRevealError] = useState<string | null>(null);
+  const retry = answer.retry;
+  const showHint = hintVisible(state, q);
 
   // Move focus to the new question for keyboard and screen-reader users, but not on first load.
   useEffect(() => {
@@ -71,7 +79,7 @@ export function QuestionView({
       const t = e.target as HTMLElement;
       if (t.closest("input[type=text], input[type=search], textarea, select, [contenteditable=true]")) return;
       const opt = q.options.find((o) => o.label.toLowerCase() === e.key.toLowerCase());
-      if (!opt) return;
+      if (!opt || answer.retry?.wrongOptionIds.includes(opt.id)) return;
       if (q.type === "single_choice") dispatch({ type: "respond", response: { option_id: opt.id } });
       else dispatch({ type: "respond", response: { option_ids: toggle(currentIds(answer), opt.id) } });
     }
@@ -81,7 +89,13 @@ export function QuestionView({
 
   const bookmarked = Boolean(state.bookmarks[q.id]);
 
-  return (
+  async function reveal() {
+    setRevealing(true);
+    setRevealError(await onReveal(q.id));
+    setRevealing(false);
+  }
+
+  const section = (
     <section aria-labelledby="vraag-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-7">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
@@ -135,19 +149,47 @@ export function QuestionView({
         ) : null}
 
         <div className="mt-4">
-          <AnswerInput q={q} answer={answer} locked={locked} isExam={isExam} dispatch={dispatch} />
+          <AnswerInput q={q} answer={answer} locked={locked || revealing} isExam={isExam} dispatch={dispatch} />
+        </div>
+
+        <div role="status">
+          {retry ? (
+            <div className="mt-4 rounded-lg border border-[#e8c48a] bg-[#fdf6ec] px-4 py-3 text-[0.95rem] text-navy">
+              <p className="font-semibold">Nog niet goed. Je krijgt nog één poging.</p>
+              <p className="mt-0.5 text-navy/85">
+                {q.type === "dropdowns"
+                  ? "De rood gemarkeerde onderdelen kloppen niet. "
+                  : q.type === "single_choice"
+                    ? "Het doorgestreepte antwoord valt af. "
+                    : ""}
+                Lees het stuk uit de samenvatting <span className="xl:hidden">hieronder</span><span className="max-xl:hidden">hiernaast</span> en probeer het opnieuw.
+              </p>
+            </div>
+          ) : null}
         </div>
 
         {answer.error ? <p role="alert" className="mt-3 text-sm text-danger">{answer.error}</p> : null}
+        {revealError ? <p role="alert" className="mt-3 text-sm text-danger">{revealError}</p> : null}
 
         <div className="mt-5 flex flex-wrap items-center gap-2">
           {!answered ? (
-            <Button type="submit" disabled={!canSubmit(state)} className="h-10 px-5 font-semibold">
+            <Button type="submit" disabled={!canSubmit(state) || revealing} className="h-10 px-5 font-semibold">
               {answer.status === "submitting" ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
-              {isExam ? "Antwoord opslaan" : q.type === "open" ? "Bekijk antwoordmodel" : "Controleer antwoord"}
+              {isExam ? "Antwoord opslaan" : q.type === "open" ? "Bekijk antwoordmodel" : retry ? "Controleer opnieuw" : "Controleer antwoord"}
             </Button>
           ) : isExam ? (
             <span className="text-sm font-medium text-blue">Antwoord opgeslagen</span>
+          ) : null}
+          {retry && !answered ? (
+            <Button type="button" variant="outline" disabled={revealing || answer.status === "submitting"} onClick={reveal} className="h-10 border-line text-navy">
+              {revealing ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+              Toon het antwoord
+            </Button>
+          ) : null}
+          {q.type === "open" && q.hint && !isExam && !answered && !showHint ? (
+            <Button type="button" variant="outline" onClick={() => dispatch({ type: "open-hint", questionId: q.id })} className="h-10 border-line text-navy">
+              <Lightbulb aria-hidden="true" /> Hint uit de samenvatting
+            </Button>
           ) : null}
           <div className="ml-auto flex gap-2">
             <Button type="button" variant="ghost" disabled={state.index === 0} onClick={() => dispatch({ type: "go", index: state.index - 1 })}>
@@ -184,7 +226,58 @@ export function QuestionView({
       {footer}
     </section>
   );
+
+  if (!showHint || !q.hint) return section;
+  return (
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)] xl:items-start">
+      {section}
+      <HintPanel key={q.id} questionId={q.id} hint={q.hint} reduce={Boolean(reduce)} />
+    </div>
+  );
 }
+
+function HintPanel({ questionId, hint, reduce }: { questionId: string; hint: NonNullable<PracticeQuestion["hint"]>; reduce: boolean }) {
+  const ref = useRef<HTMLElement>(null);
+  // On narrow screens the panel sits under the question: bring its top into view, without stealing focus.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || window.matchMedia("(min-width: 80rem)").matches) return;
+    const top = el.getBoundingClientRect().top;
+    if (top > window.innerHeight) el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  }, [reduce]);
+
+  return (
+    <motion.aside
+      ref={ref}
+      aria-labelledby={`${questionId}-hint-titel`}
+      initial={reduce ? false : { opacity: 0, x: 8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+      className="scroll-mt-24 rounded-xl border border-line bg-white shadow-[var(--shadow-card)] xl:sticky xl:top-24 xl:flex xl:max-h-[calc(100dvh-7rem)] xl:flex-col"
+    >
+      <div className="border-b border-line px-5 py-4">
+        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.06em] text-blue">
+          <BookOpen className="size-4" aria-hidden="true" /> Uit de samenvatting
+        </p>
+        <h3 id={`${questionId}-hint-titel`} className="mt-1 text-base font-semibold leading-snug text-navy">{hint.title}</h3>
+      </div>
+      <div className="px-5 py-4 xl:overflow-y-auto xl:overscroll-contain">
+        <ContentBlocks
+          blocks={hint.blocks}
+          imageUrls={imageUrlsFor(hint.blocks)}
+          idPrefix={`${questionId}-hint`}
+          className="space-y-4 text-[0.95rem] leading-relaxed"
+        />
+      </div>
+    </motion.aside>
+  );
+}
+
+/** The value a dropdown item had when the first attempt was marked wrong; changing it lifts the red flag. */
+const wrongValueAt = (a: AnswerState, i: number) => {
+  const first = a.retry?.first;
+  return first && "answers" in first ? first.answers[i] : undefined;
+};
 
 const currentIds = (a: AnswerState) => (a.response && "option_ids" in a.response ? a.response.option_ids : []);
 const toggle = (ids: string[], id: string) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]);
@@ -213,6 +306,8 @@ function AnswerInput({ q, answer, locked, isExam, dispatch }: {
             const selected = chosen.has(o.id);
             const isCorrect = correct.has(o.id);
             const isWrongPick = Boolean(fb) && selected && !isCorrect;
+            // During the second attempt: the first pick, struck through and no longer available.
+            const ruledOut = !fb && Boolean(answer.retry?.wrongOptionIds.includes(o.id));
             const missed = Boolean(fb) && multi && isCorrect && !selected;
             return (
               <li key={o.id}>
@@ -223,6 +318,7 @@ function AnswerInput({ q, answer, locked, isExam, dispatch }: {
                     isCorrect && "border-success bg-success-soft",
                     isWrongPick && "border-danger/60 bg-danger-soft",
                     fb && !isCorrect && !isWrongPick && "border-line opacity-80",
+                    ruledOut && "cursor-not-allowed border-danger/30 bg-danger-soft/40 text-navy/60 hover:border-danger/30 hover:bg-danger-soft/40",
                     locked && "cursor-default",
                   )}
                 >
@@ -231,13 +327,15 @@ function AnswerInput({ q, answer, locked, isExam, dispatch }: {
                     name={`vraag-${q.id}`}
                     value={o.id}
                     checked={selected}
+                    disabled={ruledOut}
                     onChange={() =>
                       dispatch({ type: "respond", response: multi ? { option_ids: toggle([...chosen], o.id) } : { option_id: o.id } })
                     }
                     className="mt-1 size-4 shrink-0 accent-accent-blue"
                   />
                   <span className="font-semibold">{o.label}.</span>
-                  <span className="flex-1">{o.body}</span>
+                  <span className={cn("flex-1", ruledOut && "line-through decoration-danger/70")}>{o.body}</span>
+                  {ruledOut ? <span className="text-xs font-medium text-danger">Jouw eerste antwoord</span> : null}
                   {isCorrect && selected ? <CircleCheck className="mt-0.5 size-5 shrink-0 text-success" aria-label="Juist" /> : null}
                   {missed ? <span className="text-xs font-medium text-success-ink">Ook juist</span> : null}
                   {isCorrect && !selected && !multi ? <CircleCheck className="mt-0.5 size-5 shrink-0 text-success" aria-label="Juiste antwoord" /> : null}
@@ -261,7 +359,9 @@ function AnswerInput({ q, answer, locked, isExam, dispatch }: {
         <ol className="divide-y divide-line rounded-lg border border-line">
           {q.items.map((item, i) => {
             const value = values[i];
-            const ok = key ? value === key[i] : null;
+            // After a wrong first attempt only "this one is wrong" is known, not what it should be.
+            const flagged = !key && Boolean(answer.retry?.wrongItems.includes(i)) && value === wrongValueAt(answer, i);
+            const ok = key ? value === key[i] : flagged ? false : null;
             return (
               <li key={i} className="grid gap-2 px-3.5 py-3 sm:grid-cols-[minmax(0,1fr)_16rem] sm:items-center sm:gap-4">
                 <label htmlFor={`${q.id}-k${i}`} className="text-[0.95rem] text-navy">{item.prompt}</label>
@@ -287,6 +387,7 @@ function AnswerInput({ q, answer, locked, isExam, dispatch }: {
                     {ok === false ? <CircleX className="size-5 shrink-0 text-danger" aria-label="Onjuist" /> : null}
                   </div>
                   {ok === false && key ? <p className="mt-1 text-xs text-success-ink">Juist: {key[i]}</p> : null}
+                  {flagged ? <p className="mt-1 text-xs text-danger">Klopt niet, kies opnieuw</p> : null}
                 </div>
               </li>
             );
@@ -355,6 +456,7 @@ function FeedbackPanel({ q, answer, fb, onSelfGrade }: {
   else if (ungraded) title = "Vergelijk je antwoord met het antwoordmodel";
   else if (q.type === "single_choice") title = fb.isCorrect ? `Juist antwoord: ${correctOption?.label}` : `Onjuist · het juiste antwoord is ${correctOption?.label}`;
   else title = fb.isCorrect ? "Juist" : partial ? "Deels juist" : "Onjuist";
+  const withHint = fb.usedHint && fb.isCorrect;
 
   const solution =
     q.type === "multiple_choice" ? `Juiste antwoorden: ${fb.answer.labels?.join(", ")}`
@@ -380,6 +482,9 @@ function FeedbackPanel({ q, answer, fb, onSelfGrade }: {
         >
           {tone === "good" ? <CircleCheck className="size-5" aria-hidden="true" /> : tone === "bad" ? <CircleX className="size-5" aria-hidden="true" /> : <CircleAlert className="size-5" aria-hidden="true" />}
           {title}
+          {withHint ? (
+            <span className="rounded-full border border-current/25 px-2 py-0.5 text-xs font-semibold">met hint</span>
+          ) : null}
         </p>
         {fb.score !== null && q.type !== "single_choice" ? (
           <span className="text-sm font-semibold tabular-nums text-navy">

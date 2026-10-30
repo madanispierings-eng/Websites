@@ -261,7 +261,7 @@ function CardList({ deck, progress }: { deck: Flashcard[]; progress: Record<stri
                 <MarkupText source={c.front} idPrefix={`lijst-${c.id}-v`} className="space-y-1 text-[0.95rem] font-semibold leading-snug text-navy" />
                 <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-xs font-medium", statusMeta[s].pill)}>{statusMeta[s].label}</span>
               </div>
-              <MarkupText source={c.back} idPrefix={`lijst-${c.id}-a`} className="mt-1.5 space-y-2 text-[0.95rem] leading-relaxed text-navy/85" />
+              <MarkupText source={c.back} idPrefix={`lijst-${c.id}-a`} className="mt-1.5 max-w-3xl space-y-2 text-[0.95rem] leading-relaxed text-navy/85" />
             </li>
           );
         })}

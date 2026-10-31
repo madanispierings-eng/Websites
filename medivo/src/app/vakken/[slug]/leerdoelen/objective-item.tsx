@@ -54,7 +54,7 @@ export function ObjectiveItem({ id, body, completed, canTrack, path, explanation
             aria-controls={panelId}
             onClick={() => setOpen((v) => !v)}
             className={cn(
-              "-mt-0.5 inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-blue transition-colors hover:bg-sky",
+              "-mt-0.5 inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 max-sm:-my-2 max-sm:size-10 max-sm:justify-center max-sm:p-0 text-sm font-medium text-blue transition-colors hover:bg-sky",
               open && "bg-sky",
             )}
           >

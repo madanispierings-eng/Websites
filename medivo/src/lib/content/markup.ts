@@ -64,8 +64,9 @@ export function parseMarkup(source: string): ContentBlock[] {
       const items = collect((l) => /^\s*[-*]\s+/.test(l)).map((l) => l.trim().replace(/^[-*]\s+/, ""));
       blocks.push({ type: "list", ordered: false, items });
     } else if (/^\d+[.)]\s+/.test(t)) {
+      const start = Number(t.match(/^(\d+)/)![1]);
       const items = collect((l) => /^\s*\d+[.)]\s+/.test(l)).map((l) => l.trim().replace(/^\d+[.)]\s+/, ""));
-      blocks.push({ type: "list", ordered: true, items });
+      blocks.push(start > 1 ? { type: "list", ordered: true, start, items } : { type: "list", ordered: true, items });
     } else if (t.startsWith("|")) {
       const rows = collect((l) => l.trim().startsWith("|"))
         .filter((l) => !/^\|?[\s:|-]+\|?$/.test(l.trim()))
@@ -130,7 +131,7 @@ export function toMarkup(blocks: ContentBlock[]): string {
         case "paragraph":
           return spansToText(b.spans);
         case "list":
-          return b.items.map((it, n) => (b.ordered ? `${n + 1}. ${it}` : `- ${it}`)).join("\n");
+          return b.items.map((it, n) => (b.ordered ? `${n + (b.start ?? 1)}. ${it}` : `- ${it}`)).join("\n");
         case "table":
           return [b.header, b.header.map(() => "---"), ...b.rows].map((r) => `| ${r.join(" | ")} |`).join("\n");
         case "callout": {

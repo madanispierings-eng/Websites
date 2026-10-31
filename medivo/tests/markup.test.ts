@@ -59,4 +59,11 @@ describe("summary markup", () => {
     const [b] = parseMarkup("<script>alert(1)</script>");
     expect(b).toEqual({ type: "paragraph", spans: [{ text: "<script>alert(1)</script>" }] });
   });
+
+  it("keeps the first number of a continued ordered list", () => {
+    const [b] = parseMarkup("6. zesde\n7. zevende");
+    expect(b).toEqual({ type: "list", ordered: true, start: 6, items: ["zesde", "zevende"] });
+    expect(parseMarkup(toMarkup([b]))).toEqual([b]);
+    expect(blocksSchema.parse([b])).toEqual([b]);
+  });
 });

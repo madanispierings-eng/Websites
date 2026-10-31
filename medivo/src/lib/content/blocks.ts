@@ -11,7 +11,13 @@ const span = z.object({
 export const blockSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("heading"), level: z.union([z.literal(2), z.literal(3)]), text: z.string().min(1) }),
   z.object({ type: z.literal("paragraph"), spans: z.array(span).min(1) }),
-  z.object({ type: z.literal("list"), ordered: z.boolean().default(false), items: z.array(z.string()).min(1) }),
+  z.object({
+    type: z.literal("list"),
+    ordered: z.boolean().default(false),
+    /** First number of an ordered list that continues an earlier one (e.g. extra questions after a heading). */
+    start: z.number().int().min(1).optional(),
+    items: z.array(z.string()).min(1),
+  }),
   z.object({
     type: z.literal("table"),
     caption: z.string().optional(),

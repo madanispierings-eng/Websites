@@ -1,21 +1,22 @@
 "use client";
 
-import { useId, useOptimistic, useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { ChevronDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { setObjectiveCompleted } from "@/app/vakken/actions";
 import { cn } from "@/lib/utils";
+import { useObjectivesProgress } from "./objectives-progress";
 
-export function ObjectiveItem({ id, body, completed, canTrack, path, explanation }: {
+export function ObjectiveItem({ id, body, canTrack, path, explanation }: {
   id: string;
   body: string;
-  completed: boolean;
   canTrack: boolean;
   path: string;
   /** The worked-out explanation, rendered on the server; shown when the student expands the objective. */
   explanation?: React.ReactNode;
 }) {
-  const [optimistic, setOptimistic] = useOptimistic(completed);
+  const { isDone, setDone } = useObjectivesProgress();
+  const optimistic = isDone(id);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [, startTransition] = useTransition();
@@ -34,10 +35,16 @@ export function ObjectiveItem({ id, body, completed, canTrack, path, explanation
           onCheckedChange={(value) => {
             const next = value === true;
             setError(null);
+            setDone(id, next);
             startTransition(async () => {
-              setOptimistic(next);
-              const res = await setObjectiveCompleted({ objectiveId: id, completed: next, path });
-              if (!res.ok) setError(res.error);
+              const res = await setObjectiveCompleted({ objectiveId: id, completed: next, path }).catch(() => ({
+                ok: false as const,
+                error: "Geen verbinding. Je vinkje is niet opgeslagen.",
+              }));
+              if (!res.ok) {
+                setDone(id, !next);
+                setError(res.error);
+              }
             });
           }}
         />

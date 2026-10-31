@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { courseSections } from "@/components/course/course-sections";
 import { TabScroller } from "@/components/course/tab-scroller";
@@ -18,8 +19,15 @@ export function CourseSubheader({ course, active, title, intro }: { course: Cour
             { label: title },
           ]}
         />
-        <p className="mt-5 text-sm font-medium text-muted-ink">
-          {course.title} · {yearLabel(course.studyYear)} · {ecLabel(course.ec)}
+        <Link
+          href={`/vakken/${course.slug}`}
+          className="mt-5 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-blue hover:underline"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Terug naar {course.title}
+        </Link>
+        <p className="mt-2 text-sm font-medium text-muted-ink">
+          {yearLabel(course.studyYear)} · {ecLabel(course.ec)}
         </p>
         <h1 className="mt-1 text-3xl font-bold tracking-[-0.02em] text-navy sm:text-[2.25rem]">{title}</h1>
         {intro ? <p className="mt-2 max-w-2xl text-muted-ink">{intro}</p> : null}

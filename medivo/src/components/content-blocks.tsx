@@ -52,7 +52,7 @@ export function ContentBlocks({
           case "list": {
             const Tag = block.ordered ? "ol" : "ul";
             return (
-              <Tag key={id} id={id} className={cn("space-y-1.5 pl-6", block.ordered ? "list-decimal" : "list-disc marker:text-blue")}>
+              <Tag key={id} id={id} start={block.ordered ? block.start : undefined} className={cn("space-y-1.5 pl-6", block.ordered ? "list-decimal" : "list-disc marker:text-blue")}>
                 {block.items.map((item, j) => <li key={j}>{item}</li>)}
               </Tag>
             );

@@ -6,7 +6,8 @@ import { CourseSubheader } from "@/components/course/course-subheader";
 import { EmptyState } from "@/components/empty-state";
 import { Progress } from "@/components/ui/progress";
 import { getCourse, getLearningObjectives, getQuestionCounts, getTopicTree } from "@/lib/data/catalog";
-import { getCompletedObjectives } from "@/lib/data/learning";
+import { getCompletedObjectives, getObjectiveExplanations } from "@/lib/data/learning";
+import { ObjectiveExplanation } from "@/components/objectives/objective-explanation";
 import { container } from "@/lib/site";
 import { getViewer } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -22,12 +23,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ObjectivesPage({ params }: Props) {
   const course = await getCourse((await params).slug);
   if (!course) notFound();
-  const [objectives, topics, completed, viewer, counts] = await Promise.all([
+  const [objectives, topics, completed, viewer, counts, explanations] = await Promise.all([
     getLearningObjectives(course.id),
     getTopicTree(course.id),
     getCompletedObjectives(),
     getViewer(),
     getQuestionCounts(course.id),
+    getObjectiveExplanations(course.id),
   ]);
   const path = `/vakken/${course.slug}/leerdoelen`;
   const done = objectives.filter((o) => completed.has(o.id)).length;
@@ -40,7 +42,7 @@ export default async function ObjectivesPage({ params }: Props) {
 
   return (
     <main id="inhoud" className="flex-1">
-      <CourseSubheader course={course} active="leerdoelen" title="Leerdoelen" intro="Vink een leerdoel af zodra je het beheerst." />
+      <CourseSubheader course={course} active="leerdoelen" title="Leerdoelen" intro="Klap een leerdoel open voor de uitgewerkte uitleg, met dia’s en uitlegvideo’s. Vink het af zodra je het beheerst." />
       <div className={cn(container, "py-8 lg:py-10")}>
         {groups.length ? (
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
@@ -64,7 +66,15 @@ export default async function ObjectivesPage({ params }: Props) {
                   </div>
                   <ul className="mt-2 divide-y divide-line">
                     {items.map((o) => (
-                      <ObjectiveItem key={o.id} id={o.id} body={o.body} completed={completed.has(o.id)} canTrack={Boolean(viewer)} path={path} />
+                      <ObjectiveItem
+                        key={o.id}
+                        id={o.id}
+                        body={o.body}
+                        completed={completed.has(o.id)}
+                        canTrack={Boolean(viewer)}
+                        path={path}
+                        explanation={explanations.has(o.id) ? <ObjectiveExplanation id={o.id} explanation={explanations.get(o.id)!} /> : undefined}
+                      />
                     ))}
                   </ul>
                 </section>

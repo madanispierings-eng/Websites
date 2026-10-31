@@ -43,7 +43,7 @@ export default async function SummaryPage({ params }: Props) {
       <CourseSubheader course={course} active="samenvatting" title="Volledige samenvatting" />
       <div className={cn(container, "py-8 lg:py-10")}>
         {chapters.length ? (
-          <SummaryReader chapters={chapters} />
+          <SummaryReader chapters={chapters} course={{ title: course.title, href: `/vakken/${course.slug}` }} />
         ) : overview.summaries > 0 ? (
           <AccessNotice signedIn={Boolean(viewer)} next={`/vakken/${course.slug}/samenvatting`} />
         ) : (

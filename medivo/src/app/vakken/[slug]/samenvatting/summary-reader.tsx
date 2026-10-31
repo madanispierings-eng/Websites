@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, Search } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Download, Search } from "lucide-react";
 import { ContentBlocks } from "@/components/content-blocks";
 import { blockText } from "@/lib/content/text";
 import type { Summary } from "@/lib/data/learning";
 
 type Chapter = Summary & { anchor: string; topicTitle: string };
 
-export function SummaryReader({ chapters }: { chapters: Chapter[] }) {
+export function SummaryReader({ chapters, course }: { chapters: Chapter[]; course: { title: string; href: string } }) {
   const [query, setQuery] = useState("");
   const [progress, setProgress] = useState(0);
   const articleRef = useRef<HTMLDivElement>(null);
@@ -64,8 +65,23 @@ export function SummaryReader({ chapters }: { chapters: Chapter[] }) {
         <div className="h-full origin-left bg-accent-blue" style={{ transform: `scaleX(${progress / 100})` }} />
       </div>
 
+      {/* On phones the sidebar scrolls away: keep a way back to the course in reach. */}
+      <div className="sticky top-16 z-20 -mx-4 mb-4 border-b border-line bg-canvas/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:hidden">
+        <Link href={course.href} className="inline-flex max-w-full items-center gap-1.5 rounded-md text-sm font-medium text-blue hover:underline">
+          <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
+          <span className="truncate">Terug naar {course.title}</span>
+        </Link>
+      </div>
+
       <div className="grid gap-8 lg:grid-cols-[17rem_minmax(0,1fr)]">
         <aside className="lg:sticky lg:top-24 lg:self-start">
+          <Link
+            href={course.href}
+            className="mb-4 hidden items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-navy shadow-[var(--shadow-card)] transition-colors hover:bg-sky lg:flex"
+          >
+            <ArrowLeft className="size-4 text-blue" aria-hidden="true" />
+            <span className="truncate">Terug naar {course.title}</span>
+          </Link>
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-ink" aria-hidden="true" />
             <label htmlFor="zoek-samenvatting" className="sr-only">Zoeken in de samenvatting</label>

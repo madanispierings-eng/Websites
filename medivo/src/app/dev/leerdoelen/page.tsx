@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ObjectiveExplanation } from "@/components/objectives/objective-explanation";
 import { ObjectiveItem } from "@/app/vakken/[slug]/leerdoelen/objective-item";
+import { ObjectivesProgressProvider, ObjectivesProgressSummary } from "@/app/vakken/[slug]/leerdoelen/objectives-progress";
 import { parseMarkup } from "@/lib/content/markup";
 import { isLaunched } from "@/lib/env";
 import { container } from "@/lib/site";
@@ -39,6 +40,8 @@ export default function Page() {
     <main id="inhoud" className={cn(container, "flex-1 py-10")}>
       <p className="mb-6 rounded-lg border border-[#e8c48a] bg-[#fdf6ec] px-4 py-3 text-sm text-navy">Ontwikkelweergave met opvultekst. Er wordt niets opgeslagen.</p>
       <h1 className="mb-6 text-3xl font-bold text-navy">Leerdoelen</h1>
+      <ObjectivesProgressProvider initialCompleted={["voorbeeld-3"]} objectiveIds={["voorbeeld-1", "voorbeeld-2", "voorbeeld-3"]}>
+      <div className="mb-4 max-w-xs rounded-xl border border-line bg-white p-5"><h2 className="font-semibold text-navy">Jouw voortgang</h2><ObjectivesProgressSummary /></div>
       <section className="max-w-4xl rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
         <h2 className="text-lg font-semibold text-navy"><span className="mr-2 tabular-nums text-muted-ink">1</span>Onderwerp 1</h2>
         <ul className="mt-2 divide-y divide-line">
@@ -47,7 +50,6 @@ export default function Page() {
               key={n}
               id={`voorbeeld-${n}`}
               body={`Voorbeeldleerdoel ${n}: een leerdoel dat zo lang is dat het over twee regels loopt, zoals in de echte lijst (opvultekst).`}
-              completed={n === 3}
               canTrack={false}
               path="/vakken/voorbeeld/leerdoelen"
               explanation={n < 3 ? <ObjectiveExplanation id={`voorbeeld-${n}`} explanation={explanation} /> : undefined}
@@ -55,6 +57,7 @@ export default function Page() {
           ))}
         </ul>
       </section>
+      </ObjectivesProgressProvider>
     </main>
   );
 }

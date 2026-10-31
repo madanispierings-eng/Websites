@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { z } from "zod";
 import { blocksSchema, type ContentBlock } from "@/lib/content/blocks";
 import { imageUrlsFor } from "@/lib/content/images";
 import type { CourseProgress } from "@/lib/progress/summary";
@@ -137,4 +138,40 @@ export const getCourseProgress = cache(async (courseId: string): Promise<CourseP
     })),
     exams: d.exams.map((e) => ({ id: e.id, finishedAt: e.finished_at, examTitle: e.exam_title, questions: Number(e.questions), points: Number(e.points), scored: Number(e.scored) })),
   };
+});
+
+const videoSchema = z.object({
+  youtube_id: z.string().regex(/^[A-Za-z0-9_-]{11}$/),
+  title: z.string().min(1),
+  channel: z.string().optional(),
+  why: z.string().optional(),
+});
+
+export type ExplanationVideo = { youtubeId: string; title: string; channel: string | null; why: string | null };
+export type ObjectiveExplanation = { blocks: ContentBlock[]; imageUrls: Record<string, string>; videos: ExplanationVideo[] };
+
+/** Worked-out explanations per learning objective that the viewer may read (RLS: premium content needs access). */
+export const getObjectiveExplanations = cache(async (courseId: string): Promise<Map<string, ObjectiveExplanation>> => {
+  const out = new Map<string, ObjectiveExplanation>();
+  const supabase = await createClient();
+  if (!supabase) return out;
+  const { data, error } = await supabase
+    .from("objective_explanations")
+    .select("objective_id, content, videos, learning_objectives!inner(topics!inner(course_id))")
+    .eq("learning_objectives.topics.course_id", courseId)
+    .eq("status", "published");
+  if (error) throw new Error(`Uitleg bij de leerdoelen kon niet worden geladen: ${error.message}`);
+  for (const row of data ?? []) {
+    const blocks = blocksSchema.safeParse(row.content);
+    const videos = z.array(videoSchema).safeParse(row.videos);
+    if (!blocks.success) continue;
+    out.set(row.objective_id, {
+      blocks: blocks.data,
+      imageUrls: imageUrlsFor(blocks.data),
+      videos: videos.success
+        ? videos.data.map((v) => ({ youtubeId: v.youtube_id, title: v.title, channel: v.channel ?? null, why: v.why ?? null }))
+        : [],
+    });
+  }
+  return out;
 });

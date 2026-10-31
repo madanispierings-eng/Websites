@@ -488,5 +488,57 @@ do $$ begin
 end $$;
 set local role authenticated;
 
+
+-- ---- explanations of learning objectives follow the summary access rules ----
+reset role;
+insert into public.learning_objectives (id, topic_id, body, sort_order, status) values
+  ('e0e0e0e0-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000001', 'Leerdoel vrij', 1, 'published'),
+  ('e0e0e0e0-0000-4000-8000-000000000002', 'bbbbbbbb-0000-4000-8000-000000000001', 'Leerdoel premium', 2, 'published'),
+  ('e0e0e0e0-0000-4000-8000-000000000003', 'bbbbbbbb-0000-4000-8000-000000000001', 'Leerdoel concept', 3, 'published');
+insert into public.objective_explanations (objective_id, content, videos, is_premium, reviewed_at, status) values
+  ('e0e0e0e0-0000-4000-8000-000000000001', '[{"type":"paragraph","spans":[{"text":"Vrij"}]}]', '[{"youtube_id":"abcdefghijk","title":"Film"}]', false, now(), 'published'),
+  ('e0e0e0e0-0000-4000-8000-000000000002', '[{"type":"paragraph","spans":[{"text":"Premium"}]}]', '[]', true, now(), 'published'),
+  ('e0e0e0e0-0000-4000-8000-000000000003', '[]', '[]', false, null, 'draft');
+do $$ begin
+  begin
+    insert into public.objective_explanations (objective_id, videos) values ('e0e0e0e0-0000-4000-8000-000000000003', '[{"title":"zonder id"}]')
+      on conflict (objective_id) do update set videos = excluded.videos;
+    raise exception 'FAIL: video without youtube_id accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    update public.objective_explanations set status = 'published' where objective_id = 'e0e0e0e0-0000-4000-8000-000000000003';
+    raise exception 'FAIL: unreviewed explanation published';
+  exception when check_violation then null;
+  end;
+end $$;
+
+set local role authenticated;
+set local request.jwt.claim.sub = 'aaaaaaaa-0000-4000-8000-000000000001';
+do $$ begin
+  if (select count(*) from public.objective_explanations where objective_id::text like 'e0e0e0e0%') <> 1 then
+    raise exception 'FAIL: student without access should see only the free published explanation';
+  end if;
+  begin
+    insert into public.objective_explanations (objective_id) values ('e0e0e0e0-0000-4000-8000-000000000003');
+    raise exception 'FAIL: student wrote an explanation';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+set local request.jwt.claim.sub = 'aaaaaaaa-0000-4000-8000-000000000003';
+do $$ begin
+  if (select count(*) from public.objective_explanations where objective_id::text like 'e0e0e0e0%') <> 3 then
+    raise exception 'FAIL: admin should see all explanations';
+  end if;
+end $$;
+
+reset request.jwt.claim.sub;
+set local role anon;
+do $$ begin
+  if exists (select 1 from public.objective_explanations where is_premium) then raise exception 'FAIL: anon reads premium explanation'; end if;
+end $$;
+set local role authenticated;
+
 rollback;
 \echo 'All database security checks passed.'

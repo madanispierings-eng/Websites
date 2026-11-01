@@ -2,14 +2,23 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Download, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronRight, ClipboardCheck, Download, Search, Stethoscope, Target } from "lucide-react";
 import { ContentBlocks } from "@/components/content-blocks";
 import { blockText } from "@/lib/content/text";
 import type { Summary } from "@/lib/data/learning";
+import { cn } from "@/lib/utils";
 
-type Chapter = Summary & { anchor: string; topicTitle: string };
+export type Chapter = Summary & {
+  anchor: string;
+  topicTitle: string;
+  topicSlug: string;
+  objectives: { id: string; body: string }[];
+};
 
-export function SummaryReader({ chapters, course }: { chapters: Chapter[]; course: { title: string; href: string } }) {
+export function SummaryReader({ chapters, course }: {
+  chapters: Chapter[];
+  course: { title: string; href: string; leerdoelenHref: string };
+}) {
   const [query, setQuery] = useState("");
   const [progress, setProgress] = useState(0);
   const articleRef = useRef<HTMLDivElement>(null);
@@ -41,15 +50,17 @@ export function SummaryReader({ chapters, course }: { chapters: Chapter[]; cours
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (q.length < 2) return [];
-    return chapters.flatMap((c) =>
-      c.blocks.flatMap((b, i) => {
-        const text = blockText(b);
-        const at = text.toLowerCase().indexOf(q);
-        if (at < 0) return [];
-        const start = Math.max(0, at - 40);
-        return [{ href: `#${c.id}-b${i}`, chapter: c.title, snippet: `${start > 0 ? "…" : ""}${text.slice(start, at + q.length + 60)}…` }];
-      }),
-    ).slice(0, 30);
+    return chapters
+      .flatMap((c) =>
+        c.blocks.flatMap((b, i) => {
+          const text = blockText(b);
+          const at = text.toLowerCase().indexOf(q);
+          if (at < 0) return [];
+          const start = Math.max(0, at - 40);
+          return [{ href: `#${c.id}-b${i}`, chapter: c.title, snippet: `${start > 0 ? "…" : ""}${text.slice(start, at + q.length + 60)}…` }];
+        }),
+      )
+      .slice(0, 30);
   }, [chapters, query]);
 
   return (
@@ -73,7 +84,7 @@ export function SummaryReader({ chapters, course }: { chapters: Chapter[]; cours
         </Link>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[17rem_minmax(0,1fr)]">
+      <div className="grid gap-8 lg:grid-cols-[16rem_minmax(0,1fr)]">
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <Link
             href={course.href}
@@ -126,34 +137,148 @@ export function SummaryReader({ chapters, course }: { chapters: Chapter[]; cours
           </nav>
         </aside>
 
-        <div ref={articleRef} className="min-w-0 space-y-6">
+        <div ref={articleRef} className="min-w-0 space-y-8">
           {chapters.map((c, i) => (
-            <article
-              key={c.id}
-              id={c.anchor}
-              aria-labelledby={`${c.id}-titel`}
-              className="scroll-mt-24 rounded-xl border border-line bg-white p-6 shadow-[var(--shadow-card)] sm:p-10"
-            >
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-blue">Hoofdstuk {i + 1} · {c.topicTitle}</p>
-              <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
-                <h2 id={`${c.id}-titel`} className="text-2xl font-bold tracking-[-0.01em] text-navy">{c.title}</h2>
-                {c.pdfUrl ? (
-                  <a href={c.pdfUrl} className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-sm font-medium text-navy hover:bg-sky">
-                    <Download className="size-4" aria-hidden="true" /> PDF
-                  </a>
-                ) : null}
-              </div>
-              <div className="mt-6">
-                {c.invalid ? (
-                  <p className="text-sm text-danger">Dit hoofdstuk kon niet worden weergegeven. We zijn op de hoogte gebracht.</p>
-                ) : (
-                  <ContentBlocks blocks={c.blocks} imageUrls={c.imageUrls} idPrefix={c.id} />
-                )}
-              </div>
-            </article>
+            <ChapterView key={c.id} chapter={c} index={i} total={chapters.length} course={course} />
           ))}
         </div>
       </div>
     </>
   );
+}
+
+function ChapterView({ chapter: c, index, total, course }: {
+  chapter: Chapter;
+  index: number;
+  total: number;
+  course: { leerdoelenHref: string };
+}) {
+  const prev = index > 0;
+  const next = index < total - 1;
+  const hasAside = c.aside.clinical.length > 0 || c.aside.exam.length > 0 || c.objectives.length > 0;
+
+  return (
+    <article id={c.anchor} aria-labelledby={`${c.id}-titel`} className="scroll-mt-24">
+      <div className={cn("grid gap-6", hasAside && "xl:grid-cols-[minmax(0,1fr)_19rem] xl:items-start")}>
+        <div className="min-w-0 rounded-2xl border border-line bg-white p-6 shadow-[var(--shadow-card)] sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="inline-flex items-center gap-2">
+              <span className="rounded-full bg-sky px-2.5 py-0.5 text-xs font-semibold text-blue">Hoofdstuk {index + 1}</span>
+              <span className="text-xs font-medium text-muted-ink">van {total}</span>
+            </span>
+            <span className="flex items-center gap-1">
+              {prev ? (
+                <a href={`#${"prev"}`} onClick={jumpTo(index - 1)} className="grid size-8 place-items-center rounded-md border border-line text-navy hover:bg-sky" aria-label="Vorige hoofdstuk">
+                  <ArrowLeft className="size-4" aria-hidden="true" />
+                </a>
+              ) : null}
+              {next ? (
+                <a href={`#${"next"}`} onClick={jumpTo(index + 1)} className="grid size-8 place-items-center rounded-md border border-line text-navy hover:bg-sky" aria-label="Volgende hoofdstuk">
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </a>
+              ) : null}
+              {c.pdfUrl ? (
+                <a href={c.pdfUrl} className="ml-1 inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-sm font-medium text-navy hover:bg-sky">
+                  <Download className="size-4" aria-hidden="true" /> PDF
+                </a>
+              ) : null}
+            </span>
+          </div>
+          <h2 id={`${c.id}-titel`} className="mt-3 text-2xl font-bold tracking-[-0.01em] text-navy sm:text-[1.75rem]">{c.title}</h2>
+
+          <div className="mt-6">
+            {c.invalid ? (
+              <p className="text-sm text-danger">Dit hoofdstuk kon niet worden weergegeven. We zijn op de hoogte gebracht.</p>
+            ) : (
+              <ContentBlocks
+                blocks={c.blocks}
+                imageUrls={c.imageUrls}
+                idPrefix={c.id}
+                className="[&_h3]:mt-2 [&_h3]:border-b [&_h3]:border-line [&_h3]:pb-2"
+              />
+            )}
+          </div>
+        </div>
+
+        {hasAside ? (
+          <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start" aria-label="Bij dit hoofdstuk">
+            {c.aside.clinical.length ? (
+              <SideCard title="Klinische relevantie" icon={Stethoscope} tone="clinical" items={c.aside.clinical} />
+            ) : null}
+            {c.aside.exam.length ? (
+              <SideCard title="Tentamenfocus" icon={ClipboardCheck} tone="exam" items={c.aside.exam} />
+            ) : null}
+            {c.objectives.length ? (
+              <div className="rounded-xl border border-line bg-white shadow-[var(--shadow-card)]">
+                <div className="flex items-center gap-2 border-b border-line px-4 py-3">
+                  <Target className="size-4 text-blue" aria-hidden="true" />
+                  <h3 className="text-sm font-semibold text-navy">Koppeling met leerdoelen</h3>
+                </div>
+                <div className="px-4 py-3">
+                  <p className="text-xs text-muted-ink">Na dit hoofdstuk kun je:</p>
+                  <ul className="mt-2 space-y-2">
+                    {c.objectives.map((o) => (
+                      <li key={o.id} className="flex gap-2 text-sm text-navy">
+                        <ChevronRight className="mt-0.5 size-4 shrink-0 text-blue" aria-hidden="true" />
+                        <span>{o.body}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={`${course.leerdoelenHref}#${c.topicSlug}`}
+                    className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-blue hover:underline"
+                  >
+                    Naar de leerdoelen <ArrowRight className="size-4" aria-hidden="true" />
+                  </Link>
+                </div>
+              </div>
+            ) : null}
+          </aside>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+const toneStyles = {
+  clinical: { head: "text-success-ink", icon: "text-success", mark: "text-success" },
+  exam: { head: "text-danger", icon: "text-danger", mark: "text-danger" },
+};
+
+function SideCard({ title, icon: Icon, tone, items }: {
+  title: string;
+  icon: typeof Stethoscope;
+  tone: keyof typeof toneStyles;
+  items: string[];
+}) {
+  const t = toneStyles[tone];
+  return (
+    <div className="rounded-xl border border-line bg-white shadow-[var(--shadow-card)]">
+      <div className="flex items-center gap-2 border-b border-line px-4 py-3">
+        <Icon className={cn("size-4", t.icon)} aria-hidden="true" />
+        <h3 className={cn("text-sm font-semibold", t.head)}>{title}</h3>
+      </div>
+      <ul className="space-y-2.5 px-4 py-3">
+        {items.map((it, i) => (
+          <li key={i} className="flex gap-2 text-sm leading-relaxed text-navy/90">
+            <span className={cn("mt-1 size-1.5 shrink-0 rounded-full", tone === "clinical" ? "bg-success" : "bg-danger")} aria-hidden="true" />
+            <span>{it}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// Smooth-scroll to another chapter without touching the URL hash history.
+function jumpTo(targetIndex: number) {
+  return (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const articles = document.querySelectorAll<HTMLElement>("article[id]");
+    const el = articles[targetIndex];
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.querySelector<HTMLElement>("h2")?.focus?.();
+    }
+  };
 }

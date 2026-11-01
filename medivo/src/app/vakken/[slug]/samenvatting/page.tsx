@@ -6,9 +6,7 @@ import { CourseSubheader } from "@/components/course/course-subheader";
 import { EmptyState } from "@/components/empty-state";
 import { getCourse, getLearningObjectives, getTopicTree } from "@/lib/data/catalog";
 import { getCourseOverview, getSummaries } from "@/lib/data/learning";
-import { container } from "@/lib/site";
 import { getViewer } from "@/lib/supabase/server";
-import { cn } from "@/lib/utils";
 import { SummaryReader } from "./summary-reader";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -54,7 +52,7 @@ export default async function SummaryPage({ params }: Props) {
   return (
     <main id="inhoud" className="flex-1">
       <CourseSubheader course={course} active="samenvatting" title="Volledige samenvatting" />
-      <div className={cn(container, "py-8 lg:py-10")}>
+      <div className="mx-auto w-full max-w-[1560px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         {chapters.length ? (
           <SummaryReader chapters={chapters} course={{ title: course.title, href: `/vakken/${course.slug}`, leerdoelenHref: `/vakken/${course.slug}/leerdoelen` }} />
         ) : overview.summaries > 0 ? (

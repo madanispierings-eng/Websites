@@ -84,7 +84,7 @@ export function SummaryReader({ chapters, course }: {
         </Link>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[16rem_minmax(0,1fr)]">
+      <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] xl:gap-8">
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <Link
             href={course.href}
@@ -159,7 +159,7 @@ function ChapterView({ chapter: c, index, total, course }: {
 
   return (
     <article id={c.anchor} aria-labelledby={`${c.id}-titel`} className="scroll-mt-24">
-      <div className={cn("grid gap-6", hasAside && "xl:grid-cols-[minmax(0,1fr)_19rem] xl:items-start")}>
+      <div className={cn("grid gap-6", hasAside && "xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start")}>
         <div className="min-w-0 rounded-2xl border border-line bg-white p-6 shadow-[var(--shadow-card)] sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="inline-flex items-center gap-2">
@@ -194,14 +194,14 @@ function ChapterView({ chapter: c, index, total, course }: {
                 blocks={c.blocks}
                 imageUrls={c.imageUrls}
                 idPrefix={c.id}
-                className="[&_h3]:mt-2 [&_h3]:border-b [&_h3]:border-line [&_h3]:pb-2"
+                className="[&_h3]:mt-8 [&_h3]:border-b [&_h3]:border-line [&_h3]:pb-2 [&_h3]:text-xl"
               />
             )}
           </div>
         </div>
 
         {hasAside ? (
-          <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start" aria-label="Bij dit hoofdstuk">
+          <aside className="space-y-4 xl:sticky xl:top-24 xl:max-h-[calc(100dvh-7rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-0.5" aria-label="Bij dit hoofdstuk">
             {c.aside.clinical.length ? (
               <SideCard title="Klinische relevantie" icon={Stethoscope} tone="clinical" items={c.aside.clinical} />
             ) : null}

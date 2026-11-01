@@ -4,7 +4,7 @@ import { FileText } from "lucide-react";
 import { AccessNotice } from "@/components/course/access-notice";
 import { CourseSubheader } from "@/components/course/course-subheader";
 import { EmptyState } from "@/components/empty-state";
-import { getCourse, getTopicTree } from "@/lib/data/catalog";
+import { getCourse, getLearningObjectives, getTopicTree } from "@/lib/data/catalog";
 import { getCourseOverview, getSummaries } from "@/lib/data/learning";
 import { container } from "@/lib/site";
 import { getViewer } from "@/lib/supabase/server";
@@ -23,19 +23,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SummaryPage({ params }: Props) {
   const course = await getCourse((await params).slug);
   if (!course) notFound();
-  const [summaries, topics, overview, viewer] = await Promise.all([
+  const [summaries, topics, overview, viewer, objectives] = await Promise.all([
     getSummaries(course.id),
     getTopicTree(course.id),
     getCourseOverview(course.id),
     getViewer(),
+    getLearningObjectives(course.id),
   ]);
 
   const allTopics = topics.flatMap((t) => [t, ...t.children]);
+  const objectivesByTopic = new Map<string, { id: string; body: string }[]>();
+  for (const o of objectives) {
+    const list = objectivesByTopic.get(o.topicId) ?? [];
+    list.push({ id: o.id, body: o.body });
+    objectivesByTopic.set(o.topicId, list);
+  }
   const chapters = summaries.map((s) => {
     const topic = allTopics.find((t) => t.id === s.topicId);
     // The first chapter of a topic carries the topic anchor, so links from the course page land on it.
     const anchor = topic && summaries.find((x) => x.topicId === s.topicId)?.id === s.id ? topic.slug : `h-${s.id}`;
-    return { ...s, anchor, topicTitle: topic?.title ?? "" };
+    return {
+      ...s,
+      anchor,
+      topicTitle: topic?.title ?? "",
+      topicSlug: topic?.slug ?? anchor,
+      objectives: objectivesByTopic.get(s.topicId) ?? [],
+    };
   });
 
   return (
@@ -43,7 +56,7 @@ export default async function SummaryPage({ params }: Props) {
       <CourseSubheader course={course} active="samenvatting" title="Volledige samenvatting" />
       <div className={cn(container, "py-8 lg:py-10")}>
         {chapters.length ? (
-          <SummaryReader chapters={chapters} course={{ title: course.title, href: `/vakken/${course.slug}` }} />
+          <SummaryReader chapters={chapters} course={{ title: course.title, href: `/vakken/${course.slug}`, leerdoelenHref: `/vakken/${course.slug}/leerdoelen` }} />
         ) : overview.summaries > 0 ? (
           <AccessNotice signedIn={Boolean(viewer)} next={`/vakken/${course.slug}/samenvatting`} />
         ) : (

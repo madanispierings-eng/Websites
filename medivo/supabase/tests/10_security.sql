@@ -540,5 +540,24 @@ do $$ begin
 end $$;
 set local role authenticated;
 
+
+-- ---- the summary aside must be an object with array fields ----
+reset role;
+do $$
+declare v_topic uuid := 'bbbbbbbb-0000-4000-8000-000000000001';
+begin
+  insert into public.summaries (id, topic_id, title, content, aside, is_premium, reviewed_at, status)
+  values ('ddddaaaa-0000-4000-8000-000000000001', v_topic, 'Aside-test', '[]'::jsonb,
+          '{"clinical":["punt"],"exam":["punt"]}'::jsonb, false, now(), 'published');
+  begin
+    update public.summaries set aside = '[]'::jsonb where id = 'ddddaaaa-0000-4000-8000-000000000001';
+    raise exception 'FAIL: aside array accepted';
+  exception when check_violation then null; end;
+  begin
+    update public.summaries set aside = '{"clinical":"x"}'::jsonb where id = 'ddddaaaa-0000-4000-8000-000000000001';
+    raise exception 'FAIL: non-array clinical accepted';
+  exception when check_violation then null; end;
+end $$;
+
 rollback;
 \echo 'All database security checks passed.'

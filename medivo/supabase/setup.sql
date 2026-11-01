@@ -1720,6 +1720,18 @@ create policy "objective explanations readable with access" on public.objective_
 );
 create policy "admins manage" on public.objective_explanations for all using (public.is_admin()) with check (public.is_admin());
 
+-- ===== supabase/migrations/20261101120000_summary_aside.sql =====
+-- A small "aside" per summary for the reader's sidebar: clinical relevance and exam focus, each a list of short
+-- points. It rides on the summaries row, so it follows the same access rules (premium content needs course access).
+-- The learning-objective links in the sidebar come from learning_objectives, not from here.
+
+alter table public.summaries
+  add column aside jsonb not null default '{}'::jsonb check (
+    jsonb_typeof(aside) = 'object'
+    and (not aside ? 'clinical' or jsonb_typeof(aside -> 'clinical') = 'array')
+    and (not aside ? 'exam' or jsonb_typeof(aside -> 'exam') = 'array')
+  );
+
 -- ===== supabase/seed.sql =====
 -- Initial catalogue: bachelor Geneeskunde, Universiteit Leiden.
 -- Course titles and EC values as supplied by the Medivo team. Use NULL for an EC value that has not been verified;

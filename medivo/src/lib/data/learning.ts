@@ -42,7 +42,11 @@ export type Summary = {
   imageUrls: Record<string, string>;
   pdfUrl: string | null;
   invalid: boolean;
+  /** Short points for the reader's sidebar; empty lists when not filled in. */
+  aside: { clinical: string[]; exam: string[] };
 };
+
+const asideSchema = z.object({ clinical: z.array(z.string()).default([]), exam: z.array(z.string()).default([]) });
 
 const CONTENT_BUCKET = "course-content";
 const SIGNED_URL_SECONDS = 60 * 60;
@@ -53,13 +57,13 @@ export const getSummaries = cache(async (courseId: string): Promise<Summary[]> =
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("summaries")
-    .select("id, topic_id, title, content, pdf_path, pdf_download_allowed, topics!inner(course_id, sort_order)")
+    .select("id, topic_id, title, content, aside, pdf_path, pdf_download_allowed, topics!inner(course_id, sort_order)")
     .eq("topics.course_id", courseId)
     .eq("status", "published");
   if (error) throw new Error(`Samenvattingen konden niet worden geladen: ${error.message}`);
 
   const rows = data as unknown as {
-    id: string; topic_id: string; title: string; content: unknown; pdf_path: string | null; pdf_download_allowed: boolean;
+    id: string; topic_id: string; title: string; content: unknown; aside: unknown; pdf_path: string | null; pdf_download_allowed: boolean;
     topics: { sort_order: number };
   }[];
   rows.sort((a, b) => a.topics.sort_order - b.topics.sort_order);
@@ -74,7 +78,11 @@ export const getSummaries = cache(async (courseId: string): Promise<Summary[]> =
         const { data: signed } = await supabase.storage.from(CONTENT_BUCKET).createSignedUrl(row.pdf_path, SIGNED_URL_SECONDS, { download: true });
         pdfUrl = signed?.signedUrl ?? null;
       }
-      return { id: row.id, topicId: row.topic_id, title: row.title, blocks, imageUrls, pdfUrl, invalid: !parsed.success };
+      const aside = asideSchema.safeParse(row.aside);
+      return {
+        id: row.id, topicId: row.topic_id, title: row.title, blocks, imageUrls, pdfUrl, invalid: !parsed.success,
+        aside: aside.success ? { clinical: aside.data.clinical, exam: aside.data.exam } : { clinical: [], exam: [] },
+      };
     }),
   );
 });

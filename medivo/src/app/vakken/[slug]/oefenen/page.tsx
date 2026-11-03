@@ -10,7 +10,8 @@ import { getTopicStats } from "@/lib/data/learning";
 import { container } from "@/lib/site";
 import { getViewer } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
-import { finishSession, revealAnswer, selfGrade, startSession, submitAnswer, toggleBookmark } from "./actions";
+import { resumableSession } from "@/lib/practice/server";
+import { finishSession, resumeSession, revealAnswer, selfGrade, startSession, submitAnswer, toggleBookmark } from "./actions";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ modus?: string; onderwerp?: string; tentamen?: string }> };
 
@@ -25,12 +26,13 @@ export default async function PracticePage({ params, searchParams }: Props) {
   const course = await getCourse((await params).slug);
   if (!course) notFound();
   const { modus, onderwerp, tentamen } = await searchParams;
-  const [topics, counts, stats, viewer, exams] = await Promise.all([
+  const [topics, counts, stats, viewer, exams, resumable] = await Promise.all([
     getTopicTree(course.id),
     getQuestionCounts(course.id),
     getTopicStats(course.id),
     getViewer(),
     getExams(course.id),
+    resumableSession(course.id),
   ]);
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   const topicIds = new Set(topics.flatMap((t) => [t.id, ...t.children.map((c) => c.id)]));
@@ -63,7 +65,8 @@ export default async function PracticePage({ params, searchParams }: Props) {
             initialTopicId={initialTopicId}
             exams={exams.map((e) => ({ id: e.id, label: examTitle(e), questionCount: e.questionCount }))}
             initialExamId={initialExamId}
-            api={{ startSession: startSession.bind(null, course.id), submitAnswer, revealAnswer, selfGrade, finishSession, toggleBookmark }}
+            resumable={resumable}
+            api={{ startSession: startSession.bind(null, course.id), submitAnswer, revealAnswer, selfGrade, finishSession, toggleBookmark, resumeSession }}
           />
         )}
       </div>

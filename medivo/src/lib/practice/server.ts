@@ -4,7 +4,7 @@ import { blocksSchema, type ContentBlock } from "@/lib/content/blocks";
 import { contentImageUrl } from "@/lib/content/images";
 import { sectionUnder } from "@/lib/content/sections";
 import { createClient, getViewer } from "@/lib/supabase/server";
-import type { ActionResult, AnswerFeedback, AnswerKey, DropdownItem, PracticeQuestion, QuestionResponse, QuestionType, RetryInfo, SessionReview } from "./types";
+import type { ActionResult, AnswerFeedback, AnswerKey, DropdownItem, PracticeMode, PracticeQuestion, QuestionResponse, QuestionType, ResumableSession, ResumeAnswer, ResumeData, RetryInfo, SessionReview } from "./types";
 
 const uuid = z.string().uuid();
 
@@ -83,14 +83,29 @@ export async function startSession(courseId: string, input: unknown) {
     .single();
   if (sErr) return fail<Out>(sErr.message);
 
-  const ids: string[] = session.question_ids;
-  const { data: rows, error: qErr } = await supabase
+  const { questions, bookmarkedIds } = await loadQuestions(supabase, session.question_ids as string[]);
+
+  return {
+    ok: true as const,
+    data: {
+      sessionId: sessionId as string,
+      questions,
+      startedAt: session.started_at as string,
+      timeLimitSeconds: session.time_limit_seconds as number | null,
+      bookmarkedIds,
+    },
+  };
+}
+
+type SupabaseClient = NonNullable<Awaited<ReturnType<typeof context>>>["supabase"];
+
+/** The questions of a session (in the given order) with their hints, plus which of them the student bookmarked. */
+async function loadQuestions(supabase: SupabaseClient, ids: string[]) {
+  const { data: rows } = await supabase
     .from("questions")
     .select("id, topic_id, type, stem, context, points, content, image_path, image_alt, hint, topics(title), question_options(id, label, body, sort_order)")
     .in("id", ids);
-  if (qErr) return fail<Out>(qErr.message);
-
-  const byId = new Map((rows as unknown as QuestionRow[]).map((r) => [r.id, r]));
+  const byId = new Map((rows as unknown as QuestionRow[] | null ?? []).map((r) => [r.id, r]));
   const hints = await loadHints(supabase, [...byId.values()]);
   const questions: PracticeQuestion[] = ids.flatMap((id) => {
     const r = byId.get(id);
@@ -111,18 +126,81 @@ export async function startSession(courseId: string, input: unknown) {
       hint: hints.get(r.id) ?? null,
     }];
   });
-
   const { data: marks } = await supabase.from("bookmarks").select("question_id").in("question_id", ids);
+  return { questions, bookmarkedIds: (marks ?? []).map((m) => m.question_id as string) };
+}
+
+/** The most recent unfinished session for this course, for the "verder gaan" banner. Null when there is none. */
+export async function resumableSession(courseId: string): Promise<ResumableSession | null> {
+  if (!uuid.safeParse(courseId).success) return null;
+  const ctx = await context();
+  if (!ctx) return null;
+  const { supabase } = ctx;
+  const { data: session } = await supabase
+    .from("practice_sessions")
+    .select("id, mode, started_at, question_ids")
+    .eq("course_id", courseId)
+    .is("finished_at", null)
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!session) return null;
+  const total = (session.question_ids as string[]).length;
+  if (total === 0) return null;
+  const { count } = await supabase
+    .from("question_attempts")
+    .select("question_id", { count: "exact", head: true })
+    .eq("session_id", session.id);
+  return {
+    sessionId: session.id as string,
+    mode: session.mode as PracticeMode,
+    startedAt: session.started_at as string,
+    total,
+    answered: count ?? 0,
+  };
+}
+
+type ResumeRpc = {
+  mode: PracticeMode;
+  started_at: string;
+  time_limit_seconds: number | null;
+  question_ids: string[];
+  answers: (
+    | { question_id: string; kind: "exam"; response: QuestionResponse }
+    | { question_id: string; kind: "final"; feedback: RawFeedback & { response: QuestionResponse } }
+    | { question_id: string; kind: "retry"; hint: { response: QuestionResponse; wrong_option_ids: string[]; wrong_items: number[] } }
+  )[];
+};
+
+export async function resumeSession(input: unknown) {
+  const parsed = z.object({ sessionId: uuid }).safeParse(input);
+  if (!parsed.success) return fail<ResumeData>(undefined);
+  const ctx = await context();
+  if (!ctx) return fail<ResumeData>("not_authenticated");
+  const { supabase } = ctx;
+
+  const { data, error } = await supabase.rpc("resume_practice_session", { p_session_id: parsed.data.sessionId });
+  if (error) return fail<ResumeData>(error.message);
+  const r = data as ResumeRpc;
+
+  const { questions, bookmarkedIds } = await loadQuestions(supabase, r.question_ids);
+  const answers: ResumeAnswer[] = r.answers.map((a) => {
+    if (a.kind === "exam") return { questionId: a.question_id, response: a.response, feedback: null, retry: null };
+    if (a.kind === "final") return { questionId: a.question_id, response: a.feedback.response, feedback: toFeedback(a.feedback), retry: null };
+    return { questionId: a.question_id, response: a.hint.response, feedback: null, retry: { wrongOptionIds: a.hint.wrong_option_ids ?? [], wrongItems: a.hint.wrong_items ?? [] } };
+  });
 
   return {
     ok: true as const,
     data: {
-      sessionId: sessionId as string,
+      sessionId: parsed.data.sessionId,
+      mode: r.mode,
       questions,
-      startedAt: session.started_at as string,
-      timeLimitSeconds: session.time_limit_seconds as number | null,
-      bookmarkedIds: (marks ?? []).map((m) => m.question_id as string),
-    },
+      startedAt: r.started_at,
+      timeLimitSeconds: r.time_limit_seconds,
+      bookmarkedIds,
+      answers,
+    } satisfies ResumeData,
   };
 }
 

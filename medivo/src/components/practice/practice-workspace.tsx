@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useReducer, useRef, useState, useTransition } from "react";
-import { ChevronDown, ClipboardList, Clock, Layers, ListChecks, Loader2, RotateCcw, Shuffle, Timer, X } from "lucide-react";
+import { ChevronDown, ClipboardList, Clock, History, Layers, ListChecks, Loader2, RotateCcw, Shuffle, Timer, X } from "lucide-react";
 import { QuestionView } from "@/components/practice/question-view";
 import { TopicSidebar, type TopicStats } from "@/components/practice/topic-sidebar";
 import { Button } from "@/components/ui/button";
-import { answeredCount, createEngine, currentQuestion, engineReducer, isPartial, type EngineAction, type EngineState } from "@/lib/practice/engine";
-import type { PracticeApi, PracticeExam, PracticeMode } from "@/lib/practice/types";
+import { answeredCount, createEngine, currentQuestion, engineReducer, isPartial, resumeEngine, type EngineAction, type EngineState } from "@/lib/practice/engine";
+import type { PracticeApi, PracticeExam, PracticeMode, ResumableSession } from "@/lib/practice/types";
 import type { TopicNode } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +40,7 @@ export function PracticeWorkspace({
   initialTopicId,
   exams = [],
   initialExamId = null,
+  resumable = null,
   api,
 }: {
   courseTitle: string;
@@ -50,6 +51,7 @@ export function PracticeWorkspace({
   initialTopicId: string | null;
   exams?: PracticeExam[];
   initialExamId?: string | null;
+  resumable?: ResumableSession | null;
   api: PracticeApi;
 }) {
   const router = useRouter();
@@ -66,6 +68,9 @@ export function PracticeWorkspace({
   const [starting, startTransition] = useTransition();
   const [finishing, setFinishing] = useState(false);
   const [showTopics, setShowTopics] = useState(false);
+  const [resuming, setResuming] = useState(false);
+  const [resumeDismissed, setResumeDismissed] = useState(false);
+  const [resumeError, setResumeError] = useState<string | null>(null);
 
   const topicTitle = (id: string | null) => topics.flatMap((t) => [t, ...t.children]).find((t) => t.id === id)?.title ?? null;
   const totalQuestions = Object.values(counts).reduce((a, b) => a + b, 0);
@@ -94,6 +99,19 @@ export function PracticeWorkspace({
       setTimer(res.data.timeLimitSeconds ? { startedAt: Date.parse(res.data.startedAt), limit: res.data.timeLimitSeconds } : null);
       setShowTopics(false);
     });
+  }
+
+  async function resume() {
+    if (!resumable || resuming) return;
+    setResumeError(null);
+    setResuming(true);
+    const res = await api.resumeSession({ sessionId: resumable.sessionId });
+    setResuming(false);
+    if (!res.ok) return setResumeError(res.error);
+    const { sessionId, mode: sessionMode, questions, startedAt, timeLimitSeconds, bookmarkedIds, answers } = res.data;
+    dispatch({ type: "init", state: resumeEngine(sessionId, sessionMode, questions, answers, bookmarkedIds) });
+    setTimer(timeLimitSeconds ? { startedAt: Date.parse(startedAt), limit: timeLimitSeconds } : null);
+    setShowTopics(false);
   }
 
   const submit = useCallback(async () => {
@@ -217,7 +235,34 @@ export function PracticeWorkspace({
             }
           />
         ) : (
-          <section aria-labelledby="modus-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-7">
+          <>
+            {resumable && !resumeDismissed ? (
+              <section aria-labelledby="hervat-titel" className="mb-5 rounded-xl border border-accent-blue/40 bg-sky/50 p-5 shadow-[var(--shadow-card)] sm:p-6">
+                <div className="flex flex-wrap items-start gap-4">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent-blue/15 text-accent-blue">
+                    <History className="size-5" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h2 id="hervat-titel" className="font-semibold text-navy">Ga verder waar je gebleven was</h2>
+                    <p className="mt-1 text-sm text-muted-ink">
+                      Je hebt nog een onafgeronde {modeLabel(resumable.mode)}-sessie · {resumable.answered} van {resumable.total} vragen beantwoord.
+                    </p>
+                    {resumeError ? <p role="alert" className="mt-2 text-sm text-danger">{resumeError}</p> : null}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button type="button" onClick={resume} disabled={resuming} className="h-10 font-semibold">
+                        {resuming ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+                        Verder gaan
+                      </Button>
+                      <Button type="button" variant="ghost" onClick={() => setResumeDismissed(true)} disabled={resuming}>
+                        Nieuwe sessie starten
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            ) : null}
+
+            <section aria-labelledby="modus-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-7">
             <h2 id="modus-titel" className="text-lg font-semibold text-navy">Kies hoe je wilt oefenen</h2>
             <div role="radiogroup" aria-labelledby="modus-titel" className="mt-4 grid gap-3 sm:grid-cols-2">
               {modes.filter((m) => m.value !== "past" || exams.length > 0).map((m) => (
@@ -370,12 +415,15 @@ export function PracticeWorkspace({
                 {mode === "exam" || (mode === "past" && pastAsExam) ? "Start tentamen" : "Start met oefenen"}
               </Button>
             </div>
-          </section>
+            </section>
+          </>
         )}
       </div>
     </div>
   );
 }
+
+const modeLabel = (m: PracticeMode) => modes.find((x) => x.value === m)?.label.toLowerCase() ?? "oefen";
 
 function useCountdown(timer: { startedAt: number; limit: number } | null, onExpire: () => void) {
   const [now, setNow] = useState(() => Date.now());

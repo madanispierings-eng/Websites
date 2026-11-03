@@ -151,6 +151,26 @@ const api: PracticeApi = {
   async toggleBookmark({ bookmarked }) {
     return { ok: true, data: { bookmarked } };
   },
+  async resumeSession({ sessionId }) {
+    await wait(300);
+    // A made-up half-finished session: the first two questions answered, the rest still open.
+    const done = [
+      { q: questions[0], r: { option_id: "q1B" } as QuestionResponse },
+      { q: questions[1], r: { option_ids: ["q2B", "q2D"] } as QuestionResponse },
+    ];
+    return {
+      ok: true,
+      data: {
+        sessionId,
+        mode: "topic" as const,
+        questions,
+        startedAt: new Date(Date.now() - 20 * 60_000).toISOString(),
+        timeLimitSeconds: null,
+        bookmarkedIds: [],
+        answers: done.map(({ q, r }) => ({ questionId: q.id, response: r, feedback: { ...feedback(q, r, grade(q, r)), usedHint: false }, retry: null })),
+      },
+    };
+  },
 };
 
 export function PracticePreview() {
@@ -163,6 +183,7 @@ export function PracticePreview() {
       initialMode="topic"
       initialTopicId="t1a"
       exams={[{ id: "e1", label: "Voorbeeldtentamen", questionCount: 5 }]}
+      resumable={{ sessionId: "preview", mode: "topic", startedAt: new Date(Date.now() - 20 * 60_000).toISOString(), total: 5, answered: 2 }}
       api={api}
     />
   );

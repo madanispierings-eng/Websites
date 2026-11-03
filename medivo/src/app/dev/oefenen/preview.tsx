@@ -158,7 +158,7 @@ export function PracticePreview() {
     <PracticeWorkspace
       courseTitle="Voorbeeldvak"
       topics={topics}
-      counts={{ t1a: 4, t1b: 0, t2: 1, t3: 0 }}
+      counts={{ t1a: 4, t1b: 6, t2: 8, t3: 5 }}
       stats={{ t1a: { answered: 2, correct: 1 } }}
       initialMode="topic"
       initialTopicId="t1a"

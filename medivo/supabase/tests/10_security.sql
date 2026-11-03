@@ -559,5 +559,27 @@ begin
   exception when check_violation then null; end;
 end $$;
 
+
+-- ---- "per onderwerp" may select several topics at once ----
+set local role authenticated;
+set local request.jwt.claim.sub = 'aaaaaaaa-0000-4000-8000-000000000001';
+do $$
+declare v_course uuid := (select id from public.courses where slug = 'van-cel-tot-molecuul'); v_session uuid;
+begin
+  -- Two topic ids in topic mode no longer raise; the free question is still returned.
+  v_session := public.start_practice_session(v_course, 'topic',
+    array['bbbbbbbb-0000-4000-8000-000000000001'::uuid, 'bbbbbbbb-0000-4000-8000-000000000001'::uuid], 100);
+  if (select cardinality(question_ids) from public.practice_sessions where id = v_session) < 1 then
+    raise exception 'FAIL: topic mode with several topics returned no questions';
+  end if;
+  -- Zero topics still rejected in topic mode.
+  begin
+    perform public.start_practice_session(v_course, 'topic', '{}'::uuid[], 100);
+    raise exception 'FAIL: topic mode without a topic was accepted';
+  exception when invalid_parameter_value then null; end;
+end $$;
+reset request.jwt.claim.sub;
+reset role;
+
 rollback;
 \echo 'All database security checks passed.'

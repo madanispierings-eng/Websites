@@ -194,7 +194,7 @@ function ChapterView({ chapter: c, index, total, course }: {
                 blocks={c.blocks}
                 imageUrls={c.imageUrls}
                 idPrefix={c.id}
-                className="[&_h3]:mt-8 [&_h3]:border-b [&_h3]:border-line [&_h3]:pb-2 [&_h3]:text-xl"
+                className="[&_h3]:mt-6 [&_h3]:border-b [&_h3]:border-line [&_h3]:pb-2 [&_h3]:text-xl [&_h4]:mt-4"
               />
             )}
           </div>

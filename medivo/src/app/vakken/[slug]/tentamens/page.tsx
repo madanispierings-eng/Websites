@@ -36,7 +36,7 @@ export default async function ExamsPage({ params }: Props) {
         course={course}
         active="tentamens"
         title="Oude tentamens"
-        intro="Alleen tentamenmateriaal waarvoor Medivo toestemming heeft of dat zelf is gemaakt, altijd met bronvermelding."
+        intro="Oefententamens die aansluiten op de stof: dezelfde opbouw, vraagtypes en moeilijkheidsgraad als het echte tentamen."
       />
       <div className={cn(container, "py-8 lg:py-10")}>
         {exams.length ? (
@@ -48,7 +48,6 @@ export default async function ExamsPage({ params }: Props) {
                   <th scope="col" className="px-5 py-3 font-semibold">Type</th>
                   <th scope="col" className="px-5 py-3 font-semibold">Vragen</th>
                   <th scope="col" className="px-5 py-3 font-semibold">Uitwerkingen</th>
-                  <th scope="col" className="px-5 py-3 font-semibold">Bron</th>
                   <th scope="col" className="px-5 py-3 font-semibold"><span className="sr-only">Oefenen</span></th>
                 </tr>
               </thead>
@@ -61,7 +60,6 @@ export default async function ExamsPage({ params }: Props) {
                     <td className="px-5 py-4">
                       {e.hasExplanations ? <Badge className="bg-success-soft text-success-ink">Met uitleg</Badge> : <span className="text-muted-ink">Geen</span>}
                     </td>
-                    <td className="px-5 py-4 text-muted-ink">{e.source}</td>
                     <td className="px-5 py-4 text-right">
                       <Button asChild size="sm" className="font-semibold">
                         <Link href={`/vakken/${course.slug}/oefenen?tentamen=${e.id}`}>Start tentamen</Link>
@@ -74,7 +72,7 @@ export default async function ExamsPage({ params }: Props) {
           </div>
         ) : (
           <EmptyState icon={ClipboardList} title="Nog geen tentamens beschikbaar">
-            We publiceren alleen tentamens waarvoor we toestemming hebben. Wil je alvast oefenen? Kijk bij{" "}
+            De oefententamens voor dit vak worden nog voorbereid. Wil je alvast oefenen? Kijk bij{" "}
             <Link href={`/vakken/${course.slug}/oefenen`} className="font-medium text-blue hover:underline">Oefenen per onderwerp</Link>.
           </EmptyState>
         )}

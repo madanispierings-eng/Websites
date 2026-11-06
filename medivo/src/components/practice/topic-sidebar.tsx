@@ -23,23 +23,25 @@ export function TopicSidebar({
   topics,
   counts,
   stats,
-  selectedId,
-  onSelect,
+  selectedIds,
+  onToggle,
   disabled,
 }: {
   courseTitle: string;
   topics: TopicNode[];
   counts: Record<string, number>;
   stats: TopicStats;
-  selectedId: string | null;
-  onSelect: (id: string) => void;
+  /** The topics chosen for "per onderwerp"; several may be selected at once. */
+  selectedIds: string[];
+  onToggle: (id: string) => void;
   disabled?: boolean;
 }) {
+  const selected = new Set(selectedIds);
   const allIds = topics.flatMap((t) => [t.id, ...t.children.map((c) => c.id)]);
   const overall = aggregate(allIds, counts, stats);
   const pct = overall.total ? Math.round((overall.answered / overall.total) * 100) : 0;
   const [open, setOpen] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(topics.map((t) => [t.id, t.id === selectedId || t.children.some((c) => c.id === selectedId)])),
+    Object.fromEntries(topics.map((t) => [t.id, selectedIds.includes(t.id) || t.children.some((c) => selectedIds.includes(c.id))])),
   );
 
   return (
@@ -64,24 +66,24 @@ export function TopicSidebar({
           const ids = [t.id, ...t.children.map((c) => c.id)];
           const agg = aggregate(ids, counts, stats);
           const complete = agg.total > 0 && agg.answered >= agg.total;
-          const active = selectedId === t.id;
+          const active = selected.has(t.id);
           return (
             <li key={t.id}>
               <div className={cn("flex items-center gap-1 rounded-lg", active && "bg-sky")}>
                 <button
                   type="button"
                   disabled={disabled || agg.total === 0}
-                  onClick={() => onSelect(t.id)}
+                  onClick={() => onToggle(t.id)}
                   aria-pressed={active}
                   className="flex min-h-11 flex-1 items-center gap-3 rounded-lg px-2 py-2 text-left text-sm text-navy enabled:hover:bg-sky/70 disabled:cursor-not-allowed disabled:opacity-55"
                 >
                   <span
                     className={cn(
-                      "grid size-6 shrink-0 place-items-center rounded-full border text-[0.7rem] font-semibold tabular-nums",
-                      complete ? "border-success bg-success text-white" : "border-line text-muted-ink",
+                      "grid size-6 shrink-0 place-items-center rounded-md border text-[0.7rem] font-semibold tabular-nums",
+                      active ? "border-accent-blue bg-accent-blue text-white" : complete ? "border-success bg-success text-white" : "border-line text-muted-ink",
                     )}
                   >
-                    {complete ? <Check className="size-3.5" strokeWidth={3} aria-label="Afgerond" /> : i + 1}
+                    {active ? <Check className="size-3.5" strokeWidth={3} aria-label="Geselecteerd" /> : complete ? <Check className="size-3.5" strokeWidth={3} aria-label="Afgerond" /> : i + 1}
                   </span>
                   <span className={cn("flex-1", active && "font-semibold")}>{t.title}</span>
                   <span className="text-xs tabular-nums text-muted-ink" aria-label={`${agg.total} vragen`}>{agg.total}</span>
@@ -108,13 +110,16 @@ export function TopicSidebar({
                         <button
                           type="button"
                           disabled={disabled || n === 0}
-                          onClick={() => onSelect(c.id)}
-                          aria-pressed={selectedId === c.id}
+                          onClick={() => onToggle(c.id)}
+                          aria-pressed={selected.has(c.id)}
                           className={cn(
                             "flex min-h-10 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[0.82rem] text-navy enabled:hover:bg-sky/70 disabled:cursor-not-allowed disabled:opacity-55",
-                            selectedId === c.id && "bg-sky font-semibold",
+                            selected.has(c.id) && "bg-sky font-semibold",
                           )}
                         >
+                          <span className={cn("grid size-4 shrink-0 place-items-center rounded border", selected.has(c.id) ? "border-accent-blue bg-accent-blue text-white" : "border-line")} aria-hidden="true">
+                            {selected.has(c.id) ? <Check className="size-3" strokeWidth={3} /> : null}
+                          </span>
                           <span className="flex-1">{c.title}</span>
                           {s?.answered ? (
                             <span className="text-[0.7rem] tabular-nums text-success-ink">{Math.round((s.correct / s.answered) * 100)}% goed</span>

@@ -21,3 +21,6 @@ export async function selfGrade(input: unknown) {
 export async function revealAnswer(input: unknown) {
   return practice.revealAnswer(input);
 }
+export async function resumeSession(input: unknown) {
+  return practice.resumeSession(input);
+}

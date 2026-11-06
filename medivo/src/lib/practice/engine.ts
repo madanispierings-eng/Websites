@@ -1,4 +1,4 @@
-import type { AnswerFeedback, PracticeMode, PracticeQuestion, QuestionResponse, RetryInfo, SessionReview } from "./types";
+import type { AnswerFeedback, PracticeMode, PracticeQuestion, QuestionResponse, ResumeAnswer, RetryInfo, SessionReview } from "./types";
 
 export type AnswerState = {
   response: QuestionResponse | null;
@@ -43,6 +43,31 @@ export function createEngine(
 ): EngineState {
   const bookmarks = Object.fromEntries(bookmarkedIds.map((id) => [id, true]));
   return { sessionId, mode, questions, index: 0, answers: {}, bookmarks, finished: null };
+}
+
+/** Rebuilds an engine for an unfinished session: recorded answers restored, cursor on the first open question. */
+export function resumeEngine(
+  sessionId: string,
+  mode: PracticeMode,
+  questions: PracticeQuestion[],
+  answers: ResumeAnswer[],
+  bookmarkedIds: string[] = [],
+): EngineState {
+  const base = createEngine(sessionId, mode, questions, bookmarkedIds);
+  const map: Record<string, AnswerState> = {};
+  for (const a of answers) {
+    if (a.retry) {
+      // A second attempt is still open: single_choice starts over empty, other types keep the answer to adjust.
+      const q = questions.find((x) => x.id === a.questionId);
+      const response = q?.type === "single_choice" ? null : a.response;
+      map[a.questionId] = { response, status: "idle", feedback: null, error: null, retry: a.response ? { ...a.retry, first: a.response } : null, hintOpened: false };
+    } else {
+      map[a.questionId] = { response: a.response, status: "answered", feedback: a.feedback, error: null, retry: null, hintOpened: false };
+    }
+  }
+  const settled = new Set(answers.filter((a) => !a.retry).map((a) => a.questionId));
+  const firstOpen = questions.findIndex((q) => !settled.has(q.id));
+  return { ...base, answers: map, index: firstOpen === -1 ? 0 : firstOpen };
 }
 
 export const currentQuestion = (s: EngineState) => s.questions[s.index] ?? null;

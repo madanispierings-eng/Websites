@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useReducer, useRef, useState, useTransition } from "react";
-import { ChevronDown, ClipboardList, Clock, Layers, ListChecks, Loader2, RotateCcw, Shuffle, Timer } from "lucide-react";
+import { ChevronDown, ClipboardList, Clock, History, Layers, ListChecks, Loader2, RotateCcw, Shuffle, Timer, X } from "lucide-react";
 import { QuestionView } from "@/components/practice/question-view";
 import { TopicSidebar, type TopicStats } from "@/components/practice/topic-sidebar";
 import { Button } from "@/components/ui/button";
-import { answeredCount, createEngine, currentQuestion, engineReducer, isPartial, type EngineAction, type EngineState } from "@/lib/practice/engine";
-import type { PracticeApi, PracticeExam, PracticeMode } from "@/lib/practice/types";
+import { answeredCount, createEngine, currentQuestion, engineReducer, isPartial, resumeEngine, type EngineAction, type EngineState } from "@/lib/practice/engine";
+import type { PracticeApi, PracticeExam, PracticeMode, ResumableSession } from "@/lib/practice/types";
 import type { TopicNode } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 export type WorkspaceMode = PracticeMode | "past";
 
 const modes: { value: WorkspaceMode; label: string; body: string; icon: typeof Layers }[] = [
-  { value: "topic", label: "Per onderwerp", body: "Vragen uit één onderwerp, met direct uitleg.", icon: ListChecks },
+  { value: "topic", label: "Per onderwerp", body: "Vragen uit één of meer gekozen onderwerpen, met direct uitleg.", icon: ListChecks },
   { value: "mixed", label: "Gemengd", body: "Vragen uit meerdere onderwerpen door elkaar.", icon: Shuffle },
   { value: "exam", label: "Tentamenmodus", body: "Geen tussentijdse feedback, optioneel met timer. Score en uitleg aan het eind.", icon: Timer },
   { value: "incorrect", label: "Fout beantwoord", body: "Vragen die je de laatste keer fout had, of alleen met hint goed.", icon: RotateCcw },
@@ -40,6 +40,7 @@ export function PracticeWorkspace({
   initialTopicId,
   exams = [],
   initialExamId = null,
+  resumable = null,
   api,
 }: {
   courseTitle: string;
@@ -50,13 +51,14 @@ export function PracticeWorkspace({
   initialTopicId: string | null;
   exams?: PracticeExam[];
   initialExamId?: string | null;
+  resumable?: ResumableSession | null;
   api: PracticeApi;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<WorkspaceMode>(initialMode === "past" && !exams.length ? "topic" : initialMode);
   const [examId, setExamId] = useState<string | null>(initialExamId ?? exams[0]?.id ?? null);
   const [pastAsExam, setPastAsExam] = useState(true);
-  const [topicId, setTopicId] = useState<string | null>(initialTopicId);
+  const [topicIds, setTopicIds] = useState<string[]>(initialTopicId ? [initialTopicId] : []);
   const [mixedTopics, setMixedTopics] = useState<string[]>([]);
   const [examCount, setExamCount] = useState(20);
   const [examMinutes, setExamMinutes] = useState<number | null>(30);
@@ -66,20 +68,28 @@ export function PracticeWorkspace({
   const [starting, startTransition] = useTransition();
   const [finishing, setFinishing] = useState(false);
   const [showTopics, setShowTopics] = useState(false);
+  const [resuming, setResuming] = useState(false);
+  const [resumeDismissed, setResumeDismissed] = useState(false);
+  const [resumeError, setResumeError] = useState<string | null>(null);
 
   const topicTitle = (id: string | null) => topics.flatMap((t) => [t, ...t.children]).find((t) => t.id === id)?.title ?? null;
   const totalQuestions = Object.values(counts).reduce((a, b) => a + b, 0);
+  const topicQuestionCount = topicIds.reduce((a, id) => a + (counts[id] ?? 0), 0);
+  const toggleTopic = (id: string) => {
+    setMode("topic");
+    setTopicIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
+  };
 
   function start() {
     setStartError(null);
-    const topicIds = mode === "topic" ? (topicId ? [topicId] : []) : mode === "mixed" ? mixedTopics : [];
+    const sessionTopicIds = mode === "topic" ? topicIds : mode === "mixed" ? mixedTopics : [];
     // A past exam runs as the "exam" mode (feedback at the end) or as "mixed" (feedback per question), in exam order.
     const sessionMode: PracticeMode = mode === "past" ? (pastAsExam ? "exam" : "mixed") : mode;
     const timed = mode === "exam" || (mode === "past" && pastAsExam);
     startTransition(async () => {
       const res = await api.startSession({
         mode: sessionMode,
-        topicIds,
+        topicIds: sessionTopicIds,
         limit: mode === "past" ? 200 : mode === "exam" ? examCount : mode === "topic" ? 100 : 25,
         timeLimitSeconds: timed && examMinutes ? examMinutes * 60 : null,
         examId: mode === "past" ? examId : null,
@@ -89,6 +99,19 @@ export function PracticeWorkspace({
       setTimer(res.data.timeLimitSeconds ? { startedAt: Date.parse(res.data.startedAt), limit: res.data.timeLimitSeconds } : null);
       setShowTopics(false);
     });
+  }
+
+  async function resume() {
+    if (!resumable || resuming) return;
+    setResumeError(null);
+    setResuming(true);
+    const res = await api.resumeSession({ sessionId: resumable.sessionId });
+    setResuming(false);
+    if (!res.ok) return setResumeError(res.error);
+    const { sessionId, mode: sessionMode, questions, startedAt, timeLimitSeconds, bookmarkedIds, answers } = res.data;
+    dispatch({ type: "init", state: resumeEngine(sessionId, sessionMode, questions, answers, bookmarkedIds) });
+    setTimer(timeLimitSeconds ? { startedAt: Date.parse(startedAt), limit: timeLimitSeconds } : null);
+    setShowTopics(false);
   }
 
   const submit = useCallback(async () => {
@@ -166,7 +189,11 @@ export function PracticeWorkspace({
         >
           <span>
             Onderwerpen
-            {topicId ? <span className="ml-2 font-normal text-muted-ink">· {topicTitle(topicId)}</span> : null}
+            {topicIds.length === 1 ? (
+              <span className="ml-2 font-normal text-muted-ink">· {topicTitle(topicIds[0])}</span>
+            ) : topicIds.length > 1 ? (
+              <span className="ml-2 font-normal text-muted-ink">· {topicIds.length} gekozen</span>
+            ) : null}
           </span>
           <ChevronDown className={cn("size-4 transition-transform", showTopics && "rotate-180")} aria-hidden="true" />
         </button>
@@ -176,13 +203,9 @@ export function PracticeWorkspace({
             topics={topics}
             counts={counts}
             stats={stats}
-            selectedId={mode === "topic" ? topicId : null}
+            selectedIds={mode === "topic" ? topicIds : []}
             disabled={inSession}
-            onSelect={(id) => {
-              setMode("topic");
-              setTopicId(id);
-              setShowTopics(false);
-            }}
+            onToggle={toggleTopic}
           />
         </div>
       </div>
@@ -212,7 +235,34 @@ export function PracticeWorkspace({
             }
           />
         ) : (
-          <section aria-labelledby="modus-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-7">
+          <>
+            {resumable && !resumeDismissed ? (
+              <section aria-labelledby="hervat-titel" className="mb-5 rounded-xl border border-accent-blue/40 bg-sky/50 p-5 shadow-[var(--shadow-card)] sm:p-6">
+                <div className="flex flex-wrap items-start gap-4">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent-blue/15 text-accent-blue">
+                    <History className="size-5" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h2 id="hervat-titel" className="font-semibold text-navy">Ga verder waar je gebleven was</h2>
+                    <p className="mt-1 text-sm text-muted-ink">
+                      Je hebt nog een onafgeronde {modeLabel(resumable.mode)}-sessie · {resumable.answered} van {resumable.total} vragen beantwoord.
+                    </p>
+                    {resumeError ? <p role="alert" className="mt-2 text-sm text-danger">{resumeError}</p> : null}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button type="button" onClick={resume} disabled={resuming} className="h-10 font-semibold">
+                        {resuming ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+                        Verder gaan
+                      </Button>
+                      <Button type="button" variant="ghost" onClick={() => setResumeDismissed(true)} disabled={resuming}>
+                        Nieuwe sessie starten
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            ) : null}
+
+            <section aria-labelledby="modus-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-7">
             <h2 id="modus-titel" className="text-lg font-semibold text-navy">Kies hoe je wilt oefenen</h2>
             <div role="radiogroup" aria-labelledby="modus-titel" className="mt-4 grid gap-3 sm:grid-cols-2">
               {modes.filter((m) => m.value !== "past" || exams.length > 0).map((m) => (
@@ -235,15 +285,34 @@ export function PracticeWorkspace({
 
             <div className="mt-6 border-t border-line pt-5">
               {mode === "topic" ? (
-                <p className="text-sm text-navy">
-                  {topicId ? (
-                    <>Onderwerp: <strong>{topicTitle(topicId)}</strong> · {counts[topicId] ?? 0} vragen</>
+                <div className="text-sm text-navy">
+                  {topicIds.length === 1 ? (
+                    <p>Onderwerp: <strong>{topicTitle(topicIds[0])}</strong> · {topicQuestionCount} vragen</p>
+                  ) : topicIds.length > 1 ? (
+                    <>
+                      <p><strong>{topicIds.length} onderwerpen</strong> gekozen · {topicQuestionCount} vragen samen</p>
+                      <ul className="mt-2 flex flex-wrap gap-1.5">
+                        {topicIds.map((id) => (
+                          <li key={id} className="inline-flex items-center gap-1.5 rounded-full border border-accent-blue bg-sky px-2.5 py-1 text-xs text-navy">
+                            {topicTitle(id)}
+                            <button
+                              type="button"
+                              onClick={() => toggleTopic(id)}
+                              aria-label={`${topicTitle(id)} verwijderen`}
+                              className="grid size-4 place-items-center rounded-full text-navy/60 hover:bg-white/70 hover:text-navy"
+                            >
+                              <X className="size-3" aria-hidden="true" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
                   ) : (
-                    <span className="text-muted-ink">Kies een onderwerp in de lijst {""}
+                    <span className="text-muted-ink">Kies één of meer onderwerpen in de lijst {""}
                       <span className="lg:hidden">hierboven</span><span className="hidden lg:inline">links</span>.
                     </span>
                   )}
-                </p>
+                </div>
               ) : null}
 
               {mode === "mixed" ? (
@@ -339,19 +408,22 @@ export function PracticeWorkspace({
               <Button
                 type="button"
                 onClick={start}
-                disabled={starting || (mode !== "past" && totalQuestions === 0) || (mode === "topic" && !topicId) || (mode === "past" && !examId)}
+                disabled={starting || (mode !== "past" && totalQuestions === 0) || (mode === "topic" && topicIds.length === 0) || (mode === "past" && !examId)}
                 className="mt-5 h-11 px-6 font-semibold"
               >
                 {starting ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
                 {mode === "exam" || (mode === "past" && pastAsExam) ? "Start tentamen" : "Start met oefenen"}
               </Button>
             </div>
-          </section>
+            </section>
+          </>
         )}
       </div>
     </div>
   );
 }
+
+const modeLabel = (m: PracticeMode) => modes.find((x) => x.value === m)?.label.toLowerCase() ?? "oefen";
 
 function useCountdown(timer: { startedAt: number; limit: number } | null, onExpire: () => void) {
   const [now, setNow] = useState(() => Date.now());

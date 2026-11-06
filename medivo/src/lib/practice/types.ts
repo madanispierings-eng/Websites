@@ -82,6 +82,31 @@ export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string
 
 export type PracticeExam = { id: string; label: string; questionCount: number | null };
 
+/** One recorded answer in an unfinished session, normalised for the engine to rehydrate. */
+export type ResumeAnswer = {
+  questionId: string;
+  /** The recorded response (the first response when a second attempt is still open). */
+  response: QuestionResponse | null;
+  /** Full feedback for a settled practice answer; null in exam mode and while a second attempt is open. */
+  feedback: AnswerFeedback | null;
+  /** Set when a wrong first answer still has its second attempt open. */
+  retry: RetryInfo | null;
+};
+
+/** Everything needed to drop the student back into an unfinished session where they left off. */
+export type ResumeData = {
+  sessionId: string;
+  mode: PracticeMode;
+  questions: PracticeQuestion[];
+  startedAt: string;
+  timeLimitSeconds: number | null;
+  bookmarkedIds: string[];
+  answers: ResumeAnswer[];
+};
+
+/** The short summary shown in the "verder gaan" banner before the session is loaded. */
+export type ResumableSession = { sessionId: string; mode: PracticeMode; startedAt: string; total: number; answered: number };
+
 /** The server operations the practice UI needs. Implemented with server actions in production. */
 export type PracticeApi = {
   startSession: (input: {
@@ -98,4 +123,5 @@ export type PracticeApi = {
   selfGrade: (input: { sessionId: string; questionId: string; score: number }) => Promise<ActionResult<{ score: number; isCorrect: boolean }>>;
   finishSession: (input: { sessionId: string }) => Promise<ActionResult<SessionReview>>;
   toggleBookmark: (input: { questionId: string; bookmarked: boolean }) => Promise<ActionResult<{ bookmarked: boolean }>>;
+  resumeSession: (input: { sessionId: string }) => Promise<ActionResult<ResumeData>>;
 };

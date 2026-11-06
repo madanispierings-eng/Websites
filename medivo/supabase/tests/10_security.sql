@@ -281,11 +281,34 @@ begin
   if v_res ? 'retry' then raise exception 'FAIL: retry in exam mode'; end if;
   if (select final from public.question_attempts where session_id = v_session and question_id = q_sc) is not true then raise exception 'FAIL: exam attempt not final'; end if;
 
+  -- Resume: an unfinished session reads back its recorded answers without closing. A finished one answers correctly.
+  v_session := public.start_practice_session(v_course, 'mixed', '{}', 100);
+  perform public.submit_response(v_session, q_sc, jsonb_build_object('option_id', opt_a)); -- wrong first
+  perform public.submit_response(v_session, q_sc, jsonb_build_object('option_id', opt_b)); -- right second (final)
+  perform public.submit_response(v_session, q_dd, '{"answers":["hoog","nee"]}');           -- wrong first, retry still open
+  v_res := public.resume_practice_session(v_session);
+  if v_res ->> 'mode' <> 'mixed' then raise exception 'FAIL: resume mode %', v_res; end if;
+  if not (v_res -> 'question_ids' @> jsonb_build_array(q_sc::text)) then raise exception 'FAIL: resume question_ids %', v_res; end if;
+  if not exists (
+    select 1 from jsonb_array_elements(v_res -> 'answers') a
+    where a ->> 'question_id' = q_sc::text and a ->> 'kind' = 'final' and (a -> 'feedback' ->> 'is_correct')::boolean
+  ) then raise exception 'FAIL: resume did not return the final answer %', v_res; end if;
+  if not exists (
+    select 1 from jsonb_array_elements(v_res -> 'answers') a
+    where a ->> 'question_id' = q_dd::text and a ->> 'kind' = 'retry' and a -> 'hint' -> 'wrong_items' = '[1]'::jsonb
+  ) then raise exception 'FAIL: resume did not reopen the second attempt %', v_res; end if;
+  if (select finished_at from public.practice_sessions where id = v_session) is not null then raise exception 'FAIL: resume closed the session'; end if;
+
   -- A second attempt left open is closed when the session is finished.
   v_session := public.start_practice_session(v_course, 'mixed', '{}', 100);
   perform public.submit_response(v_session, q_sc, jsonb_build_object('option_id', opt_a));
   v_res := public.finish_practice_session(v_session);
   if exists (select 1 from public.question_attempts where session_id = v_session and not final) then raise exception 'FAIL: open attempt after finish'; end if;
+  begin
+    perform public.resume_practice_session(v_session);
+    raise exception 'FAIL: resumed a finished session';
+  exception when sqlstate '22023' then null;
+  end;
 end $$;
 
 -- ---- as another student: cannot see or use the first student's data ----
@@ -558,6 +581,28 @@ begin
     raise exception 'FAIL: non-array clinical accepted';
   exception when check_violation then null; end;
 end $$;
+
+
+-- ---- "per onderwerp" may select several topics at once ----
+set local role authenticated;
+set local request.jwt.claim.sub = 'aaaaaaaa-0000-4000-8000-000000000001';
+do $$
+declare v_course uuid := (select id from public.courses where slug = 'van-cel-tot-molecuul'); v_session uuid;
+begin
+  -- Two topic ids in topic mode no longer raise; the free question is still returned.
+  v_session := public.start_practice_session(v_course, 'topic',
+    array['bbbbbbbb-0000-4000-8000-000000000001'::uuid, 'bbbbbbbb-0000-4000-8000-000000000001'::uuid], 100);
+  if (select cardinality(question_ids) from public.practice_sessions where id = v_session) < 1 then
+    raise exception 'FAIL: topic mode with several topics returned no questions';
+  end if;
+  -- Zero topics still rejected in topic mode.
+  begin
+    perform public.start_practice_session(v_course, 'topic', '{}'::uuid[], 100);
+    raise exception 'FAIL: topic mode without a topic was accepted';
+  exception when invalid_parameter_value then null; end;
+end $$;
+reset request.jwt.claim.sub;
+reset role;
 
 rollback;
 \echo 'All database security checks passed.'

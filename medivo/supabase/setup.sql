@@ -1732,6 +1732,141 @@ alter table public.summaries
     and (not aside ? 'exam' or jsonb_typeof(aside -> 'exam') = 'array')
   );
 
+-- ===== supabase/migrations/20261103120000_topic_mode_multi.sql =====
+-- Practice "per onderwerp" may now cover several topics at once: the topic-mode query already matches any of the
+-- given topic ids, so only the guard changes from "exactly one topic" to "at least one topic".
+
+create or replace function public.start_practice_session(
+  p_course_id uuid,
+  p_mode public.practice_mode,
+  p_topic_ids uuid[] default '{}',
+  p_limit integer default 20,
+  p_time_limit_seconds integer default null,
+  p_exam_id uuid default null
+) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_user uuid := auth.uid();
+  v_ids uuid[];
+  v_session uuid;
+begin
+  if v_user is null then
+    raise exception 'not_authenticated' using errcode = '28000';
+  end if;
+  if p_limit is null or p_limit < 1 or p_limit > 200 then
+    raise exception 'invalid_limit' using errcode = '22023';
+  end if;
+  if p_exam_id is null and p_mode = 'topic' and coalesce(array_length(p_topic_ids, 1), 0) < 1 then
+    raise exception 'topic_mode_needs_one_topic' using errcode = '22023';
+  end if;
+
+  if p_exam_id is not null then
+    -- A whole exam, in its original order.
+    select array_agg(id order by exam_position, created_at) into v_ids from (
+      select q.id, q.exam_position, q.created_at
+      from public.questions q
+      join public.exams e on e.id = q.exam_id and e.status = 'published'
+      where q.exam_id = p_exam_id
+        and q.course_id = p_course_id
+        and q.status = 'published'
+        and (not q.is_premium or public.has_course_access(p_course_id))
+      order by q.exam_position, q.created_at
+      limit p_limit
+    ) picked;
+  else
+    select array_agg(id) into v_ids from (
+      select q.id
+      from public.questions q
+      join public.topics t on t.id = q.topic_id
+      where q.course_id = p_course_id
+        and q.status = 'published'
+        and (not q.is_premium or public.has_course_access(p_course_id))
+        -- A subtopic counts as part of its parent topic.
+        and (coalesce(array_length(p_topic_ids, 1), 0) = 0 or q.topic_id = any (p_topic_ids) or t.parent_id = any (p_topic_ids))
+        and (
+          p_mode <> 'incorrect' or exists (
+            select 1 from (
+              select distinct on (a.question_id) a.question_id, a.is_correct, a.used_hint
+              from public.question_attempts a
+              where a.user_id = v_user and a.question_id = q.id and a.final
+              order by a.question_id, a.answered_at desc
+            ) latest where not latest.is_correct or latest.used_hint
+          )
+        )
+      -- Parts of one exam case stay together and in order within a topic session.
+      order by case when p_mode = 'topic' then t.sort_order else 0 end,
+               case when p_mode = 'topic' then q.exam_id end,
+               case when p_mode = 'topic' then q.exam_position end,
+               case when p_mode = 'topic' then q.created_at end,
+               random()
+      limit p_limit
+    ) picked;
+  end if;
+
+  if v_ids is null then
+    raise exception 'no_questions_available' using errcode = 'P0002';
+  end if;
+
+  insert into public.practice_sessions (user_id, course_id, mode, topic_ids, question_ids, time_limit_seconds, exam_id)
+  values (v_user, p_course_id, p_mode, coalesce(p_topic_ids, '{}'), v_ids,
+          case when p_mode = 'exam' then p_time_limit_seconds end, p_exam_id)
+  returning id into v_session;
+
+  return v_session;
+end $$;
+
+-- ===== supabase/migrations/20261104090000_resume_session.sql =====
+-- Resume an unfinished practice session. A session stays open (finished_at is null) when the student navigates
+-- away without handing it in, so "verder gaan" reads back what was already answered and puts the student back
+-- where they left off. This function returns the session together with its recorded attempts, each rendered the
+-- way the client needs it, without closing the session:
+--   * exam mode  -> only the recorded response (feedback stays hidden until the exam is handed in);
+--   * final (practice) -> the full feedback, exactly as submit_response returned it;
+--   * open second attempt (not final) -> the retry hint, so the half-finished question reopens for its second try.
+create or replace function public.resume_practice_session(p_session_id uuid)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_user uuid := auth.uid();
+  v_session public.practice_sessions;
+  v_answers jsonb;
+begin
+  select * into v_session from public.practice_sessions where id = p_session_id and user_id = v_user;
+  if not found then
+    raise exception 'session_not_found' using errcode = 'P0002';
+  end if;
+  if v_session.finished_at is not null then
+    raise exception 'session_finished' using errcode = '22023';
+  end if;
+
+  select coalesce(jsonb_agg(
+    case
+      when v_session.mode = 'exam'
+        then jsonb_build_object('question_id', a.question_id, 'kind', 'exam', 'response', a.response)
+      when a.final
+        then jsonb_build_object('question_id', a.question_id, 'kind', 'final', 'feedback', public.attempt_feedback(a, k))
+      else jsonb_build_object('question_id', a.question_id, 'kind', 'retry', 'hint', public.retry_hint(q, k, a.response))
+    end
+    order by a.answered_at
+  ), '[]'::jsonb)
+  into v_answers
+  from public.question_attempts a
+  join public.questions q on q.id = a.question_id
+  left join public.question_answer_keys k on k.question_id = a.question_id
+  where a.session_id = p_session_id;
+
+  return jsonb_build_object(
+    'mode', v_session.mode,
+    'started_at', v_session.started_at,
+    'time_limit_seconds', v_session.time_limit_seconds,
+    'question_ids', to_jsonb(v_session.question_ids),
+    'answers', v_answers
+  );
+end $$;
+
+revoke execute on function public.resume_practice_session(uuid) from public, anon, authenticated;
+grant execute on function public.resume_practice_session(uuid) to authenticated;
+
 -- ===== supabase/seed.sql =====
 -- Initial catalogue: bachelor Geneeskunde, Universiteit Leiden.
 -- Course titles and EC values as supplied by the Medivo team. Use NULL for an EC value that has not been verified;

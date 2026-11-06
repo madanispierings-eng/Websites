@@ -64,7 +64,7 @@ export default async function ExamsPage({ params }: Props) {
                     <td className="px-5 py-4 text-muted-ink">{e.source}</td>
                     <td className="px-5 py-4 text-right">
                       <Button asChild size="sm" className="font-semibold">
-                        <Link href={`/vakken/${course.slug}/oefenen?tentamen=${e.id}`}>Oefenen</Link>
+                        <Link href={`/vakken/${course.slug}/oefenen?tentamen=${e.id}`}>Start tentamen</Link>
                       </Button>
                     </td>
                   </tr>

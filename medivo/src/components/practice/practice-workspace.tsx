@@ -80,26 +80,49 @@ export function PracticeWorkspace({
     setTopicIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
   };
 
+  const startSessionWith = useCallback(
+    (opts: { sessionMode: PracticeMode; topicIds: string[]; limit: number; timeLimitSeconds: number | null; examId: string | null }) => {
+      setStartError(null);
+      startTransition(async () => {
+        const res = await api.startSession({
+          mode: opts.sessionMode,
+          topicIds: opts.topicIds,
+          limit: opts.limit,
+          timeLimitSeconds: opts.timeLimitSeconds,
+          examId: opts.examId,
+        });
+        if (!res.ok) return setStartError(res.error);
+        dispatch({ type: "init", state: createEngine(res.data.sessionId, opts.sessionMode, res.data.questions, res.data.bookmarkedIds) });
+        setTimer(res.data.timeLimitSeconds ? { startedAt: Date.parse(res.data.startedAt), limit: res.data.timeLimitSeconds } : null);
+        setShowTopics(false);
+      });
+    },
+    [api],
+  );
+
   function start() {
-    setStartError(null);
     const sessionTopicIds = mode === "topic" ? topicIds : mode === "mixed" ? mixedTopics : [];
     // A past exam runs as the "exam" mode (feedback at the end) or as "mixed" (feedback per question), in exam order.
     const sessionMode: PracticeMode = mode === "past" ? (pastAsExam ? "exam" : "mixed") : mode;
     const timed = mode === "exam" || (mode === "past" && pastAsExam);
-    startTransition(async () => {
-      const res = await api.startSession({
-        mode: sessionMode,
-        topicIds: sessionTopicIds,
-        limit: mode === "past" ? 200 : mode === "exam" ? examCount : mode === "topic" ? 100 : 25,
-        timeLimitSeconds: timed && examMinutes ? examMinutes * 60 : null,
-        examId: mode === "past" ? examId : null,
-      });
-      if (!res.ok) return setStartError(res.error);
-      dispatch({ type: "init", state: createEngine(res.data.sessionId, sessionMode, res.data.questions, res.data.bookmarkedIds) });
-      setTimer(res.data.timeLimitSeconds ? { startedAt: Date.parse(res.data.startedAt), limit: res.data.timeLimitSeconds } : null);
-      setShowTopics(false);
+    startSessionWith({
+      sessionMode,
+      topicIds: sessionTopicIds,
+      limit: mode === "past" ? 200 : mode === "exam" ? examCount : mode === "topic" ? 100 : 25,
+      timeLimitSeconds: timed && examMinutes ? examMinutes * 60 : null,
+      examId: mode === "past" ? examId : null,
     });
   }
+
+  // Arriving from "Oude tentamens" with a chosen exam: start that exam straight away, as an exam
+  // (feedback and review at the end) without a timer, instead of showing the mode picker.
+  const autoStarted = useRef(false);
+  const [autoStart, setAutoStart] = useState(Boolean(initialExamId));
+  useEffect(() => {
+    if (!autoStart || autoStarted.current || engine || !initialExamId) return;
+    autoStarted.current = true;
+    startSessionWith({ sessionMode: "exam", topicIds: [], limit: 200, timeLimitSeconds: null, examId: initialExamId });
+  }, [autoStart, initialExamId, engine, startSessionWith]);
 
   async function resume() {
     if (!resumable || resuming) return;
@@ -171,11 +194,14 @@ export function PracticeWorkspace({
   }
 
   function newSession() {
+    setAutoStart(false); // show the mode picker after an auto-started exam, don't re-launch it
     dispatch({ type: "reset" });
     router.refresh(); // fresh progress figures in the sidebar
   }
 
   const inSession = Boolean(engine);
+  // While the chosen exam is being started automatically, show a loader instead of the mode picker.
+  const autoStarting = autoStart && !engine && !startError;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[19rem_minmax(0,1fr)]">
@@ -234,6 +260,11 @@ export function PracticeWorkspace({
               />
             }
           />
+        ) : autoStarting ? (
+          <section className="grid place-items-center rounded-xl border border-line bg-white p-12 text-center shadow-[var(--shadow-card)]">
+            <Loader2 className="size-6 animate-spin text-blue" aria-hidden="true" />
+            <p className="mt-3 text-sm text-muted-ink">Tentamen wordt geladen…</p>
+          </section>
         ) : (
           <>
             {resumable && !resumeDismissed ? (

@@ -338,7 +338,8 @@ begin
   if n <> 15 then raise exception 'FAIL: anon sees % courses', n; end if;
   select count(*) into n from public.questions;
   if n <> 0 then raise exception 'FAIL: anon sees % questions', n; end if;
-  if (public.course_content_overview((select id from public.courses where slug = 'van-cel-tot-molecuul')) ->> 'questions')::int <> 8
+  -- Overview counts only per-topic practice questions, not questions that belong to an exam.
+  if (public.course_content_overview((select id from public.courses where slug = 'van-cel-tot-molecuul')) ->> 'questions')::int <> 4
   then raise exception 'FAIL: overview counts wrong'; end if;
   begin
     perform public.start_practice_session((select id from public.courses limit 1), 'mixed');

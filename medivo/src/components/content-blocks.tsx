@@ -74,7 +74,7 @@ function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrl
           {src ? (
             // Signed, short-lived URL from private storage; next/image would cache it past its expiry.
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={src} alt={block.alt} loading="lazy" className="mx-auto block h-auto max-h-[26rem] w-auto max-w-[min(100%,36rem)] rounded-lg border border-line bg-white" />
+            <img src={src} alt={block.alt} loading="lazy" className="mx-auto block h-auto max-h-[34rem] w-auto max-w-[min(100%,48rem)] rounded-lg border border-line bg-white" />
           ) : (
             <div className="grid aspect-video place-items-center rounded-lg border border-dashed border-line text-sm text-muted-ink">
               Afbeelding niet beschikbaar

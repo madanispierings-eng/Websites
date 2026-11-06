@@ -100,7 +100,8 @@ export function QuestionView({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h2 id="vraag-titel" ref={headingRef} tabIndex={-1} className="text-xl font-semibold text-navy outline-none">
-            {q.topicTitle || "Vraag"}
+            {/* Hide the topic during an exam so it does not reveal the subject; show it again when reviewing. */}
+            {isExam ? "Vraag" : q.topicTitle || "Vraag"}
           </h2>
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
             <span className="shrink-0 text-xs font-medium text-muted-ink">Vraag {state.index + 1} van {total}</span>

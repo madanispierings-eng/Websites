@@ -1,4 +1,4 @@
-import { ClipboardCheck, HelpCircle, Info, Stethoscope, TriangleAlert } from "lucide-react";
+import { ClipboardCheck, HelpCircle, Info, Lightbulb, Stethoscope, TriangleAlert } from "lucide-react";
 import type { ContentBlock } from "@/lib/content/blocks";
 import { slugify } from "@/lib/content/text";
 import { Formula } from "@/components/formula";
@@ -14,9 +14,10 @@ const calloutTone = {
 const panelTone = [
   { test: /^tentamenfocus\b/i, icon: ClipboardCheck, head: "bg-[#fdf6ec] border-[#e8c48a]/70 text-navy", card: "border-[#e8c48a]/70 bg-[#fffdf8]" },
   { test: /^controlevragen\b/i, icon: HelpCircle, head: "bg-sky border-blue/20 text-navy", card: "border-blue/20 bg-sky/30" },
+  { test: /^antwoorden\b/i, icon: Lightbulb, head: "bg-success-soft border-success/25 text-navy", card: "border-success/25 bg-success-soft/40" },
 ] as const;
 /** A heading that ends an open panel: the next college (level 2) or the next lifted section. */
-const sectionBoundary = /^(tentamenfocus|controlevragen|begrippenlijst)\b/i;
+const sectionBoundary = /^(tentamenfocus|controlevragen|begrippenlijst|antwoorden)\b/i;
 
 /** Renders one content block. Kept separate so panels can reuse it for their inner blocks. */
 function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrls: Record<string, string>) {

@@ -30,7 +30,10 @@ export function blockText(block: ContentBlock): string {
     case "formula":
       return [block.label ?? "", texToText(block.expression)].join(" ");
     case "quiz":
-      return [block.title ?? "", ...block.items.flatMap((i) => [i.q, i.a])].join(" ");
+      return [
+        block.title ?? "",
+        ...block.items.flatMap((i) => [i.q, typeof i.a === "string" ? i.a : i.a.map(blockText).join(" ")]),
+      ].join(" ");
   }
 }
 

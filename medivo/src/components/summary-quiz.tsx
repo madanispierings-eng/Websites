@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, HelpCircle, Lightbulb, RotateCcw } from "lucide-react";
+import { ContentBlocks } from "@/components/content-blocks";
 import { MarkupText } from "@/components/markup-text";
 import { Button } from "@/components/ui/button";
+import type { AnswerBlock } from "@/lib/content/blocks";
+import { imageUrlsFor } from "@/lib/content/images";
 import { cn } from "@/lib/utils";
 
-type QuizItem = { q: string; a: string };
+type QuizItem = { q: string; a: string | AnswerBlock[] };
 
 /**
  * Interactive self-check under a hoorcollege: the student types an answer, reveals the model
@@ -75,7 +78,7 @@ export function SummaryQuiz({ id, title, items }: { id: string; title?: string; 
               <Lightbulb className="size-4 shrink-0 text-success-ink" aria-hidden="true" />
               Modelantwoord
             </h5>
-            <MarkupText source={item.a} idPrefix={`${id}-ans-${index}`} className="mt-2 space-y-2 text-[0.95rem] leading-relaxed text-navy/90" />
+            <Answer a={item.a} idPrefix={`${id}-ans-${index}`} />
           </div>
         ) : null}
 
@@ -103,4 +106,13 @@ export function SummaryQuiz({ id, title, items }: { id: string; title?: string; 
       </div>
     </section>
   );
+}
+
+/** A model answer is either summary markup (a plain string) or rich blocks that keep tables, figures and formulas. */
+function Answer({ a, idPrefix }: { a: string | AnswerBlock[]; idPrefix: string }) {
+  const imageUrls = useMemo(() => (typeof a === "string" ? {} : imageUrlsFor(a)), [a]);
+  if (typeof a === "string") {
+    return <MarkupText source={a} idPrefix={idPrefix} className="mt-2 space-y-2 text-[0.95rem] leading-relaxed text-navy/90" />;
+  }
+  return <ContentBlocks blocks={a} imageUrls={imageUrls} idPrefix={idPrefix} className="mt-2 space-y-3 text-[0.95rem] leading-relaxed text-navy/90" />;
 }

@@ -29,6 +29,8 @@ export function blockText(block: ContentBlock): string {
       return [block.alt, block.caption ?? ""].join(" ");
     case "formula":
       return [block.label ?? "", texToText(block.expression)].join(" ");
+    case "quiz":
+      return [block.title ?? "", ...block.items.flatMap((i) => [i.q, i.a])].join(" ");
   }
 }
 

@@ -2,6 +2,7 @@ import { ClipboardCheck, HelpCircle, Info, Lightbulb, Stethoscope, TriangleAlert
 import type { ContentBlock } from "@/lib/content/blocks";
 import { slugify } from "@/lib/content/text";
 import { Formula } from "@/components/formula";
+import { SummaryQuiz } from "@/components/summary-quiz";
 import { cn } from "@/lib/utils";
 
 const calloutTone = {
@@ -118,6 +119,8 @@ function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrl
           </ol>
         </section>
       );
+    case "quiz":
+      return <SummaryQuiz key={id} id={id} title={block.title} items={block.items} />;
   }
 }
 
@@ -137,6 +140,7 @@ function group(blocks: ContentBlock[]): Item[] {
       while (j < blocks.length) {
         const nb = blocks[j];
         if (nb.type === "heading" && (nb.level === 2 || sectionBoundary.test(nb.text))) break;
+        if (nb.type === "quiz") break; // an interactive quiz always renders standalone, never inside a panel
         children.push({ block: nb, index: j });
         j++;
       }

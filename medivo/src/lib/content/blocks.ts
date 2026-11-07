@@ -40,6 +40,13 @@ export const blockSchema = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("formula"), expression: z.string().min(1), label: z.string().optional() }),
   z.object({ type: z.literal("references"), items: z.array(z.string()).min(1) }),
+  // An interactive self-check: the student types an answer per question and then reveals the model answer.
+  // `q` is plain question text; `a` is the model answer in the summary markup.
+  z.object({
+    type: z.literal("quiz"),
+    title: z.string().optional(),
+    items: z.array(z.object({ q: z.string().min(1), a: z.string().min(1) })).min(1),
+  }),
 ]);
 
 export const blocksSchema = z.array(blockSchema);

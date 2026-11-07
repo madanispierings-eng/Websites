@@ -83,7 +83,9 @@ export function SummaryReader({ chapters, course }: {
         </Link>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] xl:gap-8">
+      {/* On wide screens the reading column is centered in the viewport with symmetric gutters;
+          the table of contents sits in the left gutter so the summary doesn't drift to the right. */}
+      <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[minmax(15rem,1fr)_minmax(0,68rem)_minmax(15rem,1fr)] xl:gap-8">
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <Link
             href={course.href}

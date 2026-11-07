@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, ChevronRight, ClipboardCheck, Download, Search, Stethoscope, Target } from "lucide-react";
+import { ArrowLeft, ArrowRight, ClipboardCheck, Download, Search, Stethoscope } from "lucide-react";
 import { ContentBlocks } from "@/components/content-blocks";
 import { blockText } from "@/lib/content/text";
 import type { Summary } from "@/lib/data/learning";
@@ -12,12 +12,11 @@ export type Chapter = Summary & {
   anchor: string;
   topicTitle: string;
   topicSlug: string;
-  objectives: { id: string; body: string }[];
 };
 
 export function SummaryReader({ chapters, course }: {
   chapters: Chapter[];
-  course: { title: string; href: string; leerdoelenHref: string };
+  course: { title: string; href: string };
 }) {
   const [query, setQuery] = useState("");
   const [progress, setProgress] = useState(0);
@@ -139,7 +138,7 @@ export function SummaryReader({ chapters, course }: {
 
         <div ref={articleRef} className="min-w-0 space-y-8">
           {chapters.map((c, i) => (
-            <ChapterView key={c.id} chapter={c} index={i} total={chapters.length} course={course} />
+            <ChapterView key={c.id} chapter={c} index={i} total={chapters.length} />
           ))}
         </div>
       </div>
@@ -147,15 +146,14 @@ export function SummaryReader({ chapters, course }: {
   );
 }
 
-function ChapterView({ chapter: c, index, total, course }: {
+function ChapterView({ chapter: c, index, total }: {
   chapter: Chapter;
   index: number;
   total: number;
-  course: { leerdoelenHref: string };
 }) {
   const prev = index > 0;
   const next = index < total - 1;
-  const hasAside = c.aside.clinical.length > 0 || c.aside.exam.length > 0 || c.objectives.length > 0;
+  const hasAside = c.aside.clinical.length > 0 || c.aside.exam.length > 0;
 
   return (
     <article id={c.anchor} aria-labelledby={`${c.id}-titel`} className="scroll-mt-24">
@@ -207,31 +205,6 @@ function ChapterView({ chapter: c, index, total, course }: {
             ) : null}
             {c.aside.exam.length ? (
               <SideCard title="Tentamenfocus" icon={ClipboardCheck} tone="exam" items={c.aside.exam} />
-            ) : null}
-            {c.objectives.length ? (
-              <div className="rounded-xl border border-line bg-white shadow-[var(--shadow-card)]">
-                <div className="flex items-center gap-2 border-b border-line px-4 py-3">
-                  <Target className="size-4 text-blue" aria-hidden="true" />
-                  <h3 className="text-sm font-semibold text-navy">Koppeling met leerdoelen</h3>
-                </div>
-                <div className="px-4 py-3">
-                  <p className="text-xs text-muted-ink">Na dit hoofdstuk kun je:</p>
-                  <ul className="mt-2 space-y-2">
-                    {c.objectives.map((o) => (
-                      <li key={o.id} className="flex gap-2 text-sm text-navy">
-                        <ChevronRight className="mt-0.5 size-4 shrink-0 text-blue" aria-hidden="true" />
-                        <span>{o.body}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link
-                    href={`${course.leerdoelenHref}#${c.topicSlug}`}
-                    className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-blue hover:underline"
-                  >
-                    Naar de leerdoelen <ArrowRight className="size-4" aria-hidden="true" />
-                  </Link>
-                </div>
-              </div>
             ) : null}
           </aside>
         ) : null}

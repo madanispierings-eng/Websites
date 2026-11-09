@@ -1,11 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowRight, BookOpenText, Check, ClipboardList, FileText, Layers, LayoutGrid, ListChecks, MessageCircleQuestion, Sparkles, Target, TrendingUp, Video,
+  ArrowRight, Check, ClipboardList, FileText, Layers, MessageCircleQuestion, Sparkles, Target, TrendingUp, Video,
 } from "lucide-react";
 import { CourseCard } from "@/components/course-card";
 import { FaqList } from "@/components/faq-list";
-import { ShowcaseCarousel } from "@/components/showcase-carousel";
 import { Reveal } from "@/components/reveal";
 import { Button } from "@/components/ui/button";
 import { getCourses } from "@/lib/data/catalog";
@@ -25,12 +24,6 @@ const features = [
   { icon: Video, label: "Leerdoelen met video's" },
   { icon: ClipboardList, label: "Oefententamens" },
   { icon: TrendingUp, label: "Inzicht in je voortgang" },
-];
-
-const steps = [
-  { icon: LayoutGrid, title: "Kies je vak", body: "Elk vak van jaar 1 tot en met 3 heeft een eigen overzicht met dezelfde vaste indeling." },
-  { icon: BookOpenText, title: "Leer de stof", body: "Lees de samenvatting per onderwerp en vink leerdoelen af die je beheerst." },
-  { icon: ListChecks, title: "Oefen en controleer", body: "Beantwoord vragen per onderwerp, lees de uitleg en zie per onderwerp hoe je ervoor staat." },
 ];
 
 const pillars = [
@@ -140,25 +133,6 @@ export default async function HomePage() {
         ))}
       </section>
 
-      {/* How it works */}
-      <section className="border-y border-line bg-white" aria-labelledby="werkwijze-titel">
-        <div className={cn(container, "py-16 lg:py-24")}>
-          <h2 id="werkwijze-titel" className="text-3xl font-bold tracking-[-0.02em] text-navy sm:text-4xl">Zo werkt Medivo</h2>
-          <ol className="mt-10 grid gap-6 md:grid-cols-3">
-            {steps.map(({ icon: Icon, title, body }, i) => (
-              <li key={title} className="rounded-xl border border-line bg-canvas p-6">
-                <div className="flex items-center gap-3">
-                  <span className="grid size-9 place-items-center rounded-full bg-navy text-sm font-semibold text-white">{i + 1}</span>
-                  <Icon className="size-5 text-blue" aria-hidden="true" />
-                </div>
-                <h3 className="mt-5 text-lg font-semibold text-navy">{title}</h3>
-                <p className="mt-2 text-[0.95rem] leading-relaxed text-muted-ink">{body}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
       {/* Learning experience */}
       <section className={cn(container, "py-16 lg:py-24")} aria-labelledby="ervaring-titel">
         <div className="max-w-2xl">
@@ -167,14 +141,7 @@ export default async function HomePage() {
           </h2>
           <p className="mt-3 text-muted-ink">Van leren tot toetsen, op één plek en met dezelfde vaste indeling voor elk vak.</p>
         </div>
-
-        {/* Showcase: a real example of what a subject looks like */}
-        <div className="mt-8">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.08em] text-muted-ink">Voorbeeld · Mechanisms of Disease 2</p>
-          <ShowcaseCarousel />
-        </div>
-
-        <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {pillars.map(({ icon: Icon, title, body }) => (
             <li key={title} className="rounded-2xl border border-line bg-white p-6 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-lift)]">
               <span className="grid size-11 place-items-center rounded-xl bg-sky text-blue">

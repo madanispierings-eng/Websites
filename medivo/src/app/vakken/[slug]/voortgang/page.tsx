@@ -11,6 +11,14 @@ import { getCourseProgress } from "@/lib/data/learning";
 import { coverage, MIN_ANSWERED, pct, summarize, TOPIC_DONE } from "@/lib/progress/summary";
 import { container } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { ResetTopicButton } from "./reset-topic-button";
+
+/** A short mastery label from the first-go score, matching the progress bar colours. */
+function levelBadge(rate: number) {
+  if (rate >= 0.85) return { label: "Beheerst", cls: "border-success/30 bg-success-soft text-success-ink" };
+  if (rate >= 0.75) return { label: "Bijna beheerst", cls: "border-blue/20 bg-sky text-blue" };
+  return { label: "Aandacht", cls: "border-[#e8c48a] bg-[#fdf6ec] text-[#8a4f0c]" };
+}
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -37,13 +45,13 @@ export default async function ProgressPage({ params }: Props) {
         intro="Hoeveel van de stof je hebt doorgewerkt, en hoe goed het oefenen gaat. Die twee staan bewust los van elkaar."
       />
       <div className={cn(container, "py-8 lg:py-10")}>
-        {!progress ? <AccessNotice signedIn={false} next={`${base}/voortgang`} /> : <Overview progress={progress} base={base} />}
+        {!progress ? <AccessNotice signedIn={false} next={`${base}/voortgang`} /> : <Overview progress={progress} base={base} courseSlug={course.slug} />}
       </div>
     </main>
   );
 }
 
-function Overview({ progress, base }: { progress: NonNullable<Awaited<ReturnType<typeof getCourseProgress>>>; base: string }) {
+function Overview({ progress, base, courseSlug }: { progress: NonNullable<Awaited<ReturnType<typeof getCourseProgress>>>; base: string; courseSlug: string }) {
   const s = summarize(progress, base);
   const topics = progress.topics.filter((t) => coverage(t) !== null);
   const objectives = topics.reduce((a, t) => ({ done: a.done + t.objectivesDone, total: a.total + t.objectivesTotal }), { done: 0, total: 0 });
@@ -106,14 +114,19 @@ function Overview({ progress, base }: { progress: NonNullable<Awaited<ReturnType
 
       <section aria-labelledby="onderwerp-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
         <h2 id="onderwerp-titel" className="text-lg font-semibold text-navy">Per onderwerp</h2>
+        <p className="mt-0.5 text-sm text-muted-ink">
+          Je niveau per thema, op basis van je oefenvragen. Reset een thema om bij een volgende oefensessie weer vers te zien
+          hoe je ervoor staat; je antwoorden worden gewist, de vragen blijven staan.
+        </p>
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[44rem] text-left text-sm">
+          <table className="w-full min-w-[52rem] text-left text-sm">
             <thead className="border-b border-line text-xs font-semibold uppercase tracking-[0.04em] text-muted-ink">
               <tr>
                 <th scope="col" className="py-2 pr-4 font-semibold">Onderwerp</th>
-                <th scope="col" className="w-44 py-2 pr-4 font-semibold">Doorgewerkt</th>
+                <th scope="col" className="w-40 py-2 pr-4 font-semibold">Doorgewerkt</th>
                 <th scope="col" className="w-44 py-2 pr-4 font-semibold">Goed in één keer</th>
-                <th scope="col" className="w-28 py-2 pr-4 font-semibold">Flashcards</th>
+                <th scope="col" className="w-32 py-2 pr-4 font-semibold">Niveau</th>
+                <th scope="col" className="w-24 py-2 pr-4 font-semibold">Flashcards</th>
                 <th scope="col" className="py-2 font-semibold"><span className="sr-only">Acties</span></th>
               </tr>
             </thead>
@@ -143,9 +156,19 @@ function Overview({ progress, base }: { progress: NonNullable<Awaited<ReturnType
                       )}
                       {t.questionsAnswered ? <span className="mt-0.5 block text-xs text-muted-ink">{t.questionsCorrect} van {t.questionsAnswered} goed</span> : null}
                     </td>
+                    <td className="py-3 pr-4">
+                      {rate === null ? (
+                        <span className="text-xs text-muted-ink">–</span>
+                      ) : (
+                        (() => {
+                          const b = levelBadge(rate);
+                          return <span className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold", b.cls)}>{b.label}</span>;
+                        })()
+                      )}
+                    </td>
                     <td className="py-3 pr-4 tabular-nums text-navy">{t.flashcardsTotal ? `${t.flashcardsMastered} / ${t.flashcardsTotal}` : "–"}</td>
                     <td className="py-3">
-                      <span className="flex justify-end gap-1">
+                      <span className="flex items-center justify-end gap-1">
                         {t.questionsTotal ? (
                           <Link href={`${base}/oefenen?onderwerp=${t.id}`} className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-medium text-blue hover:bg-sky">
                             <ListChecks className="size-4" aria-hidden="true" /> Oefenen
@@ -155,6 +178,9 @@ function Overview({ progress, base }: { progress: NonNullable<Awaited<ReturnType
                           <Link href={`${base}/flashcards?onderwerp=${t.id}`} className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-medium text-blue hover:bg-sky">
                             <Layers className="size-4" aria-hidden="true" /> Flashcards
                           </Link>
+                        ) : null}
+                        {t.questionsAnswered ? (
+                          <ResetTopicButton topicId={t.id} topicTitle={t.title} courseSlug={courseSlug} />
                         ) : null}
                       </span>
                     </td>

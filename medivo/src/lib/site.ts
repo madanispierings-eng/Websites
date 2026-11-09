@@ -37,6 +37,15 @@ export const photoCredits = [
   { file: "onderdelen/oefenen.webp", what: "stethoscoop op studieboeken", author: "Bermix Studio", url: "https://unsplash.com/photos/vT-Hkq0_FBU" },
 ] as const;
 
+/** Subscription pricing, shown in the paywall and on the marketing pages. One place to change it. */
+export const pricing = {
+  monthly: "€ 49,99",
+  per: "per maand",
+  trialShort: "2 weken gratis",
+  trialLong: "Eerste 2 weken gratis",
+  terms: "maandelijks opzegbaar",
+} as const;
+
 export const container = "mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-8";
 
 export function yearLabel(year: number) {

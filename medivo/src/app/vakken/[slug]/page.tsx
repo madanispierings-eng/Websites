@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, FileText, GraduationCap, Landmark } from "lucide-react";
+import { ChevronRight, FileText, GraduationCap, Landmark, Lock } from "lucide-react";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { courseSections } from "@/components/course/course-sections";
 import { StudyProgress } from "@/components/course/study-progress";
@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/empty-state";
 import { getCourse, getTopicTree } from "@/lib/data/catalog";
 import { getCourseOverview, getCourseProgress } from "@/lib/data/learning";
 import { courseImage } from "@/lib/course-visuals";
-import { container, ecLabel, yearLabel } from "@/lib/site";
+import { container, ecLabel, pricing, yearLabel } from "@/lib/site";
 import { getViewer } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +38,7 @@ export default async function CoursePage({ params }: Props) {
   ]);
   const base = `/vakken/${course.slug}`;
   const image = courseImage(course.slug);
+  const locked = !overview.hasAccess;
 
   return (
     <main id="inhoud" className={cn(container, "flex-1 pb-16 pt-6")}>
@@ -62,6 +63,19 @@ export default async function CoursePage({ params }: Props) {
             {course.description ??
               `Studiemateriaal voor ${course.title}, ${yearLabel(course.studyYear).toLowerCase()} van de ${course.program.charAt(0).toLowerCase()}${course.program.slice(1)} aan de ${course.university}.`}
           </p>
+          {locked ? (
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Link
+                href={viewer ? "/dashboard" : "/registreren"}
+                className="inline-flex items-center justify-center rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-navy transition-colors hover:bg-white/90"
+              >
+                {viewer ? "Abonnement activeren" : "Start je gratis proefperiode"}
+              </Link>
+              <p className="text-sm text-white/80">
+                {pricing.trialShort}, daarna {pricing.monthly} {pricing.per} · {pricing.terms}
+              </p>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -89,6 +103,15 @@ export default async function CoursePage({ params }: Props) {
                   sizes="(min-width: 1280px) 260px, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                   className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                 />
+                {locked ? (
+                  <span
+                    className="absolute right-2 top-2 grid size-7 place-items-center rounded-full bg-white/95 text-navy shadow-[var(--shadow-card)]"
+                    title="Beschikbaar met een abonnement"
+                  >
+                    <Lock className="size-3.5" aria-hidden="true" />
+                    <span className="sr-only">Beschikbaar met een abonnement</span>
+                  </span>
+                ) : null}
               </div>
               <div className="flex min-w-0 flex-1 flex-col px-4 pb-4 pt-3.5 max-sm:py-3">
                 <h2 className="font-semibold leading-snug text-navy">{s.title}</h2>

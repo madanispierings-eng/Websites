@@ -72,9 +72,12 @@ export default async function CoursePage({ params }: Props) {
                 {viewer ? "Abonnement activeren" : "Start je gratis proefperiode"}
               </Link>
               <p className="text-sm text-white/80">
-                {pricing.trialShort}, daarna {pricing.monthly} {pricing.per} · {pricing.terms}
+                {pricing.trialShort}, daarna {pricing.monthly} {pricing.per} · of los vak {pricing.singleCourse}
               </p>
             </div>
+          ) : null}
+          {locked ? (
+            <p className="mt-3 text-xs text-white/60">{pricing.availability}</p>
           ) : null}
         </div>
       </section>

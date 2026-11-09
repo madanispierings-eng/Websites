@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, BookCheck, CircleHelp, Layers, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { pct, summarize, type CourseProgress } from "@/lib/progress/summary";
+import { ResetTopicButton } from "@/app/vakken/[slug]/voortgang/reset-topic-button";
+import { MIN_ANSWERED, pct, summarize, type CourseProgress } from "@/lib/progress/summary";
 import { cn } from "@/lib/utils";
 
 const nl = (n: number) => n.toLocaleString("nl-NL");
@@ -10,13 +11,20 @@ const nl = (n: number) => n.toLocaleString("nl-NL");
 export const rateTone = (rate: number) => (rate < 0.6 ? "bg-danger" : rate < 0.75 ? "bg-[#e3a04f]" : "bg-success");
 export const rateText = (rate: number) => (rate < 0.6 ? "text-danger" : rate < 0.75 ? "text-[#8a4f0c]" : "text-success-ink");
 
+/** A short mastery label from the first-go score, matching the progress-bar colours. */
+export function levelBadge(rate: number) {
+  if (rate >= 0.85) return { label: "Beheerst", cls: "border-success/30 bg-success-soft text-success-ink" };
+  if (rate >= 0.75) return { label: "Bijna beheerst", cls: "border-blue/20 bg-sky text-blue" };
+  return { label: "Aandacht", cls: "border-[#e8c48a] bg-[#fdf6ec] text-[#8a4f0c]" };
+}
+
 /** The compact personal overview on the course page. Signed-out visitors see what it will show once they log in. */
-export function StudyProgress({ progress, courseTitle, base }: { progress: CourseProgress | null; courseTitle: string; base: string }) {
+export function StudyProgress({ progress, courseTitle, courseSlug, base }: { progress: CourseProgress | null; courseTitle: string; courseSlug: string; base: string }) {
   return (
     <aside aria-labelledby="voortgang-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
       <h2 id="voortgang-titel" className="text-lg font-semibold text-navy">Mijn studievoortgang</h2>
       <p className="mt-0.5 text-sm text-muted-ink">Je persoonlijke voortgang in {courseTitle}</p>
-      {progress ? <Signed progress={progress} base={base} /> : <SignedOut base={base} />}
+      {progress ? <Signed progress={progress} base={base} courseSlug={courseSlug} /> : <SignedOut base={base} />}
     </aside>
   );
 }
@@ -45,8 +53,9 @@ function SignedOut({ base }: { base: string }) {
   );
 }
 
-function Signed({ progress, base }: { progress: CourseProgress; base: string }) {
+function Signed({ progress, base, courseSlug }: { progress: CourseProgress; base: string; courseSlug: string }) {
   const s = summarize(progress, base);
+  const practiceTopics = progress.topics.filter((t) => t.questionsTotal > 0);
   const tiles = [
     { icon: CircleHelp, value: nl(s.questionsAnswered), label: "Vragen gemaakt", sub: s.questionsTotal ? `van ${nl(s.questionsTotal)}` : null },
     { icon: Target, value: s.correctRate === null ? "–" : pct(s.correctRate), label: "Goed beantwoord", sub: "in één keer" },
@@ -87,34 +96,39 @@ function Signed({ progress, base }: { progress: CourseProgress; base: string }) 
 
       <div className="mt-6">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="text-sm font-semibold text-navy">Waar kun je nog verbeteren?</h3>
-          {s.weak.length > 2 ? <Link href={`${base}/voortgang`} className="text-xs font-medium text-blue hover:underline">Bekijk alles</Link> : null}
+          <h3 className="text-sm font-semibold text-navy">Niveau per thema</h3>
+          <Link href={`${base}/voortgang`} className="text-xs font-medium text-blue hover:underline">Bekijk alles</Link>
         </div>
-        {s.weak.length ? (
+        {practiceTopics.length ? (
           <ul className="mt-3 space-y-3">
-            {s.weak.slice(0, 3).map((t) => (
-              <li key={t.id}>
-                <Link href={`${base}/oefenen?onderwerp=${t.id}`} className="group block rounded-md outline-offset-4">
-                  <span className="flex items-baseline justify-between gap-3 text-sm">
-                    <span className="min-w-0 truncate font-medium text-navy group-hover:text-blue">{t.title}</span>
-                    <span className={cn("font-semibold tabular-nums", rateText(t.rate))}>{pct(t.rate)}</span>
-                  </span>
-                  <span className="mt-1 flex items-center gap-3">
+            {practiceTopics.map((t) => {
+              const rate = t.questionsAnswered >= MIN_ANSWERED ? t.questionsCorrect / t.questionsAnswered : null;
+              const badge = rate !== null ? levelBadge(rate) : null;
+              return (
+                <li key={t.id}>
+                  <div className="flex items-center justify-between gap-2">
+                    <Link href={`${base}/oefenen?onderwerp=${t.id}`} className="min-w-0 truncate text-sm font-medium text-navy hover:text-blue">{t.title}</Link>
+                    {badge ? (
+                      <span className={cn("inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[0.7rem] font-semibold", badge.cls)}>{badge.label}</span>
+                    ) : (
+                      <span className="shrink-0 text-[0.7rem] font-medium text-muted-ink">Nog niet geoefend</span>
+                    )}
+                  </div>
+                  <div className="mt-1.5 flex items-center gap-2">
                     <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-canvas" aria-hidden="true">
-                      <span className={cn("block h-full rounded-full", rateTone(t.rate))} style={{ width: pct(t.rate) }} />
+                      <span className={cn("block h-full rounded-full", rate !== null ? rateTone(rate) : "bg-line")} style={{ width: rate !== null ? pct(rate) : "0%" }} />
                     </span>
-                    <span className="shrink-0 text-xs tabular-nums text-muted-ink">{t.questionsCorrect} van {t.questionsAnswered} goed</span>
-                  </span>
-                </Link>
-              </li>
-            ))}
+                    <span className="shrink-0 text-xs tabular-nums text-muted-ink">
+                      {t.questionsAnswered ? <>{t.questionsCorrect}/{t.questionsAnswered} goed{rate !== null ? <span className={cn("ml-1 font-semibold", rateText(rate))}>· {pct(rate)}</span> : null}</> : <>0/{t.questionsTotal}</>}
+                    </span>
+                    {t.questionsAnswered ? <ResetTopicButton topicId={t.id} topicTitle={t.title} courseSlug={courseSlug} compact /> : null}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         ) : (
-          <p className="mt-2 text-sm text-muted-ink">
-            {s.questionsAnswered < 3
-              ? "Maak een paar oefenvragen; dan zie je hier welke onderwerpen extra aandacht nodig hebben."
-              : "Geen zwakke onderwerpen: overal minstens 75% in één keer goed."}
-          </p>
+          <p className="mt-2 text-sm text-muted-ink">Zodra er oefenvragen klaarstaan, zie je hier je niveau per thema.</p>
         )}
       </div>
 

@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { resetTopicProgress } from "./actions";
 
 /** Resets the viewer's practice progress for one topic (keeps the questions). Confirms first; destructive. */
-export function ResetTopicButton({ topicId, topicTitle, courseSlug }: { topicId: string; topicTitle: string; courseSlug: string }) {
+export function ResetTopicButton({ topicId, topicTitle, courseSlug, compact = false }: { topicId: string; topicTitle: string; courseSlug: string; compact?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,10 +41,14 @@ export function ResetTopicButton({ topicId, topicTitle, courseSlug }: { topicId:
   return (
     <AlertDialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setError(null); }}>
       <AlertDialogTrigger
-        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-medium text-muted-ink transition-colors hover:bg-canvas hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
-        title="Zet je voortgang voor dit thema terug op nul"
+        className={cn(
+          "inline-flex shrink-0 items-center gap-1.5 rounded-md font-medium text-muted-ink transition-colors hover:bg-canvas hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue",
+          compact ? "grid size-7 place-items-center" : "px-2 py-1",
+        )}
+        title={`Voortgang voor ${topicTitle} terug op nul`}
       >
-        <RotateCcw className="size-4" aria-hidden="true" /> Reset
+        <RotateCcw className="size-4" aria-hidden="true" />
+        {compact ? <span className="sr-only">Reset voortgang {topicTitle}</span> : "Reset"}
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

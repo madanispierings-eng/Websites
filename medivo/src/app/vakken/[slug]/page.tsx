@@ -156,7 +156,7 @@ export default async function CoursePage({ params }: Props) {
           )}
         </section>
 
-        <StudyProgress progress={progress} courseTitle={course.title} base={base} />
+        <StudyProgress progress={progress} courseTitle={course.title} courseSlug={course.slug} base={base} />
       </div>
     </main>
   );

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowRight, Layers, ListChecks, RotateCcw } from "lucide-react";
 import { AccessNotice } from "@/components/course/access-notice";
 import { CourseSubheader } from "@/components/course/course-subheader";
-import { rateText, rateTone } from "@/components/course/study-progress";
+import { levelBadge, rateText, rateTone } from "@/components/course/study-progress";
 import { Button } from "@/components/ui/button";
 import { getCourse } from "@/lib/data/catalog";
 import { getCourseProgress } from "@/lib/data/learning";
@@ -12,13 +12,6 @@ import { coverage, MIN_ANSWERED, pct, summarize, TOPIC_DONE } from "@/lib/progre
 import { container } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { ResetTopicButton } from "./reset-topic-button";
-
-/** A short mastery label from the first-go score, matching the progress bar colours. */
-function levelBadge(rate: number) {
-  if (rate >= 0.85) return { label: "Beheerst", cls: "border-success/30 bg-success-soft text-success-ink" };
-  if (rate >= 0.75) return { label: "Bijna beheerst", cls: "border-blue/20 bg-sky text-blue" };
-  return { label: "Aandacht", cls: "border-[#e8c48a] bg-[#fdf6ec] text-[#8a4f0c]" };
-}
 
 type Props = { params: Promise<{ slug: string }> };
 

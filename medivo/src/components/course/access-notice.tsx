@@ -5,50 +5,63 @@ import { pricing } from "@/lib/site";
 
 /** Shown when content exists but the viewer has no entitlement (or is signed out): a professional paywall. */
 export function AccessNotice({ signedIn, next }: { signedIn: boolean; next: string }) {
+  const subHref = signedIn ? "/dashboard" : "/registreren";
   const perks = [
-    "Alle samenvattingen, flashcards en oefenvragen",
-    "Leerdoelen met uitlegvideo's en oude tentamens",
-    "Je voortgang per onderwerp bijgehouden",
+    "Alle vakken van je studiejaar",
+    "Samenvattingen, flashcards, oefenvragen en oude tentamens",
+    "Leerdoelen met uitlegvideo's en je voortgang bijgehouden",
   ];
   return (
-    <div className="mx-auto max-w-lg overflow-hidden rounded-2xl border border-line bg-white text-center shadow-[var(--shadow-card)]">
-      <div className="border-b border-line bg-sky/60 px-6 py-8 sm:px-10">
+    <div className="mx-auto max-w-xl overflow-hidden rounded-2xl border border-line bg-white shadow-[var(--shadow-card)]">
+      <div className="border-b border-line bg-sky/60 px-6 py-8 text-center sm:px-10">
         <span className="mx-auto grid size-12 place-items-center rounded-full bg-white text-blue shadow-[var(--shadow-card)]">
           <Lock className="size-5" aria-hidden="true" />
         </span>
         <h2 className="mt-4 text-xl font-semibold text-navy">Deze inhoud zit achter een abonnement</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-ink">
-          Met een Medivo-abonnement krijg je volledige toegang tot alle onderdelen van elk vak.
+          Kies een jaarabonnement voor je hele studiejaar, of koop dit vak los.
         </p>
       </div>
-      <div className="px-6 py-7 sm:px-10">
-        <p className="text-3xl font-bold tracking-[-0.01em] text-navy">
-          {pricing.monthly} <span className="text-base font-medium text-muted-ink">{pricing.per}</span>
-        </p>
-        <p className="mt-1 text-sm font-semibold text-success-ink">{pricing.trialLong} · daarna {pricing.terms}</p>
-        <ul className="mx-auto mt-5 max-w-xs space-y-2 text-left">
-          {perks.map((p) => (
-            <li key={p} className="flex items-start gap-2.5 text-sm text-navy/90">
-              <Check className="mt-0.5 size-4 shrink-0 text-success" strokeWidth={2.5} aria-hidden="true" />
-              {p}
-            </li>
-          ))}
-        </ul>
-        <div className="mt-6 flex flex-col gap-2">
-          {signedIn ? (
-            <>
-              <Button asChild size="lg" className="font-semibold"><Link href="/dashboard">Abonnement activeren</Link></Button>
-              <p className="text-xs text-muted-ink">Je bent ingelogd. Activeer een abonnement om verder te gaan.</p>
-            </>
-          ) : (
-            <>
-              <Button asChild size="lg" className="font-semibold"><Link href="/registreren">Start je gratis proefperiode</Link></Button>
-              <p className="text-xs text-muted-ink">
-                Al een account? <Link href={`/inloggen?volgende=${encodeURIComponent(next)}`} className="font-medium text-blue hover:underline">Inloggen</Link>
-              </p>
-            </>
-          )}
+
+      <div className="space-y-4 p-6 sm:p-8">
+        {/* Year subscription — recommended */}
+        <div className="relative rounded-xl border-2 border-accent-blue bg-white p-5">
+          <span className="absolute -top-2.5 left-5 rounded-full bg-accent-blue px-2.5 py-0.5 text-xs font-semibold text-white">Voordeligst</span>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h3 className="font-semibold text-navy">Jaarabonnement</h3>
+            <p className="text-navy"><span className="text-2xl font-bold">{pricing.monthly}</span> <span className="text-sm text-muted-ink">{pricing.per}</span></p>
+          </div>
+          <p className="mt-0.5 text-sm font-semibold text-success-ink">{pricing.trialLong} · {pricing.terms}</p>
+          <ul className="mt-3 space-y-1.5">
+            {perks.map((p) => (
+              <li key={p} className="flex items-start gap-2 text-sm text-navy/90">
+                <Check className="mt-0.5 size-4 shrink-0 text-success" strokeWidth={2.5} aria-hidden="true" />{p}
+              </li>
+            ))}
+          </ul>
+          <Button asChild size="lg" className="mt-4 w-full font-semibold">
+            <Link href={subHref}>{signedIn ? "Abonnement activeren" : "Start je gratis proefperiode"}</Link>
+          </Button>
         </div>
+
+        {/* Single course */}
+        <div className="rounded-xl border border-line bg-canvas p-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h3 className="font-semibold text-navy">Alleen dit vak</h3>
+            <p className="text-navy"><span className="text-xl font-bold">{pricing.singleCourse}</span> <span className="text-sm text-muted-ink">{pricing.singleCourseTerms}</span></p>
+          </div>
+          <p className="mt-1 text-sm text-muted-ink">Vanaf twee vakken ben je met het jaarabonnement goedkoper uit.</p>
+          <Button asChild variant="outline" className="mt-4 w-full font-semibold">
+            <Link href={subHref}>Koop dit vak</Link>
+          </Button>
+        </div>
+
+        <p className="text-center text-xs text-muted-ink">
+          {pricing.availability}
+          {!signedIn ? (
+            <> · Al een account? <Link href={`/inloggen?volgende=${encodeURIComponent(next)}`} className="font-medium text-blue hover:underline">Inloggen</Link></>
+          ) : null}
+        </p>
       </div>
     </div>
   );

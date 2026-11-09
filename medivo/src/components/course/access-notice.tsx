@@ -32,6 +32,7 @@ export function AccessNotice({ signedIn, next }: { signedIn: boolean; next: stri
             <p className="text-navy"><span className="text-2xl font-bold">{pricing.monthly}</span> <span className="text-sm text-muted-ink">{pricing.per}</span></p>
           </div>
           <p className="mt-0.5 text-sm font-semibold text-success-ink">{pricing.trialLong} · {pricing.terms}</p>
+          <p className="mt-0.5 text-sm text-muted-ink">Of {pricing.yearOnce} ineens voor het hele jaar.</p>
           <ul className="mt-3 space-y-1.5">
             {perks.map((p) => (
               <li key={p} className="flex items-start gap-2 text-sm text-navy/90">
@@ -50,7 +51,7 @@ export function AccessNotice({ signedIn, next }: { signedIn: boolean; next: stri
             <h3 className="font-semibold text-navy">Alleen dit vak</h3>
             <p className="text-navy"><span className="text-xl font-bold">{pricing.singleCourse}</span> <span className="text-sm text-muted-ink">{pricing.singleCourseTerms}</span></p>
           </div>
-          <p className="mt-1 text-sm text-muted-ink">Vanaf twee vakken ben je met het jaarabonnement goedkoper uit.</p>
+          <p className="mt-1 text-sm text-muted-ink">Het jaarabonnement is veel voordeliger als je meerdere vakken volgt.</p>
           <Button asChild variant="outline" className="mt-4 w-full font-semibold">
             <Link href={subHref}>Koop dit vak</Link>
           </Button>

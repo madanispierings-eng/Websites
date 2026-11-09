@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { FileText } from "lucide-react";
 import { AccessNotice } from "@/components/course/access-notice";
+import { ContentWatermark } from "@/components/content-watermark";
 import { CourseSubheader } from "@/components/course/course-subheader";
 import { EmptyState } from "@/components/empty-state";
 import { getCourse, getTopicTree } from "@/lib/data/catalog";
@@ -41,8 +42,11 @@ export default async function SummaryPage({ params }: Props) {
     };
   });
 
+  const watermark = viewer ? [viewer.fullName, viewer.user.email].filter(Boolean).join(" · ") : null;
+
   return (
     <main id="inhoud" className="flex-1">
+      {chapters.length && watermark ? <ContentWatermark label={watermark} /> : null}
       <CourseSubheader course={course} active="samenvatting" title="Volledige samenvatting" />
       <div className="mx-auto w-full max-w-[104rem] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         {chapters.length ? (

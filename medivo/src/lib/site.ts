@@ -40,8 +40,10 @@ export const photoCredits = [
 /** Subscription pricing, shown in the paywall and on the marketing pages. One place to change it. */
 export const pricing = {
   // Year subscription: access to the courses of your study year (each course opens ~4 weeks before its exam).
-  monthly: "€ 49,99",
+  // Payable per month, or in one go for the whole year.
+  monthly: "€ 34,99",
   per: "per maand",
+  yearOnce: "€ 419,88",
   trialShort: "2 weken gratis",
   trialLong: "Eerste 2 weken gratis",
   terms: "maandelijks opzegbaar",

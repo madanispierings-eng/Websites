@@ -36,8 +36,8 @@ export default function Page() {
       <FlashcardsPreview />
       <h2 className="mb-4 mt-12 text-2xl font-bold text-navy">Mijn studievoortgang (voorbeeld)</h2>
       <div className="grid gap-6 lg:grid-cols-2">
-        <StudyProgress progress={example} courseTitle="Voorbeeldvak" base="/vakken/voorbeeld" />
-        <StudyProgress progress={null} courseTitle="Voorbeeldvak" base="/vakken/voorbeeld" />
+        <StudyProgress progress={example} courseTitle="Voorbeeldvak" courseSlug="voorbeeld" base="/vakken/voorbeeld" />
+        <StudyProgress progress={null} courseTitle="Voorbeeldvak" courseSlug="voorbeeld" base="/vakken/voorbeeld" />
       </div>
     </main>
   );

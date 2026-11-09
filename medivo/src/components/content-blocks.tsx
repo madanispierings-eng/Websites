@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { ClipboardCheck, HelpCircle, Info, Lightbulb, Stethoscope, TriangleAlert } from "lucide-react";
 import type { ContentBlock } from "@/lib/content/blocks";
 import { slugify } from "@/lib/content/text";
@@ -21,15 +22,22 @@ const panelTone = [
 const sectionBoundary = /^(tentamenfocus|controlevragen|begrippenlijst|antwoorden)\b/i;
 
 /** Renders one content block. Kept separate so panels can reuse it for their inner blocks. */
-function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrls: Record<string, string>) {
+function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrls: Record<string, string>, watermark?: string) {
   switch (block.type) {
     case "heading": {
       const Tag = block.level === 2 ? "h3" : "h4";
-      return (
-        <Tag key={id} id={`${idPrefix}-${slugify(block.text)}`} className={cn("scroll-mt-24 font-semibold text-navy", block.level === 2 ? "pt-2 text-xl" : "pt-1 text-lg")}>
-          {block.text}
-        </Tag>
-      );
+      const anchorId = `${idPrefix}-${slugify(block.text)}`;
+      const cls = cn("scroll-mt-24 font-semibold text-navy", block.level === 2 ? "pt-2 text-xl" : "pt-1 text-lg");
+      // A faint, per-section licence line under each hoorcollege (level-2) title: traceable, but out of the reading flow.
+      if (watermark && block.level === 2) {
+        return (
+          <Fragment key={id}>
+            <Tag id={anchorId} className={cls}>{block.text}</Tag>
+            <p className="[margin-top:0.25rem]! select-none text-[0.7rem] font-medium tracking-wide text-muted-ink/45">{watermark}</p>
+          </Fragment>
+        );
+      }
+      return <Tag key={id} id={anchorId} className={cls}>{block.text}</Tag>;
     }
     case "paragraph":
       return (
@@ -159,11 +167,14 @@ export function ContentBlocks({
   imageUrls,
   idPrefix,
   className,
+  watermark,
 }: {
   blocks: ContentBlock[];
   imageUrls: Record<string, string>;
   idPrefix: string;
   className?: string;
+  /** When set, a faint licence line (the viewer's name/e-mail) is shown under each hoorcollege title. */
+  watermark?: string;
 }) {
   return (
     <div className={cn("space-y-4 text-[1.02rem] leading-[1.6] text-navy/90", className)}>
@@ -176,11 +187,11 @@ export function ContentBlocks({
                 <Icon className="size-5 shrink-0" aria-hidden="true" />
                 {item.title}
               </h4>
-              {item.children.map(({ block, index }) => renderBlock(block, `${idPrefix}-b${index}`, idPrefix, imageUrls))}
+              {item.children.map(({ block, index }) => renderBlock(block, `${idPrefix}-b${index}`, idPrefix, imageUrls, watermark))}
             </section>
           );
         }
-        return renderBlock(item.block, `${idPrefix}-b${item.index}`, idPrefix, imageUrls);
+        return renderBlock(item.block, `${idPrefix}-b${item.index}`, idPrefix, imageUrls, watermark);
       })}
     </div>
   );

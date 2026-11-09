@@ -1,8 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight, Check, ClipboardList, FileText, Layers, MessageCircleQuestion, TrendingUp, Video,
-} from "lucide-react";
+import { ArrowRight, Check, MessageCircleQuestion } from "lucide-react";
 import { CourseCard } from "@/components/course-card";
 import { FaqList } from "@/components/faq-list";
 import { HomeFeatures } from "@/components/home-features";
@@ -17,14 +15,6 @@ const highlights = [
   "Interactieve samenvattingen, flashcards en oefenvragen met uitleg",
   "Leerdoelen per vak uitgewerkt, met uitlegvideo's erbij",
   "Je voortgang per onderwerp bijgehouden, zodat je je zwakke punten ziet",
-];
-
-const features = [
-  { icon: FileText, label: "Interactieve samenvattingen" },
-  { icon: Layers, label: "Flashcards per onderwerp" },
-  { icon: Video, label: "Leerdoelen met video's" },
-  { icon: ClipboardList, label: "Oefententamens" },
-  { icon: TrendingUp, label: "Inzicht in je voortgang" },
 ];
 
 export default async function HomePage() {
@@ -82,21 +72,6 @@ export default async function HomePage() {
               </Button>
             </Reveal>
           </div>
-        </div>
-
-        {/* Feature bar */}
-        <div className={cn(container, "relative z-10 order-3 -mt-10 pb-12 lg:-mt-20")}>
-          <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line shadow-[var(--shadow-lift)] sm:grid-cols-3 lg:grid-cols-5">
-            {features.map(({ icon: Icon, label }, i) => (
-              <li
-                key={label}
-                className={cn("flex flex-col items-center gap-2.5 bg-white px-4 py-5 text-center", i === features.length - 1 && "col-span-2 lg:col-span-1")}
-              >
-                <Icon className="size-6 text-blue" strokeWidth={1.6} aria-hidden="true" />
-                <span className="text-sm font-medium text-navy">{label}</span>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 

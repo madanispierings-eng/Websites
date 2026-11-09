@@ -14,9 +14,10 @@ export type Chapter = Summary & {
   topicSlug: string;
 };
 
-export function SummaryReader({ chapters, course }: {
+export function SummaryReader({ chapters, course, watermark }: {
   chapters: Chapter[];
   course: { title: string; href: string };
+  watermark?: string;
 }) {
   const [query, setQuery] = useState("");
   const [progress, setProgress] = useState(0);
@@ -140,7 +141,7 @@ export function SummaryReader({ chapters, course }: {
 
         <div ref={articleRef} className="min-w-0 space-y-8">
           {chapters.map((c, i) => (
-            <ChapterView key={c.id} chapter={c} index={i} total={chapters.length} />
+            <ChapterView key={c.id} chapter={c} index={i} total={chapters.length} watermark={watermark} />
           ))}
         </div>
       </div>
@@ -148,10 +149,11 @@ export function SummaryReader({ chapters, course }: {
   );
 }
 
-function ChapterView({ chapter: c, index, total }: {
+function ChapterView({ chapter: c, index, total, watermark }: {
   chapter: Chapter;
   index: number;
   total: number;
+  watermark?: string;
 }) {
   const prev = index > 0;
   const next = index < total - 1;
@@ -194,6 +196,7 @@ function ChapterView({ chapter: c, index, total }: {
                 blocks={c.blocks}
                 imageUrls={c.imageUrls}
                 idPrefix={c.id}
+                watermark={watermark}
                 className="[&_h3]:mt-6 [&_h3]:border-b [&_h3]:border-line [&_h3]:pb-2 [&_h3]:text-xl [&_h4]:mt-4"
               />
             )}

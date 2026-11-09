@@ -5,7 +5,6 @@ import {
 } from "lucide-react";
 import { CourseCard } from "@/components/course-card";
 import { FaqList } from "@/components/faq-list";
-import { ShowcaseCarousel } from "@/components/showcase-carousel";
 import { Reveal } from "@/components/reveal";
 import { Button } from "@/components/ui/button";
 import { getCourses } from "@/lib/data/catalog";
@@ -142,14 +141,7 @@ export default async function HomePage() {
           </h2>
           <p className="mt-3 text-muted-ink">Van leren tot toetsen, op één plek en met dezelfde vaste indeling voor elk vak.</p>
         </div>
-
-        {/* Showcase: a real example of what a subject looks like */}
-        <div className="mt-8">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.08em] text-muted-ink">Voorbeeld · Mechanisms of Disease 2</p>
-          <ShowcaseCarousel />
-        </div>
-
-        <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {pillars.map(({ icon: Icon, title, body }) => (
             <li key={title} className="rounded-2xl border border-line bg-white p-6 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-lift)]">
               <span className="grid size-11 place-items-center rounded-xl bg-sky text-blue">

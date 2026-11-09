@@ -159,10 +159,10 @@ export function HomeFeatures() {
                 Duidelijke, gestructureerde samenvattingen van alle tentamenstof — met interactieve controlevragen en tentamenfocus per hoorcollege.
               </p>
               <Link
-                href={`/vakken/${SLUG}/samenvatting`}
+                href={`/vakken/${SLUG}`}
                 className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-navy transition-colors hover:bg-white/90"
               >
-                Bekijk voorbeeld <ArrowRight className="size-4" aria-hidden="true" />
+                Bekijk het vak <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
             <div className="lg:translate-x-6 lg:translate-y-2">

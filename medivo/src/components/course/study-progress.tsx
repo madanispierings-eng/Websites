@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, BookCheck, CircleHelp, Layers, Target } from "lucide-react";
+import { ArrowRight, BookCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResetTopicButton } from "@/app/vakken/[slug]/voortgang/reset-topic-button";
 import { MIN_ANSWERED, pct, summarize, type CourseProgress } from "@/lib/progress/summary";
 import { cn } from "@/lib/utils";
-
-const nl = (n: number) => n.toLocaleString("nl-NL");
 
 /** Color of a first-go score: red under 60%, amber under 75%, otherwise green. */
 export const rateTone = (rate: number) => (rate < 0.6 ? "bg-danger" : rate < 0.75 ? "bg-[#e3a04f]" : "bg-success");
@@ -56,12 +54,6 @@ function SignedOut({ base }: { base: string }) {
 function Signed({ progress, base, courseSlug }: { progress: CourseProgress; base: string; courseSlug: string }) {
   const s = summarize(progress, base);
   const practiceTopics = progress.topics.filter((t) => t.questionsTotal > 0);
-  const tiles = [
-    { icon: CircleHelp, value: nl(s.questionsAnswered), label: "Vragen gemaakt", sub: s.questionsTotal ? `van ${nl(s.questionsTotal)}` : null },
-    { icon: Target, value: s.correctRate === null ? "–" : pct(s.correctRate), label: "Goed beantwoord", sub: "in één keer" },
-    { icon: Layers, value: nl(s.flashcards.mastered), label: "Flashcards beheerst", sub: s.flashcards.total ? `van ${nl(s.flashcards.total)}` : null },
-    { icon: BookCheck, value: `${s.topicsDone}/${s.topicsWithContent}`, label: "Onderwerpen afgerond", sub: null },
-  ];
 
   return (
     <div className="mt-5">
@@ -80,19 +72,6 @@ function Signed({ progress, base, courseSlug }: { progress: CourseProgress; base
         <div className="h-full rounded-full bg-accent-blue" style={{ width: pct(s.coverage) }} />
       </div>
       <p className="mt-1.5 text-xs text-muted-ink">Gemaakte vragen, beheerste flashcards en afgevinkte leerdoelen. Los van je score.</p>
-
-      <ul className="mt-5 grid grid-cols-2 gap-2.5">
-        {tiles.map((t) => (
-          <li key={t.label} className="rounded-lg border border-line px-3.5 py-3">
-            <t.icon className="size-4 text-blue" aria-hidden="true" />
-            <p className="mt-1.5 text-xl font-bold tabular-nums leading-none text-navy">
-              {t.value}
-              {t.sub ? <span className="ml-1 text-xs font-medium text-muted-ink">{t.sub}</span> : null}
-            </p>
-            <p className="mt-1 text-xs text-muted-ink">{t.label}</p>
-          </li>
-        ))}
-      </ul>
 
       <div className="mt-6">
         <div className="flex items-center justify-between gap-3">

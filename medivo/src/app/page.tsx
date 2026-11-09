@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowRight, BookOpenText, Check, ClipboardList, FileText, LayoutGrid, ListChecks, MessageCircleQuestion, Smartphone, Target,
+  ArrowRight, BookOpenText, Check, ClipboardList, FileText, Layers, LayoutGrid, ListChecks, MessageCircleQuestion, Sparkles, Target, TrendingUp, Video,
 } from "lucide-react";
 import { CourseCard } from "@/components/course-card";
 import { FaqList } from "@/components/faq-list";
@@ -13,17 +13,17 @@ import { container } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 const highlights = [
-  "Ingedeeld per vak en per onderwerp",
-  "Afgestemd op de opbouw van de Leidse bachelor",
-  "Oefenvragen met uitleg bij elk antwoord",
+  "Interactieve samenvattingen, flashcards en oefenvragen met uitleg",
+  "Leerdoelen per vak uitgewerkt, met uitlegvideo's erbij",
+  "Je voortgang per onderwerp bijgehouden, zodat je je zwakke punten ziet",
 ];
 
 const features = [
-  { icon: LayoutGrid, label: "Alle bachelorvakken" },
-  { icon: FileText, label: "Duidelijke samenvattingen" },
-  { icon: Target, label: "Oefen gericht per onderwerp" },
-  { icon: ClipboardList, label: "Oude tentamens" },
-  { icon: Smartphone, label: "Altijd en overal toegankelijk" },
+  { icon: FileText, label: "Interactieve samenvattingen" },
+  { icon: Layers, label: "Flashcards per onderwerp" },
+  { icon: Video, label: "Leerdoelen met video's" },
+  { icon: ClipboardList, label: "Oefententamens" },
+  { icon: TrendingUp, label: "Inzicht in je voortgang" },
 ];
 
 const steps = [
@@ -33,10 +33,12 @@ const steps = [
 ];
 
 const pillars = [
-  { title: "Volledige samenvatting", body: "Hoofdstukken per onderwerp, met inhoudsopgave, tabellen, afbeeldingen en zoeken binnen de tekst." },
-  { title: "Leerdoelen", body: "Alle leerdoelen per onderwerp, af te vinken, met een directe link naar de bijbehorende stof." },
-  { title: "Oude tentamens", body: "Een overzicht per jaar en type, met bronvermelding. Alleen materiaal waarvoor toestemming is." },
-  { title: "Oefenen per onderwerp", body: "Eén vraag tegelijk, feedback na het antwoorden en een tentamenmodus met timer." },
+  { icon: Sparkles, title: "Interactieve samenvattingen", body: "Lees de stof per onderwerp en test jezelf meteen: typ je antwoord op de controlevragen en vergelijk het met het modelantwoord." },
+  { icon: Layers, title: "Flashcards per onderwerp", body: "Stamp de kernbegrippen erin met flashcards die precies de belangrijke punten pakken." },
+  { icon: Video, title: "Leerdoelen met video's", body: "Elk leerdoel per vak uitgebreid uitgewerkt, met een passende uitlegvideo erbij." },
+  { icon: Target, title: "Oefenen per onderwerp", body: "Veel oefenvragen in verschillende vormen, met uitleg bij elk antwoord." },
+  { icon: ClipboardList, title: "Oefententamens", body: "Oefententamens op basis van oude tentamenvragen, zodat je weet wat je kunt verwachten." },
+  { icon: TrendingUp, title: "Je voortgang & zwakke punten", body: "Je voortgang wordt per onderwerp bijgehouden, zodat je precies ziet waar je nog moet oefenen." },
 ];
 
 export default async function HomePage() {
@@ -157,22 +159,24 @@ export default async function HomePage() {
       </section>
 
       {/* Learning experience */}
-      <section className={cn(container, "grid items-center gap-12 py-16 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:py-24")} aria-labelledby="ervaring-titel">
-        <div>
+      <section className={cn(container, "py-16 lg:py-24")} aria-labelledby="ervaring-titel">
+        <div className="max-w-2xl">
           <h2 id="ervaring-titel" className="text-3xl font-bold tracking-[-0.02em] text-navy sm:text-4xl">
-            Elk vak, dezelfde vier onderdelen
+            Alles wat je per vak krijgt
           </h2>
-          <p className="mt-3 text-muted-ink">Je weet altijd waar je iets vindt. Zo besteed je je tijd aan leren, niet aan zoeken.</p>
-          <dl className="mt-8 grid gap-6 sm:grid-cols-2">
-            {pillars.map((p) => (
-              <div key={p.title}>
-                <dt className="font-semibold text-navy">{p.title}</dt>
-                <dd className="mt-1.5 text-[0.95rem] leading-relaxed text-muted-ink">{p.body}</dd>
-              </div>
-            ))}
-          </dl>
+          <p className="mt-3 text-muted-ink">Van leren tot toetsen, op één plek en met dezelfde vaste indeling voor elk vak.</p>
         </div>
-        <PracticePreview />
+        <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {pillars.map(({ icon: Icon, title, body }) => (
+            <li key={title} className="rounded-2xl border border-line bg-white p-6 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-lift)]">
+              <span className="grid size-11 place-items-center rounded-xl bg-sky text-blue">
+                <Icon className="size-[1.4rem]" strokeWidth={1.8} aria-hidden="true" />
+              </span>
+              <h3 className="mt-4 text-lg font-semibold text-navy">{title}</h3>
+              <p className="mt-1.5 text-[0.95rem] leading-relaxed text-muted-ink">{body}</p>
+            </li>
+          ))}
+        </ul>
       </section>
 
       {/* FAQ */}
@@ -206,58 +210,5 @@ export default async function HomePage() {
         </div>
       </section>
     </main>
-  );
-}
-
-/** A schematic of the practice screen. Lines stand in for text: no example medical content is shown. */
-function PracticePreview() {
-  return (
-    <figure className="rounded-2xl border border-line bg-white p-5 shadow-[var(--shadow-lift)] sm:p-7">
-      <div aria-hidden="true">
-        <div className="flex items-center justify-between">
-          <div className="h-3 w-32 rounded-full bg-navy/80" />
-          <div className="h-7 w-28 rounded-md border border-line" />
-        </div>
-        <div className="mt-4 flex items-center gap-3">
-          <div className="h-2 w-16 rounded-full bg-muted-ink/30" />
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-sky">
-            <div className="h-full w-[30%] rounded-full bg-success" />
-          </div>
-        </div>
-        <div className="mt-5 space-y-2 rounded-lg bg-sky p-4">
-          <div className="h-2.5 w-full rounded-full bg-navy/20" />
-          <div className="h-2.5 w-11/12 rounded-full bg-navy/20" />
-          <div className="h-2.5 w-2/3 rounded-full bg-navy/20" />
-        </div>
-        <ul className="mt-4 space-y-2">
-          {["A", "B", "C", "D"].map((l) => (
-            <li
-              key={l}
-              className={cn(
-                "flex items-center gap-3 rounded-lg border px-3 py-2.5",
-                l === "B" ? "border-accent-blue bg-sky/60" : "border-line",
-              )}
-            >
-              <span className={cn("grid size-4 place-items-center rounded-full border", l === "B" ? "border-accent-blue" : "border-muted-ink/40")}>
-                {l === "B" ? <span className="size-2 rounded-full bg-accent-blue" /> : null}
-              </span>
-              <span className="text-xs font-semibold text-navy">{l}.</span>
-              <span className={cn("h-2 rounded-full bg-navy/15", l === "C" ? "w-3/4" : "w-1/2")} />
-            </li>
-          ))}
-        </ul>
-        <div className="mt-4 flex items-start gap-3 rounded-lg border border-success/30 bg-success-soft p-4">
-          <Check className="mt-0.5 size-5 shrink-0 rounded-full bg-success p-0.5 text-white" strokeWidth={3} />
-          <div className="flex-1 space-y-2">
-            <div className="h-2.5 w-28 rounded-full bg-success/60" />
-            <div className="h-2 w-full rounded-full bg-success/25" />
-            <div className="h-2 w-4/5 rounded-full bg-success/25" />
-          </div>
-        </div>
-      </div>
-      <figcaption className="mt-5 text-sm text-muted-ink">
-        Schematische weergave van het oefenscherm: na het indienen zie je direct of je antwoord juist is, met uitleg.
-      </figcaption>
-    </figure>
   );
 }

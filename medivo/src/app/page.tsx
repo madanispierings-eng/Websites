@@ -4,6 +4,7 @@ import { ArrowRight, Check, MessageCircleQuestion } from "lucide-react";
 import { CourseCard } from "@/components/course-card";
 import { FaqList } from "@/components/faq-list";
 import { HomeFeatures } from "@/components/home-features";
+import { HomeReviews } from "@/components/home-reviews";
 import { Reveal } from "@/components/reveal";
 import { Button } from "@/components/ui/button";
 import { getCourses } from "@/lib/data/catalog";
@@ -74,6 +75,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Social proof */}
+      <HomeReviews />
 
       {/* Courses by year */}
       <section className={cn(container, "py-16 lg:py-24")} aria-labelledby="vakken-titel">

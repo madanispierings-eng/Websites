@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowRight, Check, ClipboardList, FileText, Layers, MessageCircleQuestion, Sparkles, Target, TrendingUp, Video,
+  ArrowRight, Check, ClipboardList, FileText, Layers, MessageCircleQuestion, TrendingUp, Video,
 } from "lucide-react";
 import { CourseCard } from "@/components/course-card";
 import { FaqList } from "@/components/faq-list";
+import { HomeFeatures } from "@/components/home-features";
 import { Reveal } from "@/components/reveal";
 import { Button } from "@/components/ui/button";
 import { getCourses } from "@/lib/data/catalog";
@@ -24,15 +25,6 @@ const features = [
   { icon: Video, label: "Leerdoelen met video's" },
   { icon: ClipboardList, label: "Oefententamens" },
   { icon: TrendingUp, label: "Inzicht in je voortgang" },
-];
-
-const pillars = [
-  { icon: Sparkles, title: "Interactieve samenvattingen", body: "Lees de stof per onderwerp en test jezelf meteen: typ je antwoord op de controlevragen en vergelijk het met het modelantwoord." },
-  { icon: Layers, title: "Flashcards per onderwerp", body: "Stamp de kernbegrippen erin met flashcards die precies de belangrijke punten pakken." },
-  { icon: Video, title: "Leerdoelen met video's", body: "Elk leerdoel per vak uitgebreid uitgewerkt, met een passende uitlegvideo erbij." },
-  { icon: Target, title: "Oefenen per onderwerp", body: "Veel oefenvragen in verschillende vormen, met uitleg bij elk antwoord." },
-  { icon: ClipboardList, title: "Oefententamens", body: "Oefententamens op basis van oude tentamenvragen, zodat je weet wat je kunt verwachten." },
-  { icon: TrendingUp, title: "Je voortgang & zwakke punten", body: "Je voortgang wordt per onderwerp bijgehouden, zodat je precies ziet waar je nog moet oefenen." },
 ];
 
 export default async function HomePage() {
@@ -134,25 +126,7 @@ export default async function HomePage() {
       </section>
 
       {/* Learning experience */}
-      <section className={cn(container, "py-16 lg:py-24")} aria-labelledby="ervaring-titel">
-        <div className="max-w-2xl">
-          <h2 id="ervaring-titel" className="text-3xl font-bold tracking-[-0.02em] text-navy sm:text-4xl">
-            Alles wat je per vak krijgt
-          </h2>
-          <p className="mt-3 text-muted-ink">Van leren tot toetsen, op één plek en met dezelfde vaste indeling voor elk vak.</p>
-        </div>
-        <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {pillars.map(({ icon: Icon, title, body }) => (
-            <li key={title} className="rounded-2xl border border-line bg-white p-6 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-lift)]">
-              <span className="grid size-11 place-items-center rounded-xl bg-sky text-blue">
-                <Icon className="size-[1.4rem]" strokeWidth={1.8} aria-hidden="true" />
-              </span>
-              <h3 className="mt-4 text-lg font-semibold text-navy">{title}</h3>
-              <p className="mt-1.5 text-[0.95rem] leading-relaxed text-muted-ink">{body}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <HomeFeatures />
 
       {/* FAQ */}
       <section className="border-t border-line bg-white" aria-labelledby="faq-titel">

@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { ClipboardCheck, HelpCircle, Info, Lightbulb, Stethoscope, TriangleAlert } from "lucide-react";
+import { ClipboardCheck, HelpCircle, Info, Lightbulb, Sparkles, Stethoscope, Target, TriangleAlert } from "lucide-react";
 import type { ContentBlock } from "@/lib/content/blocks";
 import { slugify } from "@/lib/content/text";
 import { Formula } from "@/components/formula";
@@ -12,14 +12,22 @@ const calloutTone = {
   warning: { icon: TriangleAlert, cls: "border-[#e8c48a] bg-[#fdf6ec] text-navy", label: "Belangrijk" },
 };
 
-/** Section headings that are lifted into their own panel ("vak") for a tidier, scannable layout. */
+/**
+ * Section headings that are lifted into their own panel ("vak") for a tidier, scannable layout.
+ * `tight` panels hold just the labelled block that follows (a "Kern van dit college" recap or a
+ * "Leerdoelen" list) and close at the next heading of any level, so they never swallow the rest of
+ * the college. The others run until the next college (level 2) or the next lifted section.
+ */
 const panelTone = [
-  { test: /^tentamenfocus\b/i, icon: ClipboardCheck, head: "bg-[#fdf6ec] border-[#e8c48a]/70 text-navy", card: "border-[#e8c48a]/70 bg-[#fffdf8]" },
-  { test: /^controlevragen\b/i, icon: HelpCircle, head: "bg-sky border-blue/20 text-navy", card: "border-blue/20 bg-sky/30" },
-  { test: /^antwoorden\b/i, icon: Lightbulb, head: "bg-success-soft border-success/25 text-navy", card: "border-success/25 bg-success-soft/40" },
+  { test: /^kern van dit college\s*$/i, icon: Sparkles, head: "bg-sky border-blue/20 text-navy", card: "border-blue/20 bg-sky/30", tight: true },
+  { test: /^kern\s*&\s*leerdoelen\s*$/i, icon: Sparkles, head: "bg-sky border-blue/20 text-navy", card: "border-blue/20 bg-sky/30", tight: true },
+  { test: /^leerdoelen\s*$/i, icon: Target, head: "bg-success-soft border-success/25 text-navy", card: "border-success/25 bg-success-soft/40", tight: true },
+  { test: /^tentamenfocus\b/i, icon: ClipboardCheck, head: "bg-[#fdf6ec] border-[#e8c48a]/70 text-navy", card: "border-[#e8c48a]/70 bg-[#fffdf8]", tight: false },
+  { test: /^controlevragen\b/i, icon: HelpCircle, head: "bg-sky border-blue/20 text-navy", card: "border-blue/20 bg-sky/30", tight: false },
+  { test: /^antwoorden\b/i, icon: Lightbulb, head: "bg-success-soft border-success/25 text-navy", card: "border-success/25 bg-success-soft/40", tight: false },
 ] as const;
-/** A heading that ends an open panel: the next college (level 2) or the next lifted section. */
-const sectionBoundary = /^(tentamenfocus|controlevragen|begrippenlijst|antwoorden)\b/i;
+/** A heading that ends an open (non-tight) panel: the next college (level 2) or the next lifted section. */
+const sectionBoundary = /^(kern van dit college|kern\s*&\s*leerdoelen|leerdoelen|tentamenfocus|controlevragen|begrippenlijst|antwoorden)\b/i;
 
 /** Renders one content block. Kept separate so panels can reuse it for their inner blocks. */
 function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrls: Record<string, string>, watermark?: string) {
@@ -147,7 +155,8 @@ function group(blocks: ContentBlock[]): Item[] {
       let j = i + 1;
       while (j < blocks.length) {
         const nb = blocks[j];
-        if (nb.type === "heading" && (nb.level === 2 || sectionBoundary.test(nb.text))) break;
+        // A tight panel (Kern / Leerdoelen) holds only its labelled block and closes at any heading.
+        if (nb.type === "heading" && (nb.level === 2 || tone.tight || sectionBoundary.test(nb.text))) break;
         if (nb.type === "quiz") break; // an interactive quiz always renders standalone, never inside a panel
         children.push({ block: nb, index: j });
         j++;

@@ -29,6 +29,51 @@ const panelTone = [
 /** A heading that ends an open (non-tight) panel: the next college (level 2) or the next lifted section. */
 const sectionBoundary = /^(kern van dit college|kern\s*&\s*leerdoelen|leerdoelen|tentamenfocus|controlevragen|begrippenlijst|antwoorden)\b/i;
 
+/**
+ * Nested list support. Sub-points are encoded by the data as a leading "– " per level (a flat list
+ * with "– " / "– – " prefixes). We turn that back into real nested <ul>s with their own, subtler
+ * markers, so a recap reads as a tidy outline instead of a line of dashes.
+ */
+type ListNode = { text: string; children: ListNode[] };
+function nestListItems(items: string[]): ListNode[] {
+  const root: ListNode[] = [];
+  const stack: { depth: number; children: ListNode[] }[] = [{ depth: -1, children: root }];
+  for (const raw of items) {
+    let depth = 0;
+    let text = raw;
+    while (text.startsWith("– ") || text.startsWith("- ")) {
+      depth++;
+      text = text.slice(2);
+    }
+    while (stack.length > 1 && stack[stack.length - 1].depth >= depth) stack.pop();
+    const node: ListNode = { text: text.trim(), children: [] };
+    stack[stack.length - 1].children.push(node);
+    stack.push({ depth, children: node.children });
+  }
+  return root;
+}
+function NestedList({ nodes, ordered, start, depth, id }: { nodes: ListNode[]; ordered: boolean; start?: number; depth: number; id?: string }) {
+  const Tag = ordered && depth === 0 ? "ol" : "ul";
+  const marker =
+    ordered && depth === 0
+      ? "list-decimal"
+      : depth === 0
+        ? "list-disc marker:text-blue"
+        : depth === 1
+          ? "[list-style-type:circle] marker:text-blue/55"
+          : "[list-style-type:square] marker:text-muted-ink/55";
+  return (
+    <Tag id={id} start={ordered && depth === 0 ? start : undefined} className={cn(depth === 0 ? "space-y-1 pl-6" : "mt-1 space-y-1 pl-5", marker)}>
+      {nodes.map((n, i) => (
+        <li key={i} className="pl-0.5">
+          {n.text}
+          {n.children.length ? <NestedList nodes={n.children} ordered={false} depth={depth + 1} /> : null}
+        </li>
+      ))}
+    </Tag>
+  );
+}
+
 /** Renders one content block. Kept separate so panels can reuse it for their inner blocks. */
 function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrls: Record<string, string>, watermark?: string) {
   switch (block.type) {
@@ -61,14 +106,17 @@ function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrl
           })}
         </p>
       );
-    case "list": {
-      const Tag = block.ordered ? "ol" : "ul";
+    case "list":
       return (
-        <Tag key={id} id={id} start={block.ordered ? block.start : undefined} className={cn("space-y-1 pl-6", block.ordered ? "list-decimal" : "list-disc marker:text-blue")}>
-          {block.items.map((item, j) => <li key={j} className="pl-0.5">{item}</li>)}
-        </Tag>
+        <NestedList
+          key={id}
+          id={id}
+          nodes={nestListItems(block.items)}
+          ordered={block.ordered}
+          start={block.ordered ? block.start : undefined}
+          depth={0}
+        />
       );
-    }
     case "table":
       return (
         <div key={id} id={id} className="overflow-x-auto rounded-lg border border-line">

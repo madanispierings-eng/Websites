@@ -1,5 +1,5 @@
 export const site = {
-  name: "Medivo",
+  name: "MijnMedivo",
   description:
     "Samenvattingen, leerdoelen, oude tentamens en oefenvragen voor alle vakken van de bachelor Geneeskunde aan de Universiteit Leiden.",
   nav: [
@@ -9,7 +9,7 @@ export const site = {
     { href: "/veelgestelde-vragen", label: "Veelgestelde vragen" },
   ],
   disclaimer:
-    "Medivo is een onafhankelijk studieplatform en is niet verbonden aan of goedgekeurd door de Universiteit Leiden of het LUMC.",
+    "MijnMedivo is een onafhankelijk studieplatform en is niet verbonden aan of goedgekeurd door de Universiteit Leiden of het LUMC.",
 } as const;
 
 export const photoCredits = [

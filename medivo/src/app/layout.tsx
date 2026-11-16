@@ -13,14 +13,14 @@ const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", dis
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: "Medivo · Studieplatform voor Leiden Geneeskunde", template: "%s · Medivo" },
+  title: { default: "MijnMedivo · Studieplatform voor Leiden Geneeskunde", template: "%s · MijnMedivo" },
   description: site.description,
-  applicationName: "Medivo",
+  applicationName: "MijnMedivo",
   openGraph: {
     type: "website",
     locale: "nl_NL",
-    siteName: "Medivo",
-    title: "Medivo · Studieplatform voor Leiden Geneeskunde",
+    siteName: "MijnMedivo",
+    title: "MijnMedivo · Studieplatform voor Leiden Geneeskunde",
     description: site.description,
     images: [{ url: "/images/leiden-universiteit.webp", width: 1600, height: 1066, alt: "Universiteitsgebouw in Leiden" }],
   },

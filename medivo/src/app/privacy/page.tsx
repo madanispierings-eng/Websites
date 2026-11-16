@@ -11,7 +11,7 @@ const sections = [
       "Accountgegevens: naam, e-mailadres en een versleuteld wachtwoord (beheerd door onze authenticatieprovider).",
       "Studiegegevens die je zelf invult, zoals je studiejaar.",
       "Voortgang: gegeven antwoorden, afgevinkte leerdoelen, gemarkeerde vragen en bezochte vakken.",
-      "Abonnementsstatus. Betaalgegevens worden verwerkt door Stripe; Medivo ontvangt geen kaart- of rekeninggegevens.",
+      "Abonnementsstatus. Betaalgegevens worden verwerkt door Stripe; MijnMedivo ontvangt geen kaart- of rekeninggegevens.",
     ],
   },
   {
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
           Concept. De gegevens van de verwerkingsverantwoordelijke en een contactadres worden vóór de lancering toegevoegd.
         </p>
         <p className="mt-6 leading-relaxed text-muted-ink">
-          Medivo gaat zorgvuldig om met je gegevens en verzamelt niet meer dan nodig is om het platform te laten werken.
+          MijnMedivo gaat zorgvuldig om met je gegevens en verzamelt niet meer dan nodig is om het platform te laten werken.
         </p>
         {sections.map((s) => (
           <section key={s.title} className="mt-8">

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Veelgestelde vragen",
-  description: "Antwoorden over toegang, inhoud, abonnementen, betalen en je account bij Medivo.",
+  description: "Antwoorden over toegang, inhoud, abonnementen, betalen en je account bij MijnMedivo.",
   alternates: { canonical: "/veelgestelde-vragen" },
 };
 

@@ -230,7 +230,7 @@ export function QuestionView({
 
   if (!showHint || !q.hint) return section;
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)] xl:items-start">
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,1fr)] xl:items-start">
       {section}
       <HintPanel key={q.id} questionId={q.id} hint={q.hint} reduce={Boolean(reduce)} />
     </div>

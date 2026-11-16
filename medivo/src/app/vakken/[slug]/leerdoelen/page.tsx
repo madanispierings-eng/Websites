@@ -32,22 +32,41 @@ export default async function ObjectivesPage({ params }: Props) {
     getObjectiveExplanations(course.id),
   ]);
   const path = `/vakken/${course.slug}/leerdoelen`;
+  const hasExplanations = explanations.size > 0;
   const groups = topics
     .map((t) => {
       const ids = new Set([t.id, ...t.children.map((c) => c.id)]);
-      return { topic: t, items: objectives.filter((o) => ids.has(o.topicId)) };
+      const items = objectives.filter((o) => ids.has(o.topicId));
+      // Sub-group by source (e.g. per hoorcollege), keeping the given order. One group = render flat.
+      const subs: { source: string; items: typeof items }[] = [];
+      for (const o of items) {
+        const key = o.source ?? "";
+        const last = subs[subs.length - 1];
+        if (last && last.source === key) last.items.push(o);
+        else subs.push({ source: key, items: [o] });
+      }
+      return { topic: t, items, subs };
     })
     .filter((g) => g.items.length);
 
   return (
     <main id="inhoud" className="flex-1">
-      <CourseSubheader course={course} active="leerdoelen" title="Leerdoelen" intro="Klap een leerdoel open voor de uitgewerkte uitleg, met dia’s en uitlegvideo’s. Vink het af zodra je het beheerst." />
+      <CourseSubheader
+        course={course}
+        active="leerdoelen"
+        title="Leerdoelen"
+        intro={
+          hasExplanations
+            ? "Klap een leerdoel open voor de uitgewerkte uitleg, met dia’s en uitlegvideo’s. Vink het af zodra je het beheerst."
+            : "De leerdoelen per hoorcollege. Vink af wat je beheerst; de uitwerking lees je in de samenvatting van dat college."
+        }
+      />
       <div className={cn(container, "py-8 lg:py-10")}>
         {groups.length ? (
           <ObjectivesProgressProvider initialCompleted={[...completed]} objectiveIds={objectives.map((o) => o.id)}>
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
             <div className="space-y-5">
-              {groups.map(({ topic, items }, i) => (
+              {groups.map(({ topic, items, subs }, i) => (
                 <section key={topic.id} id={topic.slug} aria-labelledby={`${topic.slug}-titel`} className="scroll-mt-24 rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <h2 id={`${topic.slug}-titel`} className="text-lg font-semibold text-navy">
@@ -64,18 +83,40 @@ export default async function ObjectivesPage({ params }: Props) {
                       ) : null}
                     </div>
                   </div>
-                  <ul className="mt-2 divide-y divide-line">
-                    {items.map((o) => (
-                      <ObjectiveItem
-                        key={o.id}
-                        id={o.id}
-                        body={o.body}
-                        canTrack={Boolean(viewer)}
-                        path={path}
-                        explanation={explanations.has(o.id) ? <ObjectiveExplanation id={o.id} explanation={explanations.get(o.id)!} /> : undefined}
-                      />
-                    ))}
-                  </ul>
+                  {subs.length > 1 ? (
+                    <div className="mt-3 space-y-5">
+                      {subs.map((s, k) => (
+                        <div key={k}>
+                          {s.source ? <h3 className="text-sm font-semibold text-blue">{s.source}</h3> : null}
+                          <ul className="mt-1 divide-y divide-line">
+                            {s.items.map((o) => (
+                              <ObjectiveItem
+                                key={o.id}
+                                id={o.id}
+                                body={o.body}
+                                canTrack={Boolean(viewer)}
+                                path={path}
+                                explanation={explanations.has(o.id) ? <ObjectiveExplanation id={o.id} explanation={explanations.get(o.id)!} /> : undefined}
+                              />
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <ul className="mt-2 divide-y divide-line">
+                      {items.map((o) => (
+                        <ObjectiveItem
+                          key={o.id}
+                          id={o.id}
+                          body={o.body}
+                          canTrack={Boolean(viewer)}
+                          path={path}
+                          explanation={explanations.has(o.id) ? <ObjectiveExplanation id={o.id} explanation={explanations.get(o.id)!} /> : undefined}
+                        />
+                      ))}
+                    </ul>
+                  )}
                 </section>
               ))}
             </div>

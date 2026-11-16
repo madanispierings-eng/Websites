@@ -14,10 +14,12 @@ import type { ContentBlock } from "./blocks";
 
 type Span = { text: string; marks?: ("bold" | "italic" | "term")[] };
 
-const calloutPrefixes: [RegExp, "info" | "clinical" | "warning", string][] = [
+const calloutPrefixes: [RegExp, "info" | "clinical" | "warning" | "tip", string][] = [
   [/^klinisch:\s*/i, "clinical", "Klinische relevantie"],
   [/^belangrijk:\s*/i, "warning", "Belangrijk"],
   [/^let op:\s*/i, "info", "Let op"],
+  [/^ezelsbruggetje:\s*/i, "tip", "Ezelsbruggetje"],
+  [/^onthoud:\s*/i, "tip", "Onthoud dit"],
 ];
 
 export function parseSpans(text: string): Span[] {
@@ -77,7 +79,7 @@ export function parseMarkup(source: string): ContentBlock[] {
         .map((l) => l.trim().replace(/^>\s?/, ""))
         .join(" ")
         .trim();
-      let tone: "info" | "clinical" | "warning" = "info";
+      let tone: "info" | "clinical" | "warning" | "tip" = "info";
       let title: string | undefined;
       for (const [re, tn, label] of calloutPrefixes) {
         if (re.test(text)) {
@@ -135,7 +137,7 @@ export function toMarkup(blocks: ContentBlock[]): string {
         case "table":
           return [b.header, b.header.map(() => "---"), ...b.rows].map((r) => `| ${r.join(" | ")} |`).join("\n");
         case "callout": {
-          const prefix = { info: "Let op: ", clinical: "Klinisch: ", warning: "Belangrijk: " }[b.tone];
+          const prefix = { info: "Let op: ", clinical: "Klinisch: ", warning: "Belangrijk: ", tip: "Ezelsbruggetje: " }[b.tone];
           return `> ${prefix}${b.text}`;
         }
         case "image":

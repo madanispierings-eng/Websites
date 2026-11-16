@@ -1,7 +1,8 @@
 import { Fragment } from "react";
-import { ClipboardCheck, HelpCircle, Info, Lightbulb, Sparkles, Stethoscope, Target, TriangleAlert } from "lucide-react";
+import { Brain, ClipboardCheck, HelpCircle, Info, Lightbulb, Sparkles, Stethoscope, Target, TriangleAlert } from "lucide-react";
 import type { ContentBlock } from "@/lib/content/blocks";
 import { slugify } from "@/lib/content/text";
+import { parseSpans } from "@/lib/content/markup";
 import { Formula } from "@/components/formula";
 import { SummaryQuiz } from "@/components/summary-quiz";
 import { cn } from "@/lib/utils";
@@ -10,6 +11,7 @@ const calloutTone = {
   info: { icon: Info, cls: "border-blue/20 bg-sky text-navy", label: "Let op" },
   clinical: { icon: Stethoscope, cls: "border-success/25 bg-success-soft text-navy", label: "Klinische relevantie" },
   warning: { icon: TriangleAlert, cls: "border-[#e8c48a] bg-[#fdf6ec] text-navy", label: "Belangrijk" },
+  tip: { icon: Brain, cls: "border-[#c9b6e6] bg-[#f6f1fc] text-navy", label: "Ezelsbruggetje" },
 };
 
 /**
@@ -34,6 +36,23 @@ const sectionBoundary = /^(kern van dit college|kern\s*&\s*leerdoelen|leerdoelen
  * with "– " / "– – " prefixes). We turn that back into real nested <ul>s with their own, subtler
  * markers, so a recap reads as a tidy outline instead of a line of dashes.
  */
+/** Renders inline spans (bold / italic / defined term) for a paragraph or a callout. */
+function Spans({ spans }: { spans: { text: string; marks?: ("bold" | "italic" | "term")[] }[] }) {
+  return (
+    <>
+      {spans.map((s, j) => {
+        const marks = s.marks ?? [];
+        const cls = cn(marks.includes("bold") && "font-semibold text-navy", marks.includes("italic") && "italic");
+        return marks.includes("term") ? (
+          <dfn key={j} className={cn("not-italic font-medium text-blue", cls)}>{s.text}</dfn>
+        ) : (
+          <span key={j} className={cls || undefined}>{s.text}</span>
+        );
+      })}
+    </>
+  );
+}
+
 type ListNode = { text: string; children: ListNode[] };
 function nestListItems(items: string[]): ListNode[] {
   const root: ListNode[] = [];
@@ -95,15 +114,7 @@ function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrl
     case "paragraph":
       return (
         <p key={id} id={id}>
-          {block.spans.map((s, j) => {
-            const marks = s.marks ?? [];
-            const cls = cn(marks.includes("bold") && "font-semibold text-navy", marks.includes("italic") && "italic");
-            return marks.includes("term") ? (
-              <dfn key={j} className={cn("not-italic font-medium text-blue", cls)}>{s.text}</dfn>
-            ) : (
-              <span key={j} className={cls || undefined}>{s.text}</span>
-            );
-          })}
+          <Spans spans={block.spans} />
         </p>
       );
     case "list":
@@ -162,7 +173,7 @@ function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrl
           <tone.icon className="mt-1 size-5 shrink-0" aria-hidden="true" />
           <div>
             <p className="font-semibold">{block.title ?? tone.label}</p>
-            <p className="mt-1">{block.text}</p>
+            <p className="mt-1"><Spans spans={parseSpans(block.text)} /></p>
           </div>
         </aside>
       );

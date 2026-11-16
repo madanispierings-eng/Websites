@@ -36,7 +36,7 @@ const baseVariants = [
   }),
   z.object({
     type: z.literal("callout"),
-    tone: z.enum(["info", "clinical", "warning"]),
+    tone: z.enum(["info", "clinical", "warning", "tip"]),
     title: z.string().optional(),
     text: z.string().min(1),
   }),

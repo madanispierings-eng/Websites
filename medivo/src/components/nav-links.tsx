@@ -1,10 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu } from "lucide-react";
-import { LogoMark } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { site } from "@/lib/site";
@@ -53,8 +53,8 @@ export function MobileNav({ signedIn, isAdmin }: { signedIn: boolean; isAdmin: b
       </SheetTrigger>
       <SheetContent side="right" className="w-[min(22rem,88vw)] gap-0 p-0">
         <SheetHeader className="border-b border-line p-5">
-          <SheetTitle className="flex items-center gap-2 text-navy">
-            <LogoMark className="h-6 w-7" /> Medivo
+          <SheetTitle className="flex items-center text-navy">
+            <Image src="/mijnmedivo-logo.png" alt="MijnMedivo" width={1121} height={192} className="h-7 w-auto" />
           </SheetTitle>
           <SheetDescription className="sr-only">Navigatie</SheetDescription>
         </SheetHeader>

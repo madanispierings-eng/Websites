@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Over ons",
-  description: "Waarom Medivo bestaat en hoe het platform werkt.",
+  description: "Waarom MijnMedivo bestaat en hoe het platform werkt.",
   alternates: { canonical: "/over-ons" },
 };
 
@@ -39,7 +39,7 @@ export default function AboutPage() {
           <div>
             <h1 className="text-4xl font-bold tracking-[-0.03em] text-navy sm:text-5xl">Studeren met overzicht</h1>
             <p className="mt-5 text-lg leading-relaxed text-muted-ink">
-              Geneeskunde studeren betekent veel stof in korte tijd. Medivo brengt per vak samen wat je nodig hebt: een volledige
+              Geneeskunde studeren betekent veel stof in korte tijd. MijnMedivo brengt per vak samen wat je nodig hebt: een volledige
               samenvatting, de leerdoelen, oude tentamens en oefenvragen met uitleg.
             </p>
             <p className="mt-4 leading-relaxed text-muted-ink">

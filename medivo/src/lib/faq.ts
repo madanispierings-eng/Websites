@@ -7,20 +7,20 @@ export const faq: FaqGroup[] = [
     title: "Toegang en account",
     items: [
       {
-        q: "Voor wie is Medivo bedoeld?",
-        a: "Medivo is gemaakt voor studenten in de bachelor Geneeskunde aan de Universiteit Leiden. Het platform volgt de vakken van jaar 1 tot en met 3.",
+        q: "Voor wie is MijnMedivo bedoeld?",
+        a: "MijnMedivo is gemaakt voor studenten in de bachelor Geneeskunde aan de Universiteit Leiden. Het platform volgt de vakken van jaar 1 tot en met 3.",
       },
       {
         q: "Heb ik een account nodig?",
         a: "Het overzicht van vakken kun je zonder account bekijken. Voor oefenvragen, het bijhouden van je voortgang en het opslaan van vragen heb je een gratis account nodig.",
       },
       {
-        q: "Werkt Medivo op mijn telefoon?",
+        q: "Werkt MijnMedivo op mijn telefoon?",
         a: "Ja. Alle onderdelen, ook het oefenen van vragen, werken in de browser op telefoon, tablet en laptop. Je hoeft niets te installeren.",
       },
       {
-        q: "Is Medivo verbonden aan de Universiteit Leiden of het LUMC?",
-        a: "Nee. Medivo is een onafhankelijk studieplatform. We volgen de opbouw van de bachelor, maar zijn niet verbonden aan of goedgekeurd door de universiteit of het LUMC.",
+        q: "Is MijnMedivo verbonden aan de Universiteit Leiden of het LUMC?",
+        a: "Nee. MijnMedivo is een onafhankelijk studieplatform. We volgen de opbouw van de bachelor, maar zijn niet verbonden aan of goedgekeurd door de universiteit of het LUMC.",
       },
     ],
   },
@@ -49,12 +49,12 @@ export const faq: FaqGroup[] = [
     title: "Abonnementen en betalen",
     items: [
       {
-        q: "Wat kost Medivo?",
+        q: "Wat kost MijnMedivo?",
         a: "De actuele prijzen en de opties (per vak of voor de hele bachelor) zie je op het moment dat je toegang koopt. Je betaalt nooit automatisch zonder dat je zelf een abonnement hebt afgesloten.",
       },
       {
         q: "Hoe betaal ik?",
-        a: "Betalingen lopen via Stripe, een gespecialiseerde betaalprovider. Medivo ziet en bewaart je betaalgegevens niet.",
+        a: "Betalingen lopen via Stripe, een gespecialiseerde betaalprovider. MijnMedivo ziet en bewaart je betaalgegevens niet.",
       },
       {
         q: "Kan ik mijn abonnement opzeggen?",

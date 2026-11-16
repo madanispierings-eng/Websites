@@ -13,7 +13,7 @@ const columns = [
     ],
   },
   {
-    title: "Medivo",
+    title: "MijnMedivo",
     links: [
       { href: "/over-ons", label: "Over ons" },
       { href: "/veelgestelde-vragen", label: "Veelgestelde vragen" },
@@ -59,7 +59,7 @@ export function SiteFooter() {
               </span>
             ))}
           </p>
-          <p>© {new Date().getFullYear()} Medivo</p>
+          <p>© {new Date().getFullYear()} MijnMedivo</p>
         </div>
       </div>
     </footer>

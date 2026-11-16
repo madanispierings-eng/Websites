@@ -85,7 +85,7 @@ function NestedList({ nodes, ordered, start, depth, id }: { nodes: ListNode[]; o
     <Tag id={id} start={ordered && depth === 0 ? start : undefined} className={cn(depth === 0 ? "space-y-1 pl-6" : "mt-1 space-y-1 pl-5", marker)}>
       {nodes.map((n, i) => (
         <li key={i} className="pl-0.5">
-          {n.text}
+          <Spans spans={parseSpans(n.text)} />
           {n.children.length ? <NestedList nodes={n.children} ordered={false} depth={depth + 1} /> : null}
         </li>
       ))}

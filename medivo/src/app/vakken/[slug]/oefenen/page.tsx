@@ -7,9 +7,7 @@ import { EmptyState } from "@/components/empty-state";
 import { PracticeWorkspace, type WorkspaceMode } from "@/components/practice/practice-workspace";
 import { examTitle, getCourse, getExams, getQuestionCounts, getTopicTree } from "@/lib/data/catalog";
 import { getTopicStats } from "@/lib/data/learning";
-import { container } from "@/lib/site";
 import { getViewer } from "@/lib/supabase/server";
-import { cn } from "@/lib/utils";
 import { resumableSession } from "@/lib/practice/server";
 import { finishSession, resumeSession, revealAnswer, selfGrade, startSession, submitAnswer, toggleBookmark } from "./actions";
 
@@ -48,7 +46,8 @@ export default async function PracticePage({ params, searchParams }: Props) {
         title="Oefenen"
         intro="Kies een onderwerp of een oud tentamen en test je kennis. Na elk antwoord lees je waarom het klopt of niet."
       />
-      <div className={cn(container, "py-8 lg:py-10")}>
+      {/* Wider than the default container so the "lees de theorie" panel next to a question has room. */}
+      <div className="mx-auto w-full max-w-[1520px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         {total === 0 ? (
           <EmptyState icon={ListChecks} title="Nog geen oefenvragen voor dit vak">
             Vragen worden per onderwerp gepubliceerd zodra ze inhoudelijk zijn gecontroleerd en de rechten zijn geregeld.

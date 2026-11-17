@@ -69,8 +69,9 @@ export function PracticeWorkspace({
   const [finishing, setFinishing] = useState(false);
   const [showTopics, setShowTopics] = useState(false);
   const [resuming, setResuming] = useState(false);
-  const [resumeDismissed, setResumeDismissed] = useState(false);
+  const [startingNew, setStartingNew] = useState(false);
   const [resumeError, setResumeError] = useState<string | null>(null);
+  const autoResumed = useRef(false);
 
   const topicTitle = (id: string | null) => topics.flatMap((t) => [t, ...t.children]).find((t) => t.id === id)?.title ?? null;
   const totalQuestions = Object.values(counts).reduce((a, b) => a + b, 0);
@@ -124,7 +125,7 @@ export function PracticeWorkspace({
     startSessionWith({ sessionMode: "exam", topicIds: [], limit: 200, timeLimitSeconds: null, examId: initialExamId });
   }, [autoStart, initialExamId, engine, startSessionWith]);
 
-  async function resume() {
+  const resume = useCallback(async () => {
     if (!resumable || resuming) return;
     setResumeError(null);
     setResuming(true);
@@ -135,7 +136,17 @@ export function PracticeWorkspace({
     dispatch({ type: "init", state: resumeEngine(sessionId, sessionMode, questions, answers, bookmarkedIds) });
     setTimer(timeLimitSeconds ? { startedAt: Date.parse(startedAt), limit: timeLimitSeconds } : null);
     setShowTopics(false);
-  }
+  }, [api, resumable, resuming]);
+
+  // After a refresh or an accidental click away, drop the student straight back into their
+  // in-progress session at the question they were on — no banner to misclick, no new session
+  // that would mix in questions they already answered.
+  const canAutoResume = Boolean(resumable) && !initialExamId && !!resumable && resumable.answered < resumable.total;
+  useEffect(() => {
+    if (autoResumed.current || engine || starting || resuming || startingNew || !canAutoResume) return;
+    autoResumed.current = true;
+    void resume();
+  }, [canAutoResume, engine, starting, resuming, startingNew, resume]);
 
   const submit = useCallback(async () => {
     if (!engine) return;
@@ -194,6 +205,7 @@ export function PracticeWorkspace({
   }
 
   function newSession() {
+    setStartingNew(true); // the current session stays unfinished; don't auto-resume back into it
     setAutoStart(false); // show the mode picker after an auto-started exam, don't re-launch it
     dispatch({ type: "reset" });
     router.refresh(); // fresh progress figures in the sidebar
@@ -202,6 +214,8 @@ export function PracticeWorkspace({
   const inSession = Boolean(engine);
   // While the chosen exam is being started automatically, show a loader instead of the mode picker.
   const autoStarting = autoStart && !engine && !startError;
+  // Same loader while an in-progress session is being resumed automatically after a refresh.
+  const autoResuming = canAutoResume && !engine && !startingNew && !resumeError;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[19rem_minmax(0,1fr)]">
@@ -260,32 +274,29 @@ export function PracticeWorkspace({
               />
             }
           />
-        ) : autoStarting ? (
+        ) : autoStarting || autoResuming ? (
           <section className="grid place-items-center rounded-xl border border-line bg-white p-12 text-center shadow-[var(--shadow-card)]">
             <Loader2 className="size-6 animate-spin text-blue" aria-hidden="true" />
-            <p className="mt-3 text-sm text-muted-ink">Tentamen wordt geladen…</p>
+            <p className="mt-3 text-sm text-muted-ink">{autoResuming ? "Je sessie wordt hervat…" : "Tentamen wordt geladen…"}</p>
           </section>
         ) : (
           <>
-            {resumable && !resumeDismissed ? (
+            {resumeError ? (
               <section aria-labelledby="hervat-titel" className="mb-5 rounded-xl border border-accent-blue/40 bg-sky/50 p-5 shadow-[var(--shadow-card)] sm:p-6">
                 <div className="flex flex-wrap items-start gap-4">
                   <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent-blue/15 text-accent-blue">
                     <History className="size-5" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <h2 id="hervat-titel" className="font-semibold text-navy">Ga verder waar je gebleven was</h2>
+                    <h2 id="hervat-titel" className="font-semibold text-navy">Je vorige sessie hervatten</h2>
                     <p className="mt-1 text-sm text-muted-ink">
-                      Je hebt nog een onafgeronde {modeLabel(resumable.mode)}-sessie · {resumable.answered} van {resumable.total} vragen beantwoord.
+                      {resumable ? <>Je hebt nog een onafgeronde {modeLabel(resumable.mode)}-sessie · {resumable.answered} van {resumable.total} vragen beantwoord.</> : null}
                     </p>
-                    {resumeError ? <p role="alert" className="mt-2 text-sm text-danger">{resumeError}</p> : null}
+                    <p role="alert" className="mt-2 text-sm text-danger">{resumeError}</p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Button type="button" onClick={resume} disabled={resuming} className="h-10 font-semibold">
                         {resuming ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
-                        Verder gaan
-                      </Button>
-                      <Button type="button" variant="ghost" onClick={() => setResumeDismissed(true)} disabled={resuming}>
-                        Nieuwe sessie starten
+                        Opnieuw proberen
                       </Button>
                     </div>
                   </div>

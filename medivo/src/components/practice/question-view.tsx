@@ -28,6 +28,7 @@ export function QuestionView({
   onBookmark,
   onSelfGrade,
   onReveal,
+  onFinish,
   footer,
 }: {
   state: EngineState;
@@ -36,6 +37,7 @@ export function QuestionView({
   onBookmark: (questionId: string, next: boolean) => void;
   onSelfGrade: (questionId: string, score: number) => Promise<string | null>;
   onReveal: (questionId: string) => Promise<string | null>;
+  onFinish?: () => void;
   footer?: React.ReactNode;
 }) {
   const reduce = useReducedMotion();
@@ -196,15 +198,21 @@ export function QuestionView({
             <Button type="button" variant="ghost" disabled={state.index === 0} onClick={() => dispatch({ type: "go", index: state.index - 1 })}>
               <ArrowLeft aria-hidden="true" /> <span className="max-sm:sr-only">Vorige vraag</span>
             </Button>
-            <Button
-              ref={nextRef}
-              type="button"
-              variant={answered ? "default" : "secondary"}
-              disabled={state.index >= total - 1}
-              onClick={() => dispatch({ type: "go", index: state.index + 1 })}
-            >
-              Volgende vraag <ArrowRight aria-hidden="true" />
-            </Button>
+            {state.index >= total - 1 && !isExam && onFinish ? (
+              <Button ref={nextRef} type="button" variant="default" onClick={onFinish}>
+                Sessie afronden <ArrowRight aria-hidden="true" />
+              </Button>
+            ) : (
+              <Button
+                ref={nextRef}
+                type="button"
+                variant={answered ? "default" : "secondary"}
+                disabled={state.index >= total - 1}
+                onClick={() => dispatch({ type: "go", index: state.index + 1 })}
+              >
+                Volgende vraag <ArrowRight aria-hidden="true" />
+              </Button>
+            )}
           </div>
         </div>
       </form>

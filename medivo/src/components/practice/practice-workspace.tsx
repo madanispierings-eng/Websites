@@ -289,6 +289,7 @@ export function PracticeWorkspace({
             onBookmark={bookmark}
             onSelfGrade={selfGrade}
             onReveal={reveal}
+            onFinish={finish}
             footer={
               <SessionFooter
                 state={engine}

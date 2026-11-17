@@ -78,7 +78,7 @@ export type SessionReview = {
   review: (AnswerFeedback & { questionId: string; response: QuestionResponse | null })[];
 };
 
-export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
+export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string; code?: string };
 
 export type PracticeExam = { id: string; label: string; questionCount: number | null };
 
@@ -115,6 +115,7 @@ export type PracticeApi = {
     limit: number;
     timeLimitSeconds: number | null;
     examId: string | null;
+    repeatAnswered?: boolean;
   }) => Promise<
     ActionResult<{ sessionId: string; questions: PracticeQuestion[]; startedAt: string; timeLimitSeconds: number | null; bookmarkedIds: string[] }>
   >;

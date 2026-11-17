@@ -132,7 +132,9 @@ export function PracticeWorkspace({
     startSessionWith({
       sessionMode,
       topicIds: sessionTopicIds,
-      limit: mode === "past" ? 200 : mode === "exam" ? examCount : mode === "topic" ? 100 : 25,
+      // Per onderwerp, gemengd en "fout beantwoord" pakken de hele (resterende) selectie
+      // in één sessie — tot het maximum van 200 — zodat je kunt doorgaan tot je alles hebt gehad.
+      limit: mode === "exam" ? examCount : 200,
       timeLimitSeconds: timed && examMinutes ? examMinutes * 60 : null,
       examId: mode === "past" ? examId : null,
     });

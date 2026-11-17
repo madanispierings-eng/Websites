@@ -602,6 +602,25 @@ begin
     raise exception 'FAIL: topic mode without a topic was accepted';
   exception when invalid_parameter_value then null; end;
 end $$;
+
+-- ---- practice skips questions you've already answered (deliberate repeat opt-in) ----
+set local role authenticated;
+set local request.jwt.claim.sub = 'aaaaaaaa-0000-4000-8000-000000000001';
+do $$
+declare
+  v_course uuid := (select id from public.courses where slug = 'van-cel-tot-molecuul');
+  q_sc uuid := 'abababab-0000-4000-8000-000000000001'; -- already answered by this student
+  v_ids uuid[];
+begin
+  -- With skip on, an already-answered question is left out of a new session.
+  select question_ids into v_ids from public.practice_sessions
+   where id = public.start_practice_session(v_course, 'mixed', '{}', 200, p_skip_answered := true);
+  if q_sc = any (v_ids) then raise exception 'FAIL: answered question not skipped'; end if;
+  -- Without skip (deliberate repeat) it can come back.
+  select question_ids into v_ids from public.practice_sessions
+   where id = public.start_practice_session(v_course, 'mixed', '{}', 200);
+  if not (q_sc = any (v_ids)) then raise exception 'FAIL: repeat did not include the answered question'; end if;
+end $$;
 reset request.jwt.claim.sub;
 reset role;
 

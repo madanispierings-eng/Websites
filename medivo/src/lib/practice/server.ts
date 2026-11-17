@@ -23,11 +23,12 @@ const errorMessages: Record<string, string> = {
   not_gradable: "Deze vraag kun je niet zelf nakijken.",
   invalid_score: "Kies een score tussen 0 en het maximum, in stappen van een halve punt.",
   nothing_to_reveal: "Deze vraag heeft geen openstaande tweede poging.",
+  all_answered: "Je hebt alle vragen van deze selectie al gemaakt.",
 };
 
 function fail<T>(raw: string | undefined): ActionResult<T> {
   const key = Object.keys(errorMessages).find((k) => raw?.includes(k));
-  return { ok: false, error: key ? errorMessages[key] : "Er ging iets mis. Probeer het opnieuw." };
+  return { ok: false, error: key ? errorMessages[key] : "Er ging iets mis. Probeer het opnieuw.", code: key };
 }
 
 async function context() {
@@ -41,6 +42,7 @@ const startInput = z.object({
   limit: z.number().int().min(1).max(200),
   timeLimitSeconds: z.number().int().min(60).max(4 * 60 * 60).nullable(),
   examId: uuid.nullable(),
+  repeatAnswered: z.boolean().optional(),
 });
 
 const responseSchema: z.ZodType<QuestionResponse> = z.union([
@@ -73,6 +75,9 @@ export async function startSession(courseId: string, input: unknown) {
     p_limit: parsed.data.limit,
     p_time_limit_seconds: parsed.data.timeLimitSeconds,
     p_exam_id: parsed.data.examId,
+    // Per onderwerp / gemengd: sla standaard al-beantwoorde vragen over; alleen bij een
+    // bewuste herhaling niet. De DB-functie negeert dit voor exam- en incorrect-modus.
+    p_skip_answered: !(parsed.data.repeatAnswered ?? false),
   });
   if (error) return fail<Out>(error.message);
 

@@ -15,6 +15,15 @@ import { cn } from "@/lib/utils";
 /** What the student picks; "past" is a whole old exam, run as an exam or with feedback per question. */
 export type WorkspaceMode = PracticeMode | "past";
 
+type StartOpts = {
+  sessionMode: PracticeMode;
+  topicIds: string[];
+  limit: number;
+  timeLimitSeconds: number | null;
+  examId: string | null;
+  repeatAnswered?: boolean;
+};
+
 const modes: { value: WorkspaceMode; label: string; body: string; icon: typeof Layers }[] = [
   { value: "topic", label: "Per onderwerp", body: "Vragen uit één of meer gekozen onderwerpen, met direct uitleg.", icon: ListChecks },
   { value: "mixed", label: "Gemengd", body: "Vragen uit meerdere onderwerpen door elkaar.", icon: Shuffle },
@@ -65,6 +74,8 @@ export function PracticeWorkspace({
   const [engine, dispatch] = useReducer(holderReducer, null);
   const [timer, setTimer] = useState<{ startedAt: number; limit: number } | null>(null);
   const [startError, setStartError] = useState<string | null>(null);
+  const [allAnswered, setAllAnswered] = useState(false);
+  const lastStartOpts = useRef<StartOpts | null>(null);
   const [starting, startTransition] = useTransition();
   const [finishing, setFinishing] = useState(false);
   const [showTopics, setShowTopics] = useState(false);
@@ -82,8 +93,10 @@ export function PracticeWorkspace({
   };
 
   const startSessionWith = useCallback(
-    (opts: { sessionMode: PracticeMode; topicIds: string[]; limit: number; timeLimitSeconds: number | null; examId: string | null }) => {
+    (opts: StartOpts) => {
       setStartError(null);
+      setAllAnswered(false);
+      lastStartOpts.current = opts;
       startTransition(async () => {
         const res = await api.startSession({
           mode: opts.sessionMode,
@@ -91,8 +104,13 @@ export function PracticeWorkspace({
           limit: opts.limit,
           timeLimitSeconds: opts.timeLimitSeconds,
           examId: opts.examId,
+          repeatAnswered: opts.repeatAnswered,
         });
-        if (!res.ok) return setStartError(res.error);
+        if (!res.ok) {
+          // Alle vragen van deze selectie al gemaakt: bied een bewuste herhaling aan i.p.v. een foutmelding.
+          if (res.code === "all_answered") return setAllAnswered(true);
+          return setStartError(res.error);
+        }
         dispatch({ type: "init", state: createEngine(res.data.sessionId, opts.sessionMode, res.data.questions, res.data.bookmarkedIds) });
         setTimer(res.data.timeLimitSeconds ? { startedAt: Date.parse(res.data.startedAt), limit: res.data.timeLimitSeconds } : null);
         setShowTopics(false);
@@ -100,6 +118,11 @@ export function PracticeWorkspace({
     },
     [api],
   );
+
+  // Start the same selection again, now including questions the student already answered.
+  const repeatAnswered = useCallback(() => {
+    if (lastStartOpts.current) startSessionWith({ ...lastStartOpts.current, repeatAnswered: true });
+  }, [startSessionWith]);
 
   function start() {
     const sessionTopicIds = mode === "topic" ? topicIds : mode === "mixed" ? mixedTopics : [];
@@ -147,6 +170,9 @@ export function PracticeWorkspace({
     autoResumed.current = true;
     void resume();
   }, [canAutoResume, engine, starting, resuming, startingNew, resume]);
+
+  // Changing the selection clears a stale "already answered" notice or start error.
+  useEffect(() => { setAllAnswered(false); setStartError(null); }, [mode, topicIds, mixedTopics, examId]);
 
   const submit = useCallback(async () => {
     if (!engine) return;
@@ -446,6 +472,22 @@ export function PracticeWorkspace({
               ) : null}
 
               {startError ? <p role="alert" className="mt-4 text-sm text-danger">{startError}</p> : null}
+
+              {allAnswered ? (
+                <div role="status" className="mt-4 rounded-lg border border-[#e8c48a] bg-[#fdf6ec] p-4 text-sm text-navy">
+                  <p className="font-semibold">Je hebt alle vragen van deze selectie al gemaakt.</p>
+                  <p className="mt-1 text-muted-ink">Oefen gericht je foute vragen, of begin opnieuw met al deze vragen erbij.</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" onClick={repeatAnswered} disabled={starting}>
+                      {starting ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+                      Opnieuw, met alle vragen
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={() => { setAllAnswered(false); setMode("incorrect"); }}>
+                      Fout beantwoord oefenen
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
 
               <Button
                 type="button"

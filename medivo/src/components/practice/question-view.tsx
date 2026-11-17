@@ -60,7 +60,7 @@ export function QuestionView({
       firstRender.current = false;
       return;
     }
-    headingRef.current?.focus();
+    headingRef.current?.focus({ preventScroll: true });
   }, [state.index]);
 
   // The submit button unmounts once an answer is checked; keep keyboard focus inside the question instead of dropping it to <body>.
@@ -68,7 +68,7 @@ export function QuestionView({
     if (!answered) return;
     const active = document.activeElement;
     if (active && active !== document.body) return;
-    (nextRef.current && !nextRef.current.disabled ? nextRef.current : headingRef.current)?.focus();
+    (nextRef.current && !nextRef.current.disabled ? nextRef.current : headingRef.current)?.focus({ preventScroll: true });
   }, [answered, q.id]);
 
   // A–Z pick (or toggle) an option on choice questions, as long as the user is not typing somewhere.

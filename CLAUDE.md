@@ -24,3 +24,10 @@ Gebruik voor het binnenhalen van (complete) websites de `website-scraper` agent.
 - Nieuwe migraties in `medivo/supabase/migrations/` mag je zelf op de live database uitvoeren, zonder eerst te vragen, mits ze eerst lokaal slagen met `scripts/test-db.sh` en als één transactie. Draai daarna `scripts/build-setup-sql.sh`.
 - Inhoud (samenvattingen, oefenvragen, tentamens) direct publiceren, geen concepten. Zet `reviewed_at` en `reviewed_by` op het admin-account van de eigenaar.
 - Vraag wel eerst bij migraties die gegevens verwijderen of overschrijven.
+
+# Live zetten (deploy)
+
+- De site deployt via **Vercel**, niet Netlify. Productie draait op de `main`-branch: zodra er naar `main` wordt gepusht, deployt Vercel automatisch naar productie.
+- "Live zetten" van een codewijziging = de dev-branch via een PR **squash-mergen** naar `main` (zoals de eerdere PR's). Zet de dev-branch daarna weer op de nieuwe `main`.
+- Je hoeft **niet te vragen** of je iets live mag zetten als de eigenaar om een wijziging vraagt; zet het gewoon live als het werkt (typecheck/lint schoon, waar relevant visueel gecontroleerd).
+- Databasewijzigingen (inhoud/migraties) zijn direct live via de API en hoeven niet via Vercel.

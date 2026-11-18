@@ -594,7 +594,7 @@ function SessionFooter({ state, dispatch, timer, finishing, onFinish, onRestart 
         ) : null}
         <div className="ml-auto flex gap-2">
           {state.finished ? (
-            <Button type="button" variant="outline" onClick={onRestart}>Nieuwe sessie</Button>
+            <Button type="button" variant="outline" onClick={onRestart}>Terug naar oefenen</Button>
           ) : (
             <Button
               type="button"
@@ -633,7 +633,7 @@ function ResultsBanner({ state, onRestart }: { state: EngineState; onRestart: ()
         </p>
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" onClick={onRestart}>Nieuwe sessie</Button>
+        <Button variant="default" onClick={onRestart}>Terug naar oefenen</Button>
         <Button asChild variant="ghost"><Link href="/dashboard">Naar dashboard</Link></Button>
       </div>
     </section>

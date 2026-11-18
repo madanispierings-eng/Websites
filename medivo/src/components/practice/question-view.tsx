@@ -49,6 +49,7 @@ export function QuestionView({
   const fb = answer.feedback;
   const total = state.questions.length;
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
   const firstRender = useRef(true);
   const nextRef = useRef<HTMLButtonElement>(null);
   const [revealing, setRevealing] = useState(false);
@@ -56,14 +57,17 @@ export function QuestionView({
   const retry = answer.retry;
   const showHint = hintVisible(state, q);
 
-  // Move focus to the new question for keyboard and screen-reader users, but not on first load.
+  // On a new question, bring the question card back up just under the sticky header, so the
+  // question is fully in view without scrolling — even after reading a long explanation.
+  // Focus moves for keyboard/screen-reader users without its own scroll (the scroll below handles it).
   useEffect(() => {
     if (firstRender.current) {
       firstRender.current = false;
       return;
     }
+    sectionRef.current?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
     headingRef.current?.focus({ preventScroll: true });
-  }, [state.index]);
+  }, [state.index, reduce]);
 
   // The submit button unmounts once an answer is checked; keep keyboard focus inside the question instead of dropping it to <body>.
   useEffect(() => {
@@ -98,7 +102,7 @@ export function QuestionView({
   }
 
   const section = (
-    <section aria-labelledby="vraag-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-7">
+    <section ref={sectionRef} aria-labelledby="vraag-titel" className="scroll-mt-24 rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-7">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h2 id="vraag-titel" ref={headingRef} tabIndex={-1} className="text-xl font-semibold text-navy outline-none">

@@ -596,17 +596,30 @@ function SessionFooter({ state, dispatch, timer, finishing, onFinish, onRestart 
           {state.finished ? (
             <Button type="button" variant="outline" onClick={onRestart}>Terug naar oefenen</Button>
           ) : (
-            <Button
-              type="button"
-              variant={isExam ? "default" : "outline"}
-              disabled={finishing}
-              onClick={() => {
-                if (!isExam || done === total || window.confirm(`Je hebt ${total - done} vragen niet beantwoord. Toch inleveren?`)) onFinish();
-              }}
-            >
-              {finishing ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
-              {isExam ? "Tentamen inleveren" : "Sessie afronden"}
-            </Button>
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={finishing}
+                onClick={() => {
+                  // Leave to the topic/mode picker without finishing; the session stays saved and resumable.
+                  if (!isExam || window.confirm("Terug naar het oefenmenu? Je tentamen wordt niet ingeleverd; je kunt later verdergaan.")) onRestart();
+                }}
+              >
+                Terug naar oefenen
+              </Button>
+              <Button
+                type="button"
+                variant={isExam ? "default" : "outline"}
+                disabled={finishing}
+                onClick={() => {
+                  if (!isExam || done === total || window.confirm(`Je hebt ${total - done} vragen niet beantwoord. Toch inleveren?`)) onFinish();
+                }}
+              >
+                {finishing ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+                {isExam ? "Tentamen inleveren" : "Sessie afronden"}
+              </Button>
+            </>
           )}
         </div>
       </div>

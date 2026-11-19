@@ -105,7 +105,7 @@ export type ResumeData = {
 };
 
 /** The short summary shown in the "verder gaan" banner before the session is loaded. */
-export type ResumableSession = { sessionId: string; mode: PracticeMode; startedAt: string; total: number; answered: number };
+export type ResumableSession = { sessionId: string; mode: PracticeMode; startedAt: string; examId: string | null; total: number; answered: number };
 
 /** The server operations the practice UI needs. Implemented with server actions in production. */
 export type PracticeApi = {

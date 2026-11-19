@@ -143,7 +143,7 @@ export async function resumableSession(courseId: string): Promise<ResumableSessi
   const { supabase } = ctx;
   const { data: session } = await supabase
     .from("practice_sessions")
-    .select("id, mode, started_at, question_ids")
+    .select("id, mode, started_at, question_ids, exam_id")
     .eq("course_id", courseId)
     .is("finished_at", null)
     .order("started_at", { ascending: false })
@@ -160,6 +160,7 @@ export async function resumableSession(courseId: string): Promise<ResumableSessi
     sessionId: session.id as string,
     mode: session.mode as PracticeMode,
     startedAt: session.started_at as string,
+    examId: (session.exam_id as string | null) ?? null,
     total,
     answered: count ?? 0,
   };

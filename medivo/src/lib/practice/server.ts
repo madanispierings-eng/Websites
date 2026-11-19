@@ -155,8 +155,17 @@ export async function resumableSession(courseId: string, kind: "practice" | "exa
     .limit(1)
     .maybeSingle();
   if (!session) return null;
-  const total = (session.question_ids as string[]).length;
+  const qids = session.question_ids as string[];
+  const total = qids.length;
   if (total === 0) return null;
+  // Als de vragen van een sessie later zijn vervangen (bijv. een tentamen opnieuw ingeladen),
+  // bestaan de oude vraag-id's niet meer. Zo'n sessie is niet meer te hervatten en zou de
+  // hervat-flow laten crashen, dus bieden we hem niet aan.
+  const { count: existing } = await supabase
+    .from("questions")
+    .select("id", { count: "exact", head: true })
+    .in("id", qids);
+  if ((existing ?? 0) < total) return null;
   const { count } = await supabase
     .from("question_attempts")
     .select("question_id", { count: "exact", head: true })

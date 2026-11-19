@@ -202,7 +202,9 @@ export function PracticeWorkspace({
   // After a refresh or an accidental click away, drop the student straight back into their
   // in-progress session at the question they were on — no banner to misclick, no new session
   // that would mix in questions they already answered.
-  const canAutoResume = Boolean(resumable) && !initialExamId && !!resumable && resumable.answered < resumable.total;
+  // A tentamen always resumes until it is handed in (even when every question is answered, so you
+  // can still review and submit); a practice session resumes only while it is not fully answered.
+  const canAutoResume = Boolean(resumable) && !initialExamId && !!resumable && (resumable.mode === "exam" || resumable.answered < resumable.total);
   useEffect(() => {
     if (autoResumed.current || engine || starting || resuming || startingNew || !canAutoResume) return;
     autoResumed.current = true;

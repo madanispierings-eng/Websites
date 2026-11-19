@@ -136,16 +136,21 @@ async function loadQuestions(supabase: SupabaseClient, ids: string[]) {
 }
 
 /** The most recent unfinished session for this course, for the "verder gaan" banner. Null when there is none. */
-export async function resumableSession(courseId: string): Promise<ResumableSession | null> {
+// "practice" levert de laatste onafgeronde oefensessie (per onderwerp/gemengd/fout), "exam" de
+// laatste onafgeronde tentamensessie. Oefenen en tentamens staan los van elkaar, dus elke pagina
+// vraagt alleen zijn eigen soort op.
+export async function resumableSession(courseId: string, kind: "practice" | "exam" = "practice"): Promise<ResumableSession | null> {
   if (!uuid.safeParse(courseId).success) return null;
   const ctx = await context();
   if (!ctx) return null;
   const { supabase } = ctx;
-  const { data: session } = await supabase
+  let query = supabase
     .from("practice_sessions")
     .select("id, mode, started_at, question_ids, exam_id")
     .eq("course_id", courseId)
-    .is("finished_at", null)
+    .is("finished_at", null);
+  query = kind === "exam" ? query.not("exam_id", "is", null) : query.is("exam_id", null);
+  const { data: session } = await query
     .order("started_at", { ascending: false })
     .limit(1)
     .maybeSingle();

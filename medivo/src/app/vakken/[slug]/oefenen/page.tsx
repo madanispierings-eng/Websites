@@ -24,18 +24,21 @@ export default async function PracticePage({ params, searchParams }: Props) {
   const course = await getCourse((await params).slug);
   if (!course) notFound();
   const { modus, onderwerp, tentamen } = await searchParams;
-  const [topics, counts, stats, viewer, exams, resumable] = await Promise.all([
+  const [topics, counts, stats, viewer, exams] = await Promise.all([
     getTopicTree(course.id),
     getQuestionCounts(course.id),
     getTopicStats(course.id),
     getViewer(),
     getExams(course.id),
-    resumableSession(course.id),
   ]);
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   const topicIds = new Set(topics.flatMap((t) => [t.id, ...t.children.map((c) => c.id)]));
   const initialTopicId = onderwerp && topicIds.has(onderwerp) ? onderwerp : null;
   const initialExamId = exams.some((e) => e.id === tentamen) ? tentamen! : null;
+  // Op de gewone oefenpagina alleen een onafgeronde oefensessie aanbieden; een onafgerond
+  // tentamen hervat je via het tabblad Tentamens. Via de "?tentamen=…"-deeplink hervatten we
+  // juist het betreffende tentamen.
+  const resumable = await resumableSession(course.id, initialExamId ? "exam" : "practice");
   const initialMode: WorkspaceMode = MODES.includes(modus as WorkspaceMode) ? (modus as WorkspaceMode) : "topic";
 
   return (

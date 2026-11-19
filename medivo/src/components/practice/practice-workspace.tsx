@@ -242,6 +242,8 @@ export function PracticeWorkspace({
   const inSession = Boolean(engine);
   // A tentamen runs in a focused environment: only the question, no topic sidebar on the left.
   const examSession = inSession && engine?.mode === "exam";
+  // The countdown lives here so the timer can sit prominently at the top of the exam, not only in the footer.
+  const { remaining, paused: timerPaused, toggle: toggleTimer } = useCountdown(engine && !engine.finished ? timer : null, finish);
   // While the chosen exam is being started automatically, show a loader instead of the mode picker.
   const autoStarting = autoStart && !engine && !startError;
   // Same loader while an in-progress session is being resumed automatically after a refresh.
@@ -283,6 +285,27 @@ export function PracticeWorkspace({
       )}
 
       <div className="min-w-0">
+        {remaining !== null ? (
+          <div
+            className={cn(
+              "mb-4 flex items-center justify-between gap-3 rounded-xl border px-4 py-3 shadow-[var(--shadow-card)]",
+              examSession && "sticky top-16 z-20 lg:top-[4.75rem]",
+              remaining < 60 && !timerPaused ? "border-danger/40 bg-danger-soft" : "border-line bg-white",
+            )}
+          >
+            <span className="inline-flex items-center gap-2 text-lg font-semibold tabular-nums text-navy" role="timer" aria-label="Resterende tijd">
+              <Clock className="size-5 text-blue" aria-hidden="true" />
+              {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, "0")}
+              {timerPaused ? <span className="text-sm font-normal text-muted-ink"> · gepauzeerd</span> : null}
+            </span>
+            {!engine?.finished ? (
+              <Button type="button" variant="outline" size="sm" className="h-9" onClick={toggleTimer}>
+                {timerPaused ? <><Play className="size-4" aria-hidden="true" /> Hervat</> : <><Pause className="size-4" aria-hidden="true" /> Pauze</>}
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
+
         {engine?.finished ? (
           <ResultsBanner state={engine} onRestart={newSession} />
         ) : null}
@@ -300,7 +323,6 @@ export function PracticeWorkspace({
               <SessionFooter
                 state={engine}
                 dispatch={dispatch}
-                timer={timer}
                 finishing={finishing}
                 onFinish={finish}
                 onRestart={newSession}
@@ -560,15 +582,13 @@ function useCountdown(timer: { startedAt: number; limit: number } | null, onExpi
   return { remaining, paused, toggle };
 }
 
-function SessionFooter({ state, dispatch, timer, finishing, onFinish, onRestart }: {
+function SessionFooter({ state, dispatch, finishing, onFinish, onRestart }: {
   state: EngineState;
   dispatch: (a: EngineAction) => void;
-  timer: { startedAt: number; limit: number } | null;
   finishing: boolean;
   onFinish: () => void;
   onRestart: () => void;
 }) {
-  const { remaining, paused, toggle } = useCountdown(state.finished ? null : timer, onFinish);
   const isExam = state.mode === "exam";
   // After finishing, every question carries review feedback, so count from the review instead of the engine.
   const done = state.finished ? state.finished.answered : answeredCount(state);
@@ -611,24 +631,6 @@ function SessionFooter({ state, dispatch, timer, finishing, onFinish, onRestart 
 
       <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
         <span className="text-muted-ink">{done} van {total} beantwoord</span>
-        {remaining !== null ? (
-          <div className="inline-flex items-center gap-2">
-            <span
-              className={cn("inline-flex items-center gap-1.5 rounded-md bg-sky px-2.5 py-1 font-semibold tabular-nums text-navy", remaining < 60 && !paused && "bg-danger-soft text-danger", paused && "bg-canvas text-muted-ink")}
-              role="timer"
-              aria-label="Resterende tijd"
-            >
-              <Clock className="size-4" aria-hidden="true" />
-              {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, "0")}
-              {paused ? <span className="font-normal"> · gepauzeerd</span> : null}
-            </span>
-            {!state.finished ? (
-              <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-navy" onClick={toggle}>
-                {paused ? <><Play className="size-4" aria-hidden="true" /> Hervat</> : <><Pause className="size-4" aria-hidden="true" /> Pauze</>}
-              </Button>
-            ) : null}
-          </div>
-        ) : null}
         <div className="ml-auto flex gap-2">
           {state.finished ? (
             <Button type="button" variant="outline" onClick={onRestart}>Terug naar oefenen</Button>

@@ -27,11 +27,17 @@ type StartOpts = {
 /** Shown before an exam starts: the instructions screen. */
 type ExamIntro = { opts: StartOpts; count: number; minutes: number | null; label: string };
 
-/** Indicatief cijfer (1–10) met een lineaire normering en een cesuur van 55% voor een 5,5. */
-function examGrade(scored: number, points: number): number | null {
+/** Indicatief cijfer (1–10) volgens een Cohen-Schotanus-variant: eerst de gokscore (`guess`)
+ *  aftrekken, dan de 5,5-grens (cesuur) op 60% van het bereik tussen gokscore en maximumscore.
+ *  Officieel leidt Leiden/LUMC die 60% af van de besten; solo nemen we de maximumscore als referentie. */
+function examGrade(scored: number, points: number, guess: number): number | null {
   if (!points) return null;
-  const pct = scored / points;
-  const c = pct >= 0.55 ? 5.5 + (4.5 * (pct - 0.55)) / 0.45 : 1 + (4.5 * pct) / 0.55;
+  const g = Math.max(0, Math.min(guess, points * 0.95));
+  const cesuur = g + 0.6 * (points - g);
+  let c: number;
+  if (scored <= g) c = 1;
+  else if (scored <= cesuur) c = 1 + (4.5 * (scored - g)) / (cesuur - g);
+  else c = 5.5 + (4.5 * (scored - cesuur)) / (points - cesuur);
   return Math.min(10, Math.max(1, Math.round(c * 10) / 10));
 }
 
@@ -710,7 +716,11 @@ function ResultsBanner({ state, onRestart }: { state: EngineState; onRestart: ()
   const pct = r.points ? Math.round((r.scored / r.points) * 100) : 0;
   const toGrade = Object.values(state.answers).filter((a) => a.feedback && a.response !== null && a.feedback.score === null).length;
   const nl = (n: number) => n.toLocaleString("nl-NL", { maximumFractionDigits: 2 });
-  const grade = state.mode === "exam" ? examGrade(r.scored, r.points) : null;
+  // Gokscore voor de Cohen-Schotanus-correctie: per meerkeuzevraag met n opties telt 1/n punt als "gokbaar".
+  const guess = state.mode === "exam"
+    ? state.questions.reduce((s, q) => s + (q.type === "single_choice" && q.options.length ? q.points / q.options.length : 0), 0)
+    : 0;
+  const grade = state.mode === "exam" ? examGrade(r.scored, r.points, guess) : null;
   const passed = grade !== null && grade >= 5.5;
   return (
     <section aria-labelledby="resultaat-titel" className="mb-5 flex flex-wrap items-center gap-5 rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
@@ -721,7 +731,7 @@ function ResultsBanner({ state, onRestart }: { state: EngineState; onRestart: ()
         <h2 id="resultaat-titel" className="text-lg font-semibold text-navy">{grade !== null ? "Tentamen afgerond" : "Sessie afgerond"}</h2>
         <p className="mt-1 text-sm text-muted-ink">
           {grade !== null ? (
-            <><strong className={passed ? "text-success-ink" : "text-danger"}>Cijfer {grade.toLocaleString("nl-NL", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} — {passed ? "geslaagd" : "niet gehaald"}</strong> (indicatief, cesuur 55%). </>
+            <><strong className={passed ? "text-success-ink" : "text-danger"}>Cijfer {grade.toLocaleString("nl-NL", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} — {passed ? "geslaagd" : "niet gehaald"}</strong> (indicatief, Cohen-Schotanus-normering met gokcorrectie). </>
           ) : null}
           {nl(r.scored)} van {nl(r.points)} punten ({pct}%) · {r.correct} van {r.total} vragen volledig goed
           {r.withHint ? ` (waarvan ${r.withHint} met hint)` : ""} · {r.answered} beantwoord.{" "}
@@ -783,7 +793,7 @@ function ExamIntroScreen({ intro, starting, onBegin, onCancel }: {
         <Point>De <strong>tijd wordt bijgehouden</strong> en staat bovenin beeld zodra je begint. Je kunt pauzeren, maar houd dat beperkt voor een eerlijke uitslag. Is de tijd om, dan wordt het tentamen automatisch ingeleverd.</Point>
         <Point>Je krijgt <strong>tijdens het tentamen geen feedback</strong>. Je kunt vrij tussen de vragen navigeren, een vraag markeren om er later op terug te komen, en je antwoorden worden automatisch bewaard.</Point>
         <Point>Lees elke vraag rustig en volledig; bij meerkeuze is er <strong>één beste antwoord</strong>, tenzij anders vermeld.</Point>
-        <Point>Na het inleveren worden je antwoorden <strong>geanalyseerd</strong>: je ziet per vraag of het goed was, het juiste antwoord met uitleg, en je krijgt een <strong>cijfer volgens de normering</strong> (lineair, met een cesuur van 55% voor een 5,5). Open vragen kijk je zelf na met het antwoordmodel; die punten tellen mee.</Point>
+        <Point>Na het inleveren worden je antwoorden <strong>geanalyseerd</strong>: je ziet per vraag of het goed was, het juiste antwoord met uitleg, en je krijgt een <strong>cijfer volgens de normering</strong> (Cohen-Schotanus-methode met gokcorrectie, zoals aan Leiden/het LUMC gebruikelijk). Het is een indicatief cijfer: de officiële cesuur wordt op de hele groep bepaald. Open vragen kijk je zelf na met het antwoordmodel; die punten tellen mee.</Point>
       </ul>
 
       <div className="mt-7 flex flex-wrap items-center gap-3 border-t border-line pt-5">

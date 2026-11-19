@@ -13,7 +13,7 @@ import { finishSession, resumeSession, revealAnswer, selfGrade, startSession, su
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ modus?: string; onderwerp?: string; tentamen?: string }> };
 
-const MODES: WorkspaceMode[] = ["topic", "mixed", "exam", "incorrect"];
+const MODES: WorkspaceMode[] = ["topic", "mixed", "incorrect"];
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const course = await getCourse((await params).slug);

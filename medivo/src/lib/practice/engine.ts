@@ -28,6 +28,7 @@ export type EngineAction =
   | { type: "revealed"; questionId: string; feedback: AnswerFeedback }
   | { type: "open-hint"; questionId: string }
   | { type: "submit-failure"; questionId: string; error: string }
+  | { type: "saved"; questionId: string }
   | { type: "graded"; questionId: string; score: number; isCorrect: boolean }
   | { type: "go"; index: number }
   | { type: "bookmark"; questionId: string; bookmarked: boolean }
@@ -173,6 +174,13 @@ export function engineReducer(state: EngineState, action: EngineAction): EngineS
     case "open-hint": {
       const a = answerFor(state, action.questionId);
       return { ...state, answers: { ...state.answers, [action.questionId]: { ...a, hintOpened: true } } };
+    }
+    case "saved": {
+      // A tentamen answer was saved to the server in the background (no feedback). Mark it as
+      // recorded for the overview, without touching the response the student is still editing.
+      const a = answerFor(state, action.questionId);
+      if (a.status === "submitting") return state;
+      return { ...state, answers: { ...state.answers, [action.questionId]: { ...a, status: "answered" } } };
     }
     case "submit-failure": {
       const a = answerFor(state, action.questionId);

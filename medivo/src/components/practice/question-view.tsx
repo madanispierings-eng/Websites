@@ -56,6 +56,17 @@ export function QuestionView({
   const [revealError, setRevealError] = useState<string | null>(null);
   const retry = answer.retry;
   const showHint = hintVisible(state, q);
+  const examSaveRef = useRef<string>("");
+
+  // In a tentamen there is no "save" button: a chosen answer is saved automatically and can still
+  // be changed. Whenever the (editable) response changes, record it once.
+  useEffect(() => {
+    if (!isExam || state.finished || answer.status !== "idle" || answer.response == null) return;
+    const key = `${q.id}:${JSON.stringify(answer.response)}`;
+    if (examSaveRef.current === key) return;
+    examSaveRef.current = key;
+    onSubmit();
+  }, [isExam, state.finished, q.id, answer.status, answer.response, onSubmit]);
 
   // On a new question, bring the question card back up just under the sticky header, so the
   // question is fully in view without scrolling — even after reading a long explanation.
@@ -156,7 +167,7 @@ export function QuestionView({
         ) : null}
 
         <div className="mt-4">
-          <AnswerInput q={q} answer={answer} locked={locked || revealing} isExam={isExam} dispatch={dispatch} />
+          <AnswerInput q={q} answer={answer} locked={isExam ? false : locked || revealing} isExam={isExam} dispatch={dispatch} />
         </div>
 
         <div role="status">
@@ -179,13 +190,19 @@ export function QuestionView({
         {revealError ? <p role="alert" className="mt-3 text-sm text-danger">{revealError}</p> : null}
 
         <div className="mt-5 flex flex-wrap items-center gap-2">
-          {!answered ? (
+          {isExam ? (
+            <span className="text-sm text-muted-ink" aria-live="polite">
+              {answer.status === "submitting"
+                ? "Opslaan…"
+                : answered
+                  ? "Antwoord opgeslagen — je kunt het nog wijzigen."
+                  : "Kies een antwoord; het wordt automatisch opgeslagen."}
+            </span>
+          ) : !answered ? (
             <Button type="submit" disabled={!canSubmit(state) || revealing} className="h-10 px-5 font-semibold">
               {answer.status === "submitting" ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
-              {isExam ? "Antwoord opslaan" : q.type === "open" ? "Bekijk antwoordmodel" : retry ? "Controleer opnieuw" : "Controleer antwoord"}
+              {q.type === "open" ? "Bekijk antwoordmodel" : retry ? "Controleer opnieuw" : "Controleer antwoord"}
             </Button>
-          ) : isExam ? (
-            <span className="text-sm font-medium text-blue">Antwoord opgeslagen</span>
           ) : null}
           {retry && !answered ? (
             <Button type="button" variant="outline" disabled={revealing || answer.status === "submitting"} onClick={reveal} className="h-10 border-line text-navy">
@@ -361,7 +378,7 @@ function AnswerInput({ q, answer, locked, isExam, dispatch }: {
                   {missed ? <span className="text-xs font-medium text-success-ink">Ook juist</span> : null}
                   {isCorrect && !selected && !multi ? <CircleCheck className="mt-0.5 size-5 shrink-0 text-success" aria-label="Juiste antwoord" /> : null}
                   {isWrongPick ? <CircleX className="mt-0.5 size-5 shrink-0 text-danger" aria-label="Jouw antwoord, onjuist" /> : null}
-                  {isExam && locked && selected ? <span className="text-xs font-medium text-blue">Opgeslagen</span> : null}
+                  {isExam && selected && answer.status === "answered" ? <span className="text-xs font-medium text-blue">Opgeslagen</span> : null}
                 </label>
               </li>
             );

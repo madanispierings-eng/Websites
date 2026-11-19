@@ -108,6 +108,9 @@ const api: PracticeApi = {
       }
     } else if (!prev.final) {
       answers.set(questionId, { response, score, final: true, usedHint: true });
+    } else if (mode === "exam") {
+      // In a tentamen you can still change a saved answer.
+      answers.set(questionId, { response, score, final: true, usedHint: false });
     }
     const a = answers.get(questionId)!;
     const fb = { ...feedback(q, a.response, a.score), usedHint: a.usedHint };

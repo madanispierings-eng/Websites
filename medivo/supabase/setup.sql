@@ -2545,6 +2545,213 @@ begin
   return public.attempt_feedback(v_attempt, v_key);
 end $function$
 
+-- ===== supabase/migrations/20261120090000_multiple_choice_partial_score.sql =====
+-- "Meerdere antwoorden mogelijk"-vragen (bijv. kies 4 van de 16, 2 punten) gaven eerst
+-- alles-of-niets: wie niet exact de juiste set koos, kreeg 0. Dat betekende dat 3 van de 4
+-- goed alsnog 0 opleverde. Nu telt elke juiste gekozen optie mee en telt elke foute keuze
+-- even zwaar tegen: score = (punten / aantal juiste opties) * (juist gekozen - fout gekozen),
+-- begrensd op [0, punten]. Bij 4 juiste opties en 2 punten is dat 0,5 per optie; 3 goed en
+-- geen fout = 1,5; alles aankruisen levert 0 op (juist - fout <= 0). Zelfde signatuur, dus
+-- CREATE OR REPLACE behoudt de (ingetrokken) rechten.
+create or replace function public.grade_response(p_question public.questions, p_key public.question_answer_keys, p_response jsonb)
+returns numeric
+language plpgsql stable set search_path = public as $$
+declare
+  v_items jsonb := coalesce(p_question.content -> 'items', '[]'::jsonb);
+  v_n int;
+  v_score numeric := 0;
+  v_raw text;
+  v_value numeric;
+begin
+  case p_question.type::text
+    when 'single_choice' then
+      return case when (p_response ->> 'option_id')::uuid = p_key.correct_option_id then p_question.points else 0 end;
+    when 'multiple_choice' then
+      -- Deelscore: elke juiste optie telt mee, elke foute keuze telt even zwaar tegen.
+      v_n := (select count(*) from jsonb_array_elements_text(p_key.answer -> 'labels'));
+      if v_n = 0 then
+        return 0;
+      end if;
+      select coalesce(sum(
+               case when o.label in (select l from jsonb_array_elements_text(p_key.answer -> 'labels') l)
+                    then 1 else -1 end), 0)
+        into v_score
+      from public.question_options o
+      where o.question_id = p_question.id
+        and o.id in (select x::uuid from jsonb_array_elements_text(p_response -> 'option_ids') x);
+      return round(greatest(0, least(p_question.points, (p_question.points / v_n) * v_score)), 2);
+    when 'dropdowns' then
+      v_n := jsonb_array_length(v_items);
+      select coalesce(sum(coalesce((v_items -> (r.n::int - 1) ->> 'points')::numeric, p_question.points / v_n)), 0)
+      into v_score
+      from jsonb_array_elements(p_response -> 'answers') with ordinality r(v, n)
+      where jsonb_typeof(r.v) = 'string' and r.v = p_key.answer -> 'answers' -> (r.n::int - 1);
+      return round(least(v_score, p_question.points), 2);
+    when 'numeric' then
+      -- Accept a decimal comma and a unit after the number: "5,8 L/h" reads as 5.8.
+      v_raw := substring(replace(replace(p_response ->> 'value', ' ', ''), ',', '.') from '-?[0-9]+(?:\.[0-9]+)?');
+      if v_raw is null then
+        return 0;
+      end if;
+      v_value := v_raw::numeric;
+      return case when v_value between (p_key.answer ->> 'min')::numeric and (p_key.answer ->> 'max')::numeric
+                  then p_question.points else 0 end;
+    when 'open' then
+      return null;
+  end case;
+  return 0;
+end $$;
+
+-- ===== supabase/migrations/20261120100000_practice_keep_casus_together.sql =====
+-- Bij gemengd/geshuffeld oefenen moeten vervolgvragen die bij elkaar horen (een casus met
+-- meerdere deelvragen) na elkaar blijven staan, anders klopt een vraag niet die naar de vorige
+-- verwijst. Vragen die dezelfde context (casus) delen vormen één groep: binnen die groep blijven
+-- ze op volgorde (created_at), en bij gemengd shuffelen we op groepsniveau in plaats van per
+-- losse vraag. De round-robin over de thema's werkt nu ook op groepsniveau. Een vraag zonder
+-- gedeelde context is gewoon een groep van één. De tentamentak (volledig tentamen op volgorde)
+-- verandert niet. Zelfde signatuur, dus CREATE OR REPLACE behoudt de rechten.
+create or replace function public.start_practice_session(
+  p_course_id uuid,
+  p_mode practice_mode,
+  p_topic_ids uuid[] default '{}'::uuid[],
+  p_limit integer default 20,
+  p_time_limit_seconds integer default null,
+  p_exam_id uuid default null,
+  p_skip_answered boolean default false
+)
+returns uuid
+language plpgsql
+security definer
+set search_path to 'public'
+as $function$
+declare
+  v_user uuid := auth.uid();
+  v_ids uuid[];
+  v_session uuid;
+begin
+  if v_user is null then
+    raise exception 'not_authenticated' using errcode = '28000';
+  end if;
+  if p_limit is null or p_limit < 1 or p_limit > 200 then
+    raise exception 'invalid_limit' using errcode = '22023';
+  end if;
+  if p_exam_id is null and p_mode = 'topic' and coalesce(array_length(p_topic_ids, 1), 0) < 1 then
+    raise exception 'topic_mode_needs_one_topic' using errcode = '22023';
+  end if;
+
+  if p_exam_id is not null then
+    -- A whole exam, in its original order.
+    select array_agg(id order by exam_position, created_at) into v_ids from (
+      select q.id, q.exam_position, q.created_at
+      from public.questions q
+      join public.exams e on e.id = q.exam_id and e.status = 'published'
+      where q.exam_id = p_exam_id
+        and q.course_id = p_course_id
+        and q.status = 'published'
+        and (not q.is_premium or public.has_course_access(p_course_id))
+      order by q.exam_position, q.created_at
+      limit p_limit
+    ) picked;
+  else
+    select array_agg(id) into v_ids from (
+      with base as (
+        select
+          q.id,
+          q.created_at,
+          -- Groepssleutel: vragen met dezelfde casus (context) horen bij elkaar; een vraag
+          -- zonder gedeelde context is een groep van één.
+          coalesce(nullif(q.context, ''), q.id::text) as grp,
+          coalesce(t.parent_id, t.id) as theme,
+          t.sort_order as topic_sort
+        from public.questions q
+        join public.topics t on t.id = q.topic_id
+        where q.course_id = p_course_id
+          and q.status = 'published'
+          and q.exam_id is null  -- practice-per-topic never pulls questions that belong to an old exam
+          and (not q.is_premium or public.has_course_access(p_course_id))
+          -- A subtopic counts as part of its parent topic.
+          and (coalesce(array_length(p_topic_ids, 1), 0) = 0 or q.topic_id = any (p_topic_ids) or t.parent_id = any (p_topic_ids))
+          and (
+            p_mode <> 'incorrect' or exists (
+              select 1 from (
+                select distinct on (a.question_id) a.question_id, a.is_correct, a.used_hint
+                from public.question_attempts a
+                where a.user_id = v_user and a.question_id = q.id and a.final
+                order by a.question_id, a.answered_at desc
+              ) latest where not latest.is_correct or latest.used_hint
+            )
+          )
+          -- Per onderwerp / gemengd: sla vragen over die de student al heeft beantwoord,
+          -- tenzij hij er bewust voor kiest ze te herhalen.
+          and (
+            not p_skip_answered or p_mode not in ('topic', 'mixed') or not exists (
+              select 1 from public.question_attempts a
+              where a.user_id = v_user and a.question_id = q.id and a.final
+            )
+          )
+      ),
+      casus as (
+        -- Eén sorteerwaarde per groep, zodat alle delen van een casus bij elkaar blijven.
+        select
+          b.grp,
+          min(b.theme::text) as theme,
+          min(b.topic_sort) as topic_sort,
+          min(b.created_at) as grp_created,
+          random() as grp_rand
+        from base b
+        group by b.grp
+      ),
+      ordered as (
+        select
+          c.grp,
+          c.grp_rand,
+          c.topic_sort,
+          -- Evenwichtig verdelen over de thema's: round-robin op groepsniveau.
+          row_number() over (
+            partition by c.theme
+            order by (case when p_mode = 'mixed' then c.grp_rand end), c.grp_created
+          ) as rr
+        from casus c
+      )
+      select b.id
+      from base b
+      join ordered o on o.grp = b.grp
+      order by
+        o.rr,
+        -- Binnen een ronde: per onderwerp op themavolgorde (1a, 1b, ...), gemengd willekeurig.
+        case when p_mode = 'topic' then o.topic_sort end,
+        o.grp_rand,
+        -- Binnen een casus: de deelvragen in hun eigen volgorde (a, b, c, ...).
+        b.created_at
+      limit p_limit
+    ) picked;
+  end if;
+
+  if v_ids is null then
+    -- Onderscheid "je hebt alles al gemaakt" van "er zijn geen vragen".
+    if p_skip_answered and p_mode in ('topic', 'mixed') and exists (
+      select 1
+      from public.questions q
+      join public.topics t on t.id = q.topic_id
+      where q.course_id = p_course_id
+        and q.status = 'published'
+        and q.exam_id is null
+        and (not q.is_premium or public.has_course_access(p_course_id))
+        and (coalesce(array_length(p_topic_ids, 1), 0) = 0 or q.topic_id = any (p_topic_ids) or t.parent_id = any (p_topic_ids))
+    ) then
+      raise exception 'all_answered' using errcode = 'P0003';
+    end if;
+    raise exception 'no_questions_available' using errcode = 'P0002';
+  end if;
+
+  insert into public.practice_sessions (user_id, course_id, mode, topic_ids, question_ids, time_limit_seconds, exam_id)
+  values (v_user, p_course_id, p_mode, coalesce(p_topic_ids, '{}'), v_ids,
+          case when p_mode = 'exam' then p_time_limit_seconds end, p_exam_id)
+  returning id into v_session;
+
+  return v_session;
+end $function$;
+
 -- ===== supabase/seed.sql =====
 -- Initial catalogue: bachelor Geneeskunde, Universiteit Leiden.
 -- Course titles and EC values as supplied by the Medivo team. Use NULL for an EC value that has not been verified;

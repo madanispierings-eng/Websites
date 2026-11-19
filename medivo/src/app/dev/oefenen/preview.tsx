@@ -58,7 +58,12 @@ const keys: Record<string, AnswerFeedback["answer"]> = {
 
 function grade(q: PracticeQuestion, r: QuestionResponse): number | null {
   if ("option_id" in r) return r.option_id === `${q.id}B` ? q.points : 0;
-  if ("option_ids" in r) return [...r.option_ids].sort().join() === ["q2B", "q2D"].join() ? q.points : 0;
+  if ("option_ids" in r) {
+    // Deelscore zoals de database: elke juiste optie telt mee, elke foute telt even zwaar tegen.
+    const key = new Set(["q2B", "q2D"]);
+    const net = r.option_ids.reduce((s, id) => s + (key.has(id) ? 1 : -1), 0);
+    return Math.max(0, Math.min(q.points, (q.points / key.size) * net));
+  }
   if ("answers" in r) return (r.answers.filter((a, i) => a === keys.q3.answers![i]).length / q.items.length) * q.points;
   if ("value" in r) {
     const v = Number(r.value.replace(",", ".").match(/-?\d+(\.\d+)?/)?.[0]);

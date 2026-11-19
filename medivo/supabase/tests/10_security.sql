@@ -156,9 +156,10 @@ begin
   select question_ids into v_ids from public.practice_sessions where id = v_session;
   if v_ids <> array[q_mc, q_dd, q_num, q_open] then raise exception 'FAIL: exam order %', v_ids; end if;
 
-  -- Multiple choice: a subset is wrong.
+  -- Multiple choice: deelscore. Eén van de twee juiste opties levert de helft van de punten op,
+  -- en de vraag geldt nog niet als "goed".
   v_res := public.submit_response(v_session, q_mc, jsonb_build_object('option_ids', jsonb_build_array(opt_b)));
-  if (v_res ->> 'is_correct')::boolean or (v_res ->> 'score')::numeric <> 0 then raise exception 'FAIL: partial MC correct %', v_res; end if;
+  if (v_res ->> 'is_correct')::boolean or (v_res ->> 'score')::numeric <> 0.5 then raise exception 'FAIL: partial MC score %', v_res; end if;
   if v_res -> 'answer' -> 'labels' <> '["B","D"]'::jsonb then raise exception 'FAIL: MC key not returned'; end if;
   -- An option of another question is refused.
   begin
@@ -197,7 +198,8 @@ begin
   if (v_res ->> 'score')::numeric <> 2.5 then raise exception 'FAIL: self grade %', v_res; end if;
 
   v_res := public.finish_practice_session(v_session);
-  if (v_res ->> 'points')::numeric <> 9 or (v_res ->> 'scored')::numeric <> 4.5 then raise exception 'FAIL: points %', v_res; end if;
+  -- scored = MC 0,5 + dropdown 1 + numeric 1 + open (zelf nagekeken) 2,5 = 5.
+  if (v_res ->> 'points')::numeric <> 9 or (v_res ->> 'scored')::numeric <> 5 then raise exception 'FAIL: points %', v_res; end if;
 
   -- Exam mode: no feedback, and no self-grading before handing in.
   v_session := public.start_practice_session(v_course, 'exam', '{}', 200, 600, v_exam);
@@ -214,7 +216,65 @@ begin
   perform public.self_grade(v_session, q_open, 4);
   select count(*) into n from public.question_attempts where session_id = v_session and score is null;
   if n <> 0 then raise exception 'FAIL: ungraded after self-grade'; end if;
+
+  -- Deelscore bij "meerdere antwoorden" is niet te gamen: één juist én één fout heffen elkaar op.
+  v_session := public.start_practice_session(v_course, 'mixed', '{}', 200, null, v_exam);
+  v_res := public.submit_response(v_session, q_mc, jsonb_build_object('option_ids', jsonb_build_array(opt_b, opt_c)));
+  if (v_res ->> 'score')::numeric <> 0 then raise exception 'FAIL: MC one-right-one-wrong not zero %', v_res; end if;
+  -- Beide juiste opties: volledige punten en de vraag telt als goed.
+  v_session := public.start_practice_session(v_course, 'mixed', '{}', 200, null, v_exam);
+  v_res := public.submit_response(v_session, q_mc, jsonb_build_object('option_ids', jsonb_build_array(opt_b, opt_d)));
+  if not (v_res ->> 'is_correct')::boolean or (v_res ->> 'score')::numeric <> 1 then raise exception 'FAIL: MC all-correct not full %', v_res; end if;
 end $$;
+
+-- ---- vervolgvragen (een casus) blijven bij elkaar bij geshuffeld oefenen ----
+reset role;
+insert into public.topics (id, course_id, parent_id, slug, title, sort_order, status)
+select '0000cafe-0000-4000-8000-000000000001', id, null, 'casus-test', 'Casus test', 99, 'published'
+from public.courses where slug = 'van-cel-tot-molecuul';
+insert into public.questions (id, course_id, topic_id, type, stem, context, points, source, copyright_status, is_premium, reviewed_at, status)
+select v.id::uuid, c.id, '0000cafe-0000-4000-8000-000000000001', 'single_choice', v.stem, v.ctx, 1, 'test', 'own_work', false, now(), 'published'
+from public.courses c, (values
+  ('0000cafe-0001-4000-8000-000000000001', 'Casusdeel a',                       'Gedeelde casus'),
+  ('0000cafe-0001-4000-8000-000000000002', 'Casusdeel b, verwijst naar vorige', 'Gedeelde casus'),
+  ('0000cafe-0002-4000-8000-000000000001', 'Losse vraag 1', null),
+  ('0000cafe-0002-4000-8000-000000000002', 'Losse vraag 2', null),
+  ('0000cafe-0002-4000-8000-000000000003', 'Losse vraag 3', null),
+  ('0000cafe-0002-4000-8000-000000000004', 'Losse vraag 4', null)
+) as v(id, stem, ctx)
+where c.slug = 'van-cel-tot-molecuul';
+insert into public.question_options (question_id, label, body, sort_order)
+select id, 'A', 'Optie A', 1 from public.questions where topic_id = '0000cafe-0000-4000-8000-000000000001';
+insert into public.question_answer_keys (question_id, correct_option_id, explanation)
+select q.id, o.id, 'x' from public.questions q
+join public.question_options o on o.question_id = q.id
+where q.topic_id = '0000cafe-0000-4000-8000-000000000001';
+
+set local role authenticated;
+set local request.jwt.claim.sub = 'aaaaaaaa-0000-4000-8000-000000000001';
+do $$
+declare
+  v_course uuid := (select id from public.courses where slug = 'van-cel-tot-molecuul');
+  v_topic uuid := '0000cafe-0000-4000-8000-000000000001';
+  a uuid := '0000cafe-0001-4000-8000-000000000001';
+  b uuid := '0000cafe-0001-4000-8000-000000000002';
+  v_session uuid; v_ids uuid[]; ia int; ib int; i int;
+begin
+  -- Over vele shuffels: de twee delen van dezelfde casus staan altijd naast elkaar.
+  for i in 1..15 loop
+    v_session := public.start_practice_session(v_course, 'mixed', array[v_topic], 200, null);
+    select question_ids into v_ids from public.practice_sessions where id = v_session;
+    ia := array_position(v_ids, a);
+    ib := array_position(v_ids, b);
+    if ia is null or ib is null or abs(ia - ib) <> 1 then
+      raise exception 'FAIL: casus parts not adjacent (a=% b=% ids=%)', ia, ib, v_ids;
+    end if;
+  end loop;
+end $$;
+reset role;
+-- Opruimen zodat deze extra vragen latere tests niet beïnvloeden.
+delete from public.questions where topic_id = '0000cafe-0000-4000-8000-000000000001';
+delete from public.topics where id = '0000cafe-0000-4000-8000-000000000001';
 
 -- ---- a second attempt with a hint from the summary ----
 reset role;

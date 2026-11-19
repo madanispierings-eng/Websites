@@ -120,8 +120,11 @@ export function engineReducer(state: EngineState, action: EngineAction): EngineS
       const q = currentQuestion(state);
       if (!q || state.finished) return state;
       const a = answerFor(state, q.id);
-      // Once submitted (or while submitting) the answer is locked. Half-filled answers are fine while editing.
-      if (a.status !== "idle") return state;
+      // In a tentamen you may change a saved answer until you hand in, so a recorded ("answered")
+      // answer can be edited again; in practice modes a submitted answer stays locked. Never edit
+      // while a save is in flight.
+      if (a.status === "submitting") return state;
+      if (a.status === "answered" && state.mode !== "exam") return state;
       const r = action.response;
       const shapeOk =
         (q.type === "single_choice" && "option_id" in r && q.options.some((o) => o.id === r.option_id)) ||
@@ -132,7 +135,8 @@ export function engineReducer(state: EngineState, action: EngineAction): EngineS
       if (!shapeOk) return state;
       // A second attempt cannot pick the option that was already wrong.
       if (a.retry && "option_id" in r && a.retry.wrongOptionIds.includes(r.option_id)) return state;
-      return { ...state, answers: { ...state.answers, [q.id]: { ...a, response: r, error: null } } };
+      // Editing again (e.g. changing a tentamen answer) returns to the editable "idle" state.
+      return { ...state, answers: { ...state.answers, [q.id]: { ...a, response: r, status: "idle", feedback: null, error: null } } };
     }
     case "submit-start": {
       if (!canSubmit(state)) return state;

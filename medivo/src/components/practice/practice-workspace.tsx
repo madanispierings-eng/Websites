@@ -174,8 +174,11 @@ export function PracticeWorkspace({
   // (feedback and review at the end) without a timer, instead of showing the mode picker.
   const autoStarted = useRef(false);
   const [autoStart, setAutoStart] = useState(Boolean(initialExamId));
+  // If there is already an unfinished session for this exam, resume it (keeping the student's
+  // answers) instead of starting a fresh one — e.g. after a refresh on the "?tentamen=…" link.
+  const resumeMatchesExam = Boolean(initialExamId && resumable && resumable.examId === initialExamId);
   useEffect(() => {
-    if (!autoStart || autoStarted.current || engine || !initialExamId || examIntro) return;
+    if (!autoStart || autoStarted.current || engine || !initialExamId || examIntro || resumeMatchesExam) return;
     autoStarted.current = true;
     const ex = exams.find((e) => e.id === initialExamId);
     setExamIntro({
@@ -184,7 +187,7 @@ export function PracticeWorkspace({
       minutes: null,
       label: ex?.label ?? "Oefententamen",
     });
-  }, [autoStart, initialExamId, engine, examIntro, exams]);
+  }, [autoStart, initialExamId, engine, examIntro, exams, resumeMatchesExam]);
 
   const resume = useCallback(async () => {
     if (!resumable || resuming) return;
@@ -204,7 +207,10 @@ export function PracticeWorkspace({
   // that would mix in questions they already answered.
   // A tentamen always resumes until it is handed in (even when every question is answered, so you
   // can still review and submit); a practice session resumes only while it is not fully answered.
-  const canAutoResume = Boolean(resumable) && !initialExamId && !!resumable && (resumable.mode === "exam" || resumable.answered < resumable.total);
+  // On the "?tentamen=…" link we resume the matching unfinished exam instead of starting a new one.
+  const canAutoResume = Boolean(resumable) && (
+    initialExamId ? resumeMatchesExam : resumable!.mode === "exam" || resumable!.answered < resumable!.total
+  );
   useEffect(() => {
     if (autoResumed.current || engine || starting || resuming || startingNew || !canAutoResume) return;
     autoResumed.current = true;

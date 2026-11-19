@@ -8,7 +8,7 @@ import { MarkupText } from "@/components/markup-text";
 import { Button } from "@/components/ui/button";
 import { imageUrlsFor } from "@/lib/content/images";
 import { answerFor, canSubmit, currentQuestion, hintVisible, isPartial, type AnswerState, type EngineAction, type EngineState } from "@/lib/practice/engine";
-import type { AnswerFeedback, PracticeQuestion, QuestionType } from "@/lib/practice/types";
+import type { AnswerFeedback, PracticeQuestion, QuestionResponse, QuestionType } from "@/lib/practice/types";
 import { cn } from "@/lib/utils";
 
 const typeHint: Partial<Record<QuestionType, string>> = {
@@ -25,6 +25,7 @@ export function QuestionView({
   state,
   dispatch,
   onSubmit,
+  onBgSave,
   onBookmark,
   onSelfGrade,
   onReveal,
@@ -34,6 +35,7 @@ export function QuestionView({
   state: EngineState;
   dispatch: (a: EngineAction) => void;
   onSubmit: () => void;
+  onBgSave: (questionId: string, response: QuestionResponse) => void;
   onBookmark: (questionId: string, next: boolean) => void;
   onSelfGrade: (questionId: string, score: number) => Promise<string | null>;
   onReveal: (questionId: string) => Promise<string | null>;
@@ -56,17 +58,42 @@ export function QuestionView({
   const [revealError, setRevealError] = useState<string | null>(null);
   const retry = answer.retry;
   const showHint = hintVisible(state, q);
-  const examSaveRef = useRef<string>("");
 
-  // In a tentamen there is no "save" button: a chosen answer is saved automatically and can still
-  // be changed. Whenever the (editable) response changes, record it once.
+  // In a tentamen there is no "save" button: a chosen answer is saved automatically and can still be
+  // changed. The save runs in the background (onBgSave) so it never replaces the response being
+  // edited — unlike onSubmit it leaves the typed text alone. Choices save at once; typed answers
+  // (open/numeric) are debounced, so typing is not a round-trip per keystroke, and flushed on blur
+  // and when the student leaves the question.
+  const onBgSaveRef = useRef(onBgSave);
+  onBgSaveRef.current = onBgSave;
+  const savedKeyRef = useRef("");
+  const pendingSaveRef = useRef<{ questionId: string; response: QuestionResponse; key: string } | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flushSave = useRef(() => {
+    if (saveTimerRef.current) { clearTimeout(saveTimerRef.current); saveTimerRef.current = null; }
+    const p = pendingSaveRef.current;
+    if (!p) return;
+    pendingSaveRef.current = null;
+    savedKeyRef.current = p.key;
+    onBgSaveRef.current(p.questionId, p.response);
+  });
+
   useEffect(() => {
-    if (!isExam || state.finished || answer.status !== "idle" || answer.response == null) return;
+    if (!isExam || state.finished || answer.response == null) return;
     const key = `${q.id}:${JSON.stringify(answer.response)}`;
-    if (examSaveRef.current === key) return;
-    examSaveRef.current = key;
-    onSubmit();
-  }, [isExam, state.finished, q.id, answer.status, answer.response, onSubmit]);
+    if (key === savedKeyRef.current || pendingSaveRef.current?.key === key) return;
+    if (q.type === "open" || q.type === "numeric") {
+      pendingSaveRef.current = { questionId: q.id, response: answer.response, key };
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(() => flushSave.current(), 600);
+    } else {
+      savedKeyRef.current = key;
+      onBgSaveRef.current(q.id, answer.response);
+    }
+  }, [isExam, state.finished, q.id, q.type, answer.response]);
+
+  // Leaving a question (or unmounting the view) saves a typed answer that is still waiting.
+  useEffect(() => () => flushSave.current(), [q.id]);
 
   // On a new question, bring the question card back up just under the sticky header, so the
   // question is fully in view without scrolling — even after reading a long explanation.
@@ -167,7 +194,7 @@ export function QuestionView({
         ) : null}
 
         <div className="mt-4">
-          <AnswerInput q={q} answer={answer} locked={isExam ? false : locked || revealing} isExam={isExam} dispatch={dispatch} />
+          <AnswerInput q={q} answer={answer} locked={isExam ? false : locked || revealing} isExam={isExam} dispatch={dispatch} onCommit={() => flushSave.current()} />
         </div>
 
         <div role="status">
@@ -192,11 +219,11 @@ export function QuestionView({
         <div className="mt-5 flex flex-wrap items-center gap-2">
           {isExam ? (
             <span className="text-sm text-muted-ink" aria-live="polite">
-              {answer.status === "submitting"
-                ? "Opslaan…"
-                : answered
-                  ? "Antwoord opgeslagen — je kunt het nog wijzigen."
-                  : "Kies een antwoord; het wordt automatisch opgeslagen."}
+              {answered
+                ? "Antwoord opgeslagen — je kunt het nog wijzigen."
+                : answer.response != null
+                  ? "Bezig met opslaan…"
+                  : "Je antwoord wordt automatisch opgeslagen."}
             </span>
           ) : !answered ? (
             <Button type="submit" disabled={!canSubmit(state) || revealing} className="h-10 px-5 font-semibold">
@@ -313,12 +340,14 @@ const wrongValueAt = (a: AnswerState, i: number) => {
 const currentIds = (a: AnswerState) => (a.response && "option_ids" in a.response ? a.response.option_ids : []);
 const toggle = (ids: string[], id: string) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]);
 
-function AnswerInput({ q, answer, locked, isExam, dispatch }: {
+function AnswerInput({ q, answer, locked, isExam, dispatch, onCommit }: {
   q: PracticeQuestion;
   answer: AnswerState;
   locked: boolean;
   isExam: boolean;
   dispatch: (a: EngineAction) => void;
+  /** Flush a pending tentamen save at once (e.g. on blur of a typed answer). */
+  onCommit?: () => void;
 }) {
   const fb = answer.feedback;
   const r = answer.response;
@@ -451,6 +480,7 @@ function AnswerInput({ q, answer, locked, isExam, dispatch }: {
           value={value}
           maxLength={60}
           onChange={(e) => dispatch({ type: "respond", response: { value: e.target.value } })}
+          onBlur={onCommit}
           className={cn(
             "h-10 w-40 rounded-lg border bg-white px-3 text-base tabular-nums text-navy sm:text-sm",
             fb ? (fb.isCorrect ? "border-success bg-success-soft" : "border-danger/60 bg-danger-soft") : "border-input",
@@ -472,6 +502,7 @@ function AnswerInput({ q, answer, locked, isExam, dispatch }: {
         maxLength={8000}
         rows={5}
         onChange={(e) => dispatch({ type: "respond", response: { text: e.target.value } })}
+        onBlur={onCommit}
         className="mt-1.5 block w-full rounded-lg border border-input bg-white px-3 py-2 text-base leading-relaxed text-navy disabled:bg-canvas sm:text-[0.95rem]"
       />
     </div>

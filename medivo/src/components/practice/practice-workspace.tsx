@@ -8,7 +8,7 @@ import { QuestionView } from "@/components/practice/question-view";
 import { TopicSidebar, type TopicStats } from "@/components/practice/topic-sidebar";
 import { Button } from "@/components/ui/button";
 import { answeredCount, createEngine, currentQuestion, engineReducer, isPartial, resumeEngine, type EngineAction, type EngineState } from "@/lib/practice/engine";
-import type { PracticeApi, PracticeExam, PracticeMode, ResumableSession } from "@/lib/practice/types";
+import type { PracticeApi, PracticeExam, PracticeMode, QuestionResponse, ResumableSession } from "@/lib/practice/types";
 import type { TopicNode } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
 
@@ -235,9 +235,30 @@ export function PracticeWorkspace({
     }
   }, [api, engine]);
 
+  // A tentamen saves answers in the background: no feedback, and the typed/picked response is left
+  // untouched, so typing an open answer is never interrupted. "saved" only marks the answer recorded.
+  // The latest save is tracked so hand-in can wait for it: a just-typed answer is never lost.
+  const bgSaveInFlight = useRef<Promise<unknown> | null>(null);
+  const bgSave = useCallback((questionId: string, response: QuestionResponse) => {
+    if (!engine) return;
+    const sessionId = engine.sessionId;
+    const p = (async () => {
+      try {
+        const res = await api.submitAnswer({ sessionId, questionId, response });
+        if (res.ok) dispatch({ type: "saved", questionId });
+      } catch {
+        // A failed background save is retried on the next change and flushed when the student hands in.
+      }
+    })();
+    bgSaveInFlight.current = p;
+    void p.finally(() => { if (bgSaveInFlight.current === p) bgSaveInFlight.current = null; });
+  }, [api, engine]);
+
   const finish = useCallback(async () => {
     if (!engine || finishing) return;
     setFinishing(true);
+    // Let a background save that is still running (a just-typed answer) reach the server first.
+    if (bgSaveInFlight.current) await bgSaveInFlight.current;
     const res = await api.finishSession({ sessionId: engine.sessionId });
     setFinishing(false);
     if (res.ok) {
@@ -361,6 +382,7 @@ export function PracticeWorkspace({
             state={engine}
             dispatch={dispatch}
             onSubmit={submit}
+            onBgSave={bgSave}
             onBookmark={bookmark}
             onSelfGrade={selfGrade}
             onReveal={reveal}

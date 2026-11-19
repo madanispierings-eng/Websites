@@ -44,7 +44,6 @@ function examGrade(scored: number, points: number, guess: number): number | null
 const modes: { value: WorkspaceMode; label: string; body: string; icon: typeof Layers }[] = [
   { value: "topic", label: "Per onderwerp", body: "Vragen uit één of meer gekozen onderwerpen, met direct uitleg.", icon: ListChecks },
   { value: "mixed", label: "Gemengd", body: "Vragen uit meerdere onderwerpen door elkaar.", icon: Shuffle },
-  { value: "exam", label: "Tentamenmodus", body: "Geen tussentijdse feedback, optioneel met timer. Score en uitleg aan het eind.", icon: Timer },
   { value: "incorrect", label: "Fout beantwoord", body: "Vragen die je de laatste keer fout had, of alleen met hint goed.", icon: RotateCcw },
 ];
 
@@ -83,8 +82,6 @@ export function PracticeWorkspace({
   const [mode, setMode] = useState<WorkspaceMode>(initialMode);
   const [topicIds, setTopicIds] = useState<string[]>(initialTopicId ? [initialTopicId] : []);
   const [mixedTopics, setMixedTopics] = useState<string[]>([]);
-  const [examCount, setExamCount] = useState(20);
-  const [examMinutes, setExamMinutes] = useState<number | null>(30);
   const [engine, dispatch] = useReducer(holderReducer, null);
   const [timer, setTimer] = useState<{ startedAt: number; limit: number } | null>(null);
   const [startError, setStartError] = useState<string | null>(null);
@@ -140,28 +137,16 @@ export function PracticeWorkspace({
   }, [startSessionWith]);
 
   function start() {
-    const sessionTopicIds = mode === "topic" ? topicIds : mode === "mixed" ? mixedTopics : [];
-    const timed = mode === "exam";
-    const opts: StartOpts = {
+    // Per onderwerp, gemengd en "fout beantwoord" pakken de hele (resterende) selectie in één
+    // sessie — tot het maximum van 200 — zodat je kunt doorgaan tot je alles hebt gehad.
+    // Tentamens start je niet hier maar via het tabblad Tentamens (deeplink).
+    startSessionWith({
       sessionMode: mode,
-      topicIds: sessionTopicIds,
-      // Per onderwerp, gemengd en "fout beantwoord" pakken de hele (resterende) selectie
-      // in één sessie — tot het maximum van 200 — zodat je kunt doorgaan tot je alles hebt gehad.
-      limit: mode === "exam" ? examCount : 200,
-      timeLimitSeconds: timed && examMinutes ? examMinutes * 60 : null,
+      topicIds: mode === "topic" ? topicIds : mode === "mixed" ? mixedTopics : [],
+      limit: 200,
+      timeLimitSeconds: null,
       examId: null,
-    };
-    // Een tentamen start pas na het introscherm met de instructies.
-    if (mode === "exam") {
-      setExamIntro({
-        opts,
-        count: examCount,
-        minutes: timed && examMinutes ? examMinutes : null,
-        label: "Oefententamen",
-      });
-      return;
-    }
-    startSessionWith(opts);
+    });
   }
 
   // Arriving from "Oude tentamens" with a chosen exam: start that exam straight away, as an exam
@@ -196,15 +181,10 @@ export function PracticeWorkspace({
     setShowTopics(false);
   }, [api, resumable, resuming]);
 
-  // After a refresh or an accidental click away, drop the student straight back into their
-  // in-progress session at the question they were on — no banner to misclick, no new session
-  // that would mix in questions they already answered.
-  // A tentamen always resumes until it is handed in (even when every question is answered, so you
-  // can still review and submit); a practice session resumes only while it is not fully answered.
-  // On the "?tentamen=…" link we resume the matching unfinished exam instead of starting a new one.
-  const canAutoResume = Boolean(resumable) && (
-    initialExamId ? resumeMatchesExam : resumable!.mode === "exam" || resumable!.answered < resumable!.total
-  );
+  // Alleen de "?tentamen=…"-deeplink (vanaf Oude tentamens) springt direct terug in een lopend
+  // tentamen. Op de gewone oefenpagina openen we nooit automatisch een sessie: de student komt op
+  // het moduskeuzescherm, met daarboven een knop om door te gaan waar hij was gebleven.
+  const canAutoResume = Boolean(resumable) && Boolean(initialExamId) && resumeMatchesExam;
   useEffect(() => {
     if (autoResumed.current || engine || starting || resuming || startingNew || !canAutoResume) return;
     autoResumed.current = true;
@@ -405,22 +385,22 @@ export function PracticeWorkspace({
           </section>
         ) : (
           <>
-            {resumeError ? (
+            {resumable ? (
               <section aria-labelledby="hervat-titel" className="mb-5 rounded-xl border border-accent-blue/40 bg-sky/50 p-5 shadow-[var(--shadow-card)] sm:p-6">
                 <div className="flex flex-wrap items-start gap-4">
                   <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent-blue/15 text-accent-blue">
                     <History className="size-5" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <h2 id="hervat-titel" className="font-semibold text-navy">Je vorige sessie hervatten</h2>
+                    <h2 id="hervat-titel" className="font-semibold text-navy">Ga door waar je was gebleven</h2>
                     <p className="mt-1 text-sm text-muted-ink">
-                      {resumable ? <>Je hebt nog een onafgeronde {modeLabel(resumable.mode)}-sessie · {resumable.answered} van {resumable.total} vragen beantwoord.</> : null}
+                      Je hebt nog een onafgeronde {modeLabel(resumable.mode)}-sessie · {resumable.answered} van {resumable.total} vragen beantwoord.
                     </p>
-                    <p role="alert" className="mt-2 text-sm text-danger">{resumeError}</p>
+                    {resumeError ? <p role="alert" className="mt-2 text-sm text-danger">{resumeError}</p> : null}
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Button type="button" onClick={resume} disabled={resuming} className="h-10 font-semibold">
                         {resuming ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
-                        Opnieuw proberen
+                        {resumeError ? "Opnieuw proberen" : "Doorgaan"}
                       </Button>
                     </div>
                   </div>
@@ -503,28 +483,6 @@ export function PracticeWorkspace({
                 </fieldset>
               ) : null}
 
-              {mode === "exam" ? (
-                <div className="flex flex-wrap gap-6">
-                  <label className="grid gap-1.5 text-sm font-semibold text-navy">
-                    Aantal vragen
-                    <select value={examCount} onChange={(e) => setExamCount(Number(e.target.value))} className="h-10 rounded-lg border border-input bg-white px-3 text-base font-normal sm:text-sm">
-                      {[10, 20, 40, 60].map((n) => <option key={n} value={n}>{n}</option>)}
-                    </select>
-                  </label>
-                  <label className="grid gap-1.5 text-sm font-semibold text-navy">
-                    Tijdslimiet
-                    <select
-                      value={examMinutes ?? 0}
-                      onChange={(e) => setExamMinutes(Number(e.target.value) || null)}
-                      className="h-10 rounded-lg border border-input bg-white px-3 text-base font-normal sm:text-sm"
-                    >
-                      <option value={0}>Geen timer</option>
-                      {[15, 30, 60, 90, 120].map((n) => <option key={n} value={n}>{n} minuten</option>)}
-                    </select>
-                  </label>
-                </div>
-              ) : null}
-
               {mode === "incorrect" ? (
                 <p className="text-sm text-muted-ink">We verzamelen de vragen die je bij je laatste poging fout had of alleen met hint goed, uit alle onderwerpen van dit vak.</p>
               ) : null}
@@ -554,7 +512,7 @@ export function PracticeWorkspace({
                 className="mt-5 h-11 px-6 font-semibold"
               >
                 {starting ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
-                {mode === "exam" ? "Start tentamen" : "Start met oefenen"}
+                Start met oefenen
               </Button>
             </div>
             </section>
@@ -565,7 +523,7 @@ export function PracticeWorkspace({
   );
 }
 
-const modeLabel = (m: PracticeMode) => modes.find((x) => x.value === m)?.label.toLowerCase() ?? "oefen";
+const modeLabel = (m: PracticeMode) => (m === "exam" ? "tentamen" : modes.find((x) => x.value === m)?.label.toLowerCase() ?? "oefen");
 
 /** A countdown the student can pause. Pausing is client-side only; it freezes the clock and the
  *  server no longer rejects answers after the time limit, so a paused tentamen never loses work. */

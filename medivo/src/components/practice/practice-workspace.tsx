@@ -24,6 +24,17 @@ type StartOpts = {
   repeatAnswered?: boolean;
 };
 
+/** Shown before an exam starts: the instructions screen. */
+type ExamIntro = { opts: StartOpts; count: number; minutes: number | null; label: string };
+
+/** Indicatief cijfer (1–10) met een lineaire normering en een cesuur van 55% voor een 5,5. */
+function examGrade(scored: number, points: number): number | null {
+  if (!points) return null;
+  const pct = scored / points;
+  const c = pct >= 0.55 ? 5.5 + (4.5 * (pct - 0.55)) / 0.45 : 1 + (4.5 * pct) / 0.55;
+  return Math.min(10, Math.max(1, Math.round(c * 10) / 10));
+}
+
 const modes: { value: WorkspaceMode; label: string; body: string; icon: typeof Layers }[] = [
   { value: "topic", label: "Per onderwerp", body: "Vragen uit één of meer gekozen onderwerpen, met direct uitleg.", icon: ListChecks },
   { value: "mixed", label: "Gemengd", body: "Vragen uit meerdere onderwerpen door elkaar.", icon: Shuffle },
@@ -75,6 +86,7 @@ export function PracticeWorkspace({
   const [timer, setTimer] = useState<{ startedAt: number; limit: number } | null>(null);
   const [startError, setStartError] = useState<string | null>(null);
   const [allAnswered, setAllAnswered] = useState(false);
+  const [examIntro, setExamIntro] = useState<ExamIntro | null>(null);
   const lastStartOpts = useRef<StartOpts | null>(null);
   const [starting, startTransition] = useTransition();
   const [finishing, setFinishing] = useState(false);
@@ -129,7 +141,7 @@ export function PracticeWorkspace({
     // A past exam runs as the "exam" mode (feedback at the end) or as "mixed" (feedback per question), in exam order.
     const sessionMode: PracticeMode = mode === "past" ? (pastAsExam ? "exam" : "mixed") : mode;
     const timed = mode === "exam" || (mode === "past" && pastAsExam);
-    startSessionWith({
+    const opts: StartOpts = {
       sessionMode,
       topicIds: sessionTopicIds,
       // Per onderwerp, gemengd en "fout beantwoord" pakken de hele (resterende) selectie
@@ -137,7 +149,19 @@ export function PracticeWorkspace({
       limit: mode === "exam" ? examCount : 200,
       timeLimitSeconds: timed && examMinutes ? examMinutes * 60 : null,
       examId: mode === "past" ? examId : null,
-    });
+    };
+    // Een tentamen start pas na het introscherm met de instructies.
+    if (sessionMode === "exam") {
+      const ex = mode === "past" ? exams.find((e) => e.id === examId) : null;
+      setExamIntro({
+        opts,
+        count: mode === "exam" ? examCount : ex?.questionCount ?? 0,
+        minutes: timed && examMinutes ? examMinutes : null,
+        label: ex?.label ?? "Oefententamen",
+      });
+      return;
+    }
+    startSessionWith(opts);
   }
 
   // Arriving from "Oude tentamens" with a chosen exam: start that exam straight away, as an exam
@@ -145,10 +169,16 @@ export function PracticeWorkspace({
   const autoStarted = useRef(false);
   const [autoStart, setAutoStart] = useState(Boolean(initialExamId));
   useEffect(() => {
-    if (!autoStart || autoStarted.current || engine || !initialExamId) return;
+    if (!autoStart || autoStarted.current || engine || !initialExamId || examIntro) return;
     autoStarted.current = true;
-    startSessionWith({ sessionMode: "exam", topicIds: [], limit: 200, timeLimitSeconds: null, examId: initialExamId });
-  }, [autoStart, initialExamId, engine, startSessionWith]);
+    const ex = exams.find((e) => e.id === initialExamId);
+    setExamIntro({
+      opts: { sessionMode: "exam", topicIds: [], limit: 200, timeLimitSeconds: null, examId: initialExamId },
+      count: ex?.questionCount ?? 0,
+      minutes: null,
+      label: ex?.label ?? "Oefententamen",
+    });
+  }, [autoStart, initialExamId, engine, examIntro, exams]);
 
   const resume = useCallback(async () => {
     if (!resumable || resuming) return;
@@ -245,13 +275,15 @@ export function PracticeWorkspace({
   // The countdown lives here so the timer can sit prominently at the top of the exam, not only in the footer.
   const { remaining, paused: timerPaused, toggle: toggleTimer } = useCountdown(engine && !engine.finished ? timer : null, finish);
   // While the chosen exam is being started automatically, show a loader instead of the mode picker.
-  const autoStarting = autoStart && !engine && !startError;
+  const autoStarting = autoStart && !engine && !startError && !examIntro;
   // Same loader while an in-progress session is being resumed automatically after a refresh.
   const autoResuming = canAutoResume && !engine && !startingNew && !resumeError;
+  // The exam intro (instructions) also runs full-width, without the topic sidebar.
+  const focusView = examSession || Boolean(examIntro && !engine);
 
   return (
-    <div className={cn("grid gap-6", !examSession && "lg:grid-cols-[19rem_minmax(0,1fr)]")}>
-      {examSession ? null : (
+    <div className={cn("grid gap-6", !focusView && "lg:grid-cols-[19rem_minmax(0,1fr)]")}>
+      {focusView ? null : (
       <div className="lg:sticky lg:top-24 lg:self-start">
         <button
           type="button"
@@ -328,6 +360,13 @@ export function PracticeWorkspace({
                 onRestart={newSession}
               />
             }
+          />
+        ) : examIntro ? (
+          <ExamIntroScreen
+            intro={examIntro}
+            starting={starting}
+            onBegin={() => { const o = examIntro.opts; setExamIntro(null); startSessionWith(o); }}
+            onCancel={() => { setExamIntro(null); setAutoStart(false); autoStarted.current = false; }}
           />
         ) : autoStarting || autoResuming ? (
           <section className="grid place-items-center rounded-xl border border-line bg-white p-12 text-center shadow-[var(--shadow-card)]">
@@ -671,22 +710,89 @@ function ResultsBanner({ state, onRestart }: { state: EngineState; onRestart: ()
   const pct = r.points ? Math.round((r.scored / r.points) * 100) : 0;
   const toGrade = Object.values(state.answers).filter((a) => a.feedback && a.response !== null && a.feedback.score === null).length;
   const nl = (n: number) => n.toLocaleString("nl-NL", { maximumFractionDigits: 2 });
+  const grade = state.mode === "exam" ? examGrade(r.scored, r.points) : null;
+  const passed = grade !== null && grade >= 5.5;
   return (
     <section aria-labelledby="resultaat-titel" className="mb-5 flex flex-wrap items-center gap-5 rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
-      <div className="grid size-20 shrink-0 place-items-center rounded-full border-4 border-success/30 text-xl font-bold tabular-nums text-navy">{pct}%</div>
+      <div className={cn("grid size-20 shrink-0 place-items-center rounded-full border-4 text-xl font-bold tabular-nums text-navy", grade === null ? "border-success/30" : passed ? "border-success" : "border-danger/60")}>
+        {grade !== null ? grade.toLocaleString("nl-NL", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : `${pct}%`}
+      </div>
       <div className="flex-1">
-        <h2 id="resultaat-titel" className="text-lg font-semibold text-navy">Sessie afgerond</h2>
+        <h2 id="resultaat-titel" className="text-lg font-semibold text-navy">{grade !== null ? "Tentamen afgerond" : "Sessie afgerond"}</h2>
         <p className="mt-1 text-sm text-muted-ink">
-          {nl(r.scored)} van {nl(r.points)} punten · {r.correct} van {r.total} vragen volledig goed
+          {grade !== null ? (
+            <><strong className={passed ? "text-success-ink" : "text-danger"}>Cijfer {grade.toLocaleString("nl-NL", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} — {passed ? "geslaagd" : "niet gehaald"}</strong> (indicatief, cesuur 55%). </>
+          ) : null}
+          {nl(r.scored)} van {nl(r.points)} punten ({pct}%) · {r.correct} van {r.total} vragen volledig goed
           {r.withHint ? ` (waarvan ${r.withHint} met hint)` : ""} · {r.answered} beantwoord.{" "}
           {toGrade
-            ? `Kijk nog ${toGrade} open ${toGrade === 1 ? "vraag" : "vragen"} na met het antwoordmodel (oranje in het overzicht); je score loopt mee.`
+            ? `Kijk nog ${toGrade} open ${toGrade === 1 ? "vraag" : "vragen"} na met het antwoordmodel (oranje in het overzicht); je cijfer loopt mee.`
             : "Loop hieronder de vragen na om de uitleg te lezen."}
         </p>
       </div>
       <div className="flex gap-2">
         <Button variant="default" onClick={onRestart}>Terug naar oefenen</Button>
         <Button asChild variant="ghost"><Link href="/dashboard">Naar dashboard</Link></Button>
+      </div>
+    </section>
+  );
+}
+
+function ExamIntroScreen({ intro, starting, onBegin, onCancel }: {
+  intro: ExamIntro;
+  starting: boolean;
+  onBegin: () => void;
+  onCancel: () => void;
+}) {
+  const { count, minutes, label } = intro;
+  const Point = ({ children }: { children: React.ReactNode }) => (
+    <li className="flex gap-2.5">
+      <span className="mt-[0.45rem] size-1.5 shrink-0 rounded-full bg-accent-blue" aria-hidden="true" />
+      <span>{children}</span>
+    </li>
+  );
+  return (
+    <section aria-labelledby="tentamen-intro-titel" className="mx-auto max-w-2xl rounded-xl border border-line bg-white p-6 shadow-[var(--shadow-card)] sm:p-8">
+      <div className="flex items-center gap-3">
+        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-sky text-blue"><Timer className="size-6" aria-hidden="true" /></span>
+        <div>
+          <p className="text-sm font-medium text-muted-ink">Tentamenmodus</p>
+          <h2 id="tentamen-intro-titel" className="text-xl font-bold text-navy">Je staat op het punt een tentamen te starten</h2>
+        </div>
+      </div>
+      {label ? <p className="mt-1.5 text-sm text-muted-ink">{label}</p> : null}
+
+      <dl className="mt-5 grid grid-cols-3 gap-3">
+        <div className="rounded-lg border border-line bg-canvas px-3 py-2">
+          <dt className="text-xs text-muted-ink">Vragen</dt>
+          <dd className="text-base font-semibold text-navy">{count ? count : "—"}</dd>
+        </div>
+        <div className="rounded-lg border border-line bg-canvas px-3 py-2">
+          <dt className="text-xs text-muted-ink">Tijd</dt>
+          <dd className="text-base font-semibold text-navy">{minutes ? `${minutes} min` : "Geen limiet"}</dd>
+        </div>
+        <div className="rounded-lg border border-line bg-canvas px-3 py-2">
+          <dt className="text-xs text-muted-ink">Per vraag</dt>
+          <dd className="text-base font-semibold text-navy">1 punt</dd>
+        </div>
+      </dl>
+
+      <h3 className="mt-6 text-sm font-semibold text-navy">Lees dit voordat je begint</h3>
+      <ul className="mt-2.5 space-y-2.5 text-sm leading-relaxed text-navy/90">
+        <Point>Maak het tentamen <strong>zelfstandig en zonder hulpmiddelen</strong> — dus zonder de samenvatting of andere theorie ernaast. Zo oefen je onder echte tentamenomstandigheden.</Point>
+        <Point>De <strong>tijd wordt bijgehouden</strong> en staat bovenin beeld zodra je begint. Je kunt pauzeren, maar houd dat beperkt voor een eerlijke uitslag. Is de tijd om, dan wordt het tentamen automatisch ingeleverd.</Point>
+        <Point>Je krijgt <strong>tijdens het tentamen geen feedback</strong>. Je kunt vrij tussen de vragen navigeren, een vraag markeren om er later op terug te komen, en je antwoorden worden automatisch bewaard.</Point>
+        <Point>Lees elke vraag rustig en volledig; bij meerkeuze is er <strong>één beste antwoord</strong>, tenzij anders vermeld.</Point>
+        <Point>Na het inleveren worden je antwoorden <strong>geanalyseerd</strong>: je ziet per vraag of het goed was, het juiste antwoord met uitleg, en je krijgt een <strong>cijfer volgens de normering</strong> (lineair, met een cesuur van 55% voor een 5,5). Open vragen kijk je zelf na met het antwoordmodel; die punten tellen mee.</Point>
+      </ul>
+
+      <div className="mt-7 flex flex-wrap items-center gap-3 border-t border-line pt-5">
+        <Button type="button" onClick={onBegin} disabled={starting} className="h-11 px-6 font-semibold">
+          {starting ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+          Begin tentamen
+        </Button>
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={starting}>Annuleren</Button>
+        <span className="ml-auto text-sm text-muted-ink">Succes!</span>
       </div>
     </section>
   );

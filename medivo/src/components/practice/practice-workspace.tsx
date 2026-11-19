@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useReducer, useRef, useState, useTransition } from "react";
-import { ChevronDown, ClipboardList, Clock, History, Layers, ListChecks, Loader2, RotateCcw, Shuffle, Timer, X } from "lucide-react";
+import { ChevronDown, ClipboardList, Clock, History, Layers, ListChecks, Loader2, Pause, Play, RotateCcw, Shuffle, Timer, X } from "lucide-react";
 import { QuestionView } from "@/components/practice/question-view";
 import { TopicSidebar, type TopicStats } from "@/components/practice/topic-sidebar";
 import { Button } from "@/components/ui/button";
@@ -240,13 +240,16 @@ export function PracticeWorkspace({
   }
 
   const inSession = Boolean(engine);
+  // A tentamen runs in a focused environment: only the question, no topic sidebar on the left.
+  const examSession = inSession && engine?.mode === "exam";
   // While the chosen exam is being started automatically, show a loader instead of the mode picker.
   const autoStarting = autoStart && !engine && !startError;
   // Same loader while an in-progress session is being resumed automatically after a refresh.
   const autoResuming = canAutoResume && !engine && !startingNew && !resumeError;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[19rem_minmax(0,1fr)]">
+    <div className={cn("grid gap-6", !examSession && "lg:grid-cols-[19rem_minmax(0,1fr)]")}>
+      {examSession ? null : (
       <div className="lg:sticky lg:top-24 lg:self-start">
         <button
           type="button"
@@ -277,6 +280,7 @@ export function PracticeWorkspace({
           />
         </div>
       </div>
+      )}
 
       <div className="min-w-0">
         {engine?.finished ? (
@@ -512,23 +516,48 @@ export function PracticeWorkspace({
 
 const modeLabel = (m: PracticeMode) => modes.find((x) => x.value === m)?.label.toLowerCase() ?? "oefen";
 
+/** A countdown the student can pause. Pausing is client-side only; it freezes the clock and the
+ *  server no longer rejects answers after the time limit, so a paused tentamen never loses work. */
 function useCountdown(timer: { startedAt: number; limit: number } | null, onExpire: () => void) {
   const [now, setNow] = useState(() => Date.now());
+  const [paused, setPaused] = useState(false);
+  const pausedMs = useRef(0);
+  const pauseStart = useRef<number | null>(null);
   const fired = useRef(false);
   useEffect(() => {
-    if (!timer) return;
+    // A fresh timer resets the pause bookkeeping.
+    pausedMs.current = 0;
+    pauseStart.current = null;
     fired.current = false;
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
+    setPaused(false);
+    setNow(Date.now());
   }, [timer]);
-  const remaining = timer ? Math.max(0, Math.round(timer.limit - (now - timer.startedAt) / 1000)) : null;
   useEffect(() => {
-    if (remaining === 0 && !fired.current) {
+    if (!timer || paused) return;
+    const id = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(id);
+  }, [timer, paused]);
+  const elapsed = timer ? (now - timer.startedAt - pausedMs.current) / 1000 : 0;
+  const remaining = timer ? Math.max(0, Math.round(timer.limit - elapsed)) : null;
+  useEffect(() => {
+    if (remaining === 0 && !fired.current && !paused) {
       fired.current = true;
       onExpire();
     }
-  }, [remaining, onExpire]);
-  return remaining;
+  }, [remaining, paused, onExpire]);
+  const toggle = useCallback(() => {
+    setPaused((p) => {
+      if (p) {
+        if (pauseStart.current != null) pausedMs.current += Date.now() - pauseStart.current;
+        pauseStart.current = null;
+      } else {
+        pauseStart.current = Date.now();
+      }
+      setNow(Date.now());
+      return !p;
+    });
+  }, []);
+  return { remaining, paused, toggle };
 }
 
 function SessionFooter({ state, dispatch, timer, finishing, onFinish, onRestart }: {
@@ -539,7 +568,7 @@ function SessionFooter({ state, dispatch, timer, finishing, onFinish, onRestart 
   onFinish: () => void;
   onRestart: () => void;
 }) {
-  const remaining = useCountdown(state.finished ? null : timer, onFinish);
+  const { remaining, paused, toggle } = useCountdown(state.finished ? null : timer, onFinish);
   const isExam = state.mode === "exam";
   // After finishing, every question carries review feedback, so count from the review instead of the engine.
   const done = state.finished ? state.finished.answered : answeredCount(state);
@@ -583,14 +612,22 @@ function SessionFooter({ state, dispatch, timer, finishing, onFinish, onRestart 
       <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
         <span className="text-muted-ink">{done} van {total} beantwoord</span>
         {remaining !== null ? (
-          <span
-            className={cn("inline-flex items-center gap-1.5 rounded-md bg-sky px-2.5 py-1 font-semibold tabular-nums text-navy", remaining < 60 && "bg-danger-soft text-danger")}
-            role="timer"
-            aria-label="Resterende tijd"
-          >
-            <Clock className="size-4" aria-hidden="true" />
-            {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, "0")}
-          </span>
+          <div className="inline-flex items-center gap-2">
+            <span
+              className={cn("inline-flex items-center gap-1.5 rounded-md bg-sky px-2.5 py-1 font-semibold tabular-nums text-navy", remaining < 60 && !paused && "bg-danger-soft text-danger", paused && "bg-canvas text-muted-ink")}
+              role="timer"
+              aria-label="Resterende tijd"
+            >
+              <Clock className="size-4" aria-hidden="true" />
+              {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, "0")}
+              {paused ? <span className="font-normal"> · gepauzeerd</span> : null}
+            </span>
+            {!state.finished ? (
+              <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-navy" onClick={toggle}>
+                {paused ? <><Play className="size-4" aria-hidden="true" /> Hervat</> : <><Pause className="size-4" aria-hidden="true" /> Pauze</>}
+              </Button>
+            ) : null}
+          </div>
         ) : null}
         <div className="ml-auto flex gap-2">
           {state.finished ? (

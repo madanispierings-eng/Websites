@@ -13,7 +13,7 @@ import { finishSession, resumeSession, revealAnswer, selfGrade, startSession, su
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ modus?: string; onderwerp?: string; tentamen?: string }> };
 
-const MODES: WorkspaceMode[] = ["topic", "mixed", "exam", "incorrect", "past"];
+const MODES: WorkspaceMode[] = ["topic", "mixed", "exam", "incorrect"];
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const course = await getCourse((await params).slug);
@@ -36,7 +36,7 @@ export default async function PracticePage({ params, searchParams }: Props) {
   const topicIds = new Set(topics.flatMap((t) => [t.id, ...t.children.map((c) => c.id)]));
   const initialTopicId = onderwerp && topicIds.has(onderwerp) ? onderwerp : null;
   const initialExamId = exams.some((e) => e.id === tentamen) ? tentamen! : null;
-  const initialMode = initialExamId ? "past" : MODES.includes(modus as WorkspaceMode) ? (modus as WorkspaceMode) : "topic";
+  const initialMode: WorkspaceMode = MODES.includes(modus as WorkspaceMode) ? (modus as WorkspaceMode) : "topic";
 
   return (
     <main id="inhoud" className="flex-1">
@@ -44,7 +44,7 @@ export default async function PracticePage({ params, searchParams }: Props) {
         course={course}
         active="oefenen"
         title="Oefenen"
-        intro="Kies een onderwerp of een oud tentamen en test je kennis. Na elk antwoord lees je waarom het klopt of niet."
+        intro="Kies een onderwerp en test je kennis. Na elk antwoord lees je waarom het klopt of niet. Oude tentamens vind je op het tabblad Tentamens."
       />
       {/* Wider than the default container so the "lees de theorie" panel next to a question has room. */}
       <div className="mx-auto w-full max-w-[1520px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">

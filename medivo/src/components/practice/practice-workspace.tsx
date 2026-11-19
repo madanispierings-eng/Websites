@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useReducer, useRef, useState, useTransition } from "react";
-import { ChevronDown, ClipboardList, Clock, History, Layers, ListChecks, Loader2, Pause, Play, RotateCcw, Shuffle, Timer, X } from "lucide-react";
+import { ChevronDown, Clock, History, Layers, ListChecks, Loader2, Pause, Play, RotateCcw, Shuffle, Timer, X } from "lucide-react";
 import { QuestionView } from "@/components/practice/question-view";
 import { TopicSidebar, type TopicStats } from "@/components/practice/topic-sidebar";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,8 @@ import type { PracticeApi, PracticeExam, PracticeMode, QuestionResponse, Resumab
 import type { TopicNode } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
 
-/** What the student picks; "past" is a whole old exam, run as an exam or with feedback per question. */
-export type WorkspaceMode = PracticeMode | "past";
+/** What the student picks in de oefenkiezer. Oude tentamens staan apart op hun eigen pagina. */
+export type WorkspaceMode = PracticeMode;
 
 type StartOpts = {
   sessionMode: PracticeMode;
@@ -46,7 +46,6 @@ const modes: { value: WorkspaceMode; label: string; body: string; icon: typeof L
   { value: "mixed", label: "Gemengd", body: "Vragen uit meerdere onderwerpen door elkaar.", icon: Shuffle },
   { value: "exam", label: "Tentamenmodus", body: "Geen tussentijdse feedback, optioneel met timer. Score en uitleg aan het eind.", icon: Timer },
   { value: "incorrect", label: "Fout beantwoord", body: "Vragen die je de laatste keer fout had, of alleen met hint goed.", icon: RotateCcw },
-  { value: "past", label: "Oud tentamen", body: "Een volledig oud tentamen in de originele volgorde, met alle vraagtypes.", icon: ClipboardList },
 ];
 
 type Holder = EngineState | null;
@@ -81,9 +80,7 @@ export function PracticeWorkspace({
   api: PracticeApi;
 }) {
   const router = useRouter();
-  const [mode, setMode] = useState<WorkspaceMode>(initialMode === "past" && !exams.length ? "topic" : initialMode);
-  const [examId, setExamId] = useState<string | null>(initialExamId ?? exams[0]?.id ?? null);
-  const [pastAsExam, setPastAsExam] = useState(true);
+  const [mode, setMode] = useState<WorkspaceMode>(initialMode);
   const [topicIds, setTopicIds] = useState<string[]>(initialTopicId ? [initialTopicId] : []);
   const [mixedTopics, setMixedTopics] = useState<string[]>([]);
   const [examCount, setExamCount] = useState(20);
@@ -144,26 +141,23 @@ export function PracticeWorkspace({
 
   function start() {
     const sessionTopicIds = mode === "topic" ? topicIds : mode === "mixed" ? mixedTopics : [];
-    // A past exam runs as the "exam" mode (feedback at the end) or as "mixed" (feedback per question), in exam order.
-    const sessionMode: PracticeMode = mode === "past" ? (pastAsExam ? "exam" : "mixed") : mode;
-    const timed = mode === "exam" || (mode === "past" && pastAsExam);
+    const timed = mode === "exam";
     const opts: StartOpts = {
-      sessionMode,
+      sessionMode: mode,
       topicIds: sessionTopicIds,
       // Per onderwerp, gemengd en "fout beantwoord" pakken de hele (resterende) selectie
       // in één sessie — tot het maximum van 200 — zodat je kunt doorgaan tot je alles hebt gehad.
       limit: mode === "exam" ? examCount : 200,
       timeLimitSeconds: timed && examMinutes ? examMinutes * 60 : null,
-      examId: mode === "past" ? examId : null,
+      examId: null,
     };
     // Een tentamen start pas na het introscherm met de instructies.
-    if (sessionMode === "exam") {
-      const ex = mode === "past" ? exams.find((e) => e.id === examId) : null;
+    if (mode === "exam") {
       setExamIntro({
         opts,
-        count: mode === "exam" ? examCount : ex?.questionCount ?? 0,
+        count: examCount,
         minutes: timed && examMinutes ? examMinutes : null,
-        label: ex?.label ?? "Oefententamen",
+        label: "Oefententamen",
       });
       return;
     }
@@ -218,7 +212,7 @@ export function PracticeWorkspace({
   }, [canAutoResume, engine, starting, resuming, startingNew, resume]);
 
   // Changing the selection clears a stale "already answered" notice or start error.
-  useEffect(() => { setAllAnswered(false); setStartError(null); }, [mode, topicIds, mixedTopics, examId]);
+  useEffect(() => { setAllAnswered(false); setStartError(null); }, [mode, topicIds, mixedTopics]);
 
   const submit = useCallback(async () => {
     if (!engine) return;
@@ -437,7 +431,7 @@ export function PracticeWorkspace({
             <section aria-labelledby="modus-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-7">
             <h2 id="modus-titel" className="text-lg font-semibold text-navy">Kies hoe je wilt oefenen</h2>
             <div role="radiogroup" aria-labelledby="modus-titel" className="mt-4 grid gap-3 sm:grid-cols-2">
-              {modes.filter((m) => m.value !== "past" || exams.length > 0).map((m) => (
+              {modes.map((m) => (
                 <label
                   key={m.value}
                   className={cn(
@@ -509,46 +503,6 @@ export function PracticeWorkspace({
                 </fieldset>
               ) : null}
 
-              {mode === "past" ? (
-                <div className="space-y-4">
-                  <label className="grid max-w-md gap-1.5 text-sm font-semibold text-navy">
-                    Tentamen
-                    <select value={examId ?? ""} onChange={(e) => setExamId(e.target.value)} className="h-10 rounded-lg border border-input bg-white px-3 text-base font-normal sm:text-sm">
-                      {exams.map((e) => (
-                        <option key={e.id} value={e.id}>{e.label}{e.questionCount ? ` · ${e.questionCount} vragen` : ""}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <fieldset>
-                    <legend className="text-sm font-semibold text-navy">Hoe wil je het maken?</legend>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {[
-                        { v: true, l: "Als tentamen", b: "uitleg en nakijken aan het eind" },
-                        { v: false, l: "Met directe uitleg", b: "na elke vraag" },
-                      ].map((o) => (
-                        <label key={String(o.v)} className={cn("cursor-pointer rounded-lg border px-3 py-2 text-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent-blue", pastAsExam === o.v ? "border-accent-blue bg-sky text-navy" : "border-line text-muted-ink hover:text-navy")}>
-                          <input type="radio" name="tentamenvorm" className="sr-only" checked={pastAsExam === o.v} onChange={() => setPastAsExam(o.v)} />
-                          <span className="font-semibold">{o.l}</span> · {o.b}
-                        </label>
-                      ))}
-                    </div>
-                  </fieldset>
-                  {pastAsExam ? (
-                    <label className="grid w-fit gap-1.5 text-sm font-semibold text-navy">
-                      Tijdslimiet
-                      <select
-                        value={examMinutes ?? 0}
-                        onChange={(e) => setExamMinutes(Number(e.target.value) || null)}
-                        className="h-10 rounded-lg border border-input bg-white px-3 text-base font-normal sm:text-sm"
-                      >
-                        <option value={0}>Geen timer</option>
-                        {[60, 120, 180].map((n) => <option key={n} value={n}>{n / 60} uur</option>)}
-                      </select>
-                    </label>
-                  ) : null}
-                </div>
-              ) : null}
-
               {mode === "exam" ? (
                 <div className="flex flex-wrap gap-6">
                   <label className="grid gap-1.5 text-sm font-semibold text-navy">
@@ -596,11 +550,11 @@ export function PracticeWorkspace({
               <Button
                 type="button"
                 onClick={start}
-                disabled={starting || (mode !== "past" && totalQuestions === 0) || (mode === "topic" && topicIds.length === 0) || (mode === "past" && !examId)}
+                disabled={starting || totalQuestions === 0 || (mode === "topic" && topicIds.length === 0)}
                 className="mt-5 h-11 px-6 font-semibold"
               >
                 {starting ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
-                {mode === "exam" || (mode === "past" && pastAsExam) ? "Start tentamen" : "Start met oefenen"}
+                {mode === "exam" ? "Start tentamen" : "Start met oefenen"}
               </Button>
             </div>
             </section>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, BookOpen, Check, Layers, RotateCcw, Search, Shuffle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, RotateCcw, Search, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CoreMedication, MedicationGroup } from "@/lib/data/core-medications";
 import { cn } from "@/lib/utils";
@@ -18,43 +18,50 @@ export function MedicationStudio({ groups, total }: { groups: MedicationGroup[];
 
   return (
     <div>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2">
         <ModeCard
-          icon={Layers}
+          image="/images/onderdelen/flashcards.webp"
           title="Flashcards"
           body="De naam van het middel voorop, alles wat je moet kennen achterop. Oefen tot je ze allemaal kent."
           action="Start flashcards"
           onClick={() => setMode("flashcards")}
         />
         <ModeCard
-          icon={BookOpen}
+          image="/images/onderdelen/kernmedicatie-uitleg.webp"
           title="Uitleg per middel"
           body="Lees per medicijn wat het is en hoe het werkt, met het werkingsmechanisme, de indicaties en de bijwerkingen."
           action="Bekijk de uitleg"
           onClick={() => setMode("uitleg")}
         />
       </div>
-      <p className="mt-4 text-sm text-muted-ink">{total} middelen · {groups.length} groepen</p>
+      <p className="mt-4 text-sm text-muted-ink">{total} middelen in {groups.length} groepen.</p>
     </div>
   );
 }
 
-function ModeCard({ icon: Icon, title, body, action, onClick }: { icon: typeof Layers; title: string; body: string; action: string; onClick: () => void }) {
+function ModeCard({ image, title, body, action, onClick }: { image: string; title: string; body: string; action: string; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group flex flex-col rounded-xl border border-line bg-white p-6 text-left shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-lift)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
+      className="group flex flex-col overflow-hidden rounded-xl border border-line bg-white text-left shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-lift)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
     >
-      <span className="grid size-12 place-items-center rounded-full bg-sky text-blue">
-        <Icon className="size-6" aria-hidden="true" />
-      </span>
-      <h2 className="mt-4 text-lg font-semibold text-navy">{title}</h2>
-      <p className="mt-1 flex-1 text-sm leading-relaxed text-muted-ink">{body}</p>
-      <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue">
-        {action}
-        <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
-      </span>
+      <div className="relative aspect-[16/7] overflow-hidden bg-sky">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={image}
+          alt=""
+          className="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+        />
+      </div>
+      <div className="flex flex-1 flex-col p-6">
+        <h2 className="text-lg font-semibold text-navy">{title}</h2>
+        <p className="mt-1.5 flex-1 text-sm leading-relaxed text-muted-ink">{body}</p>
+        <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue">
+          {action}
+          <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
+        </span>
+      </div>
     </button>
   );
 }

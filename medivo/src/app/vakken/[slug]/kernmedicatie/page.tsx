@@ -34,7 +34,7 @@ export default async function KernmedicatiePage({ params }: Props) {
         course={course}
         active="kernmedicatie"
         title="Kernmedicatielijst"
-        intro="De kernmedicatie van dit vak. Leer ze met flashcards — de naam voorop, alles wat je moet kennen achterop — of lees de uitleg per middel."
+        intro="De kernmedicatie van dit vak. Leer ze met flashcards (de naam voorop, alles wat je moet kennen achterop) of lees de uitleg per middel."
       />
       <div className={cn(container, "py-8 lg:py-10")}>
         {overview.coreMeds === 0 ? (

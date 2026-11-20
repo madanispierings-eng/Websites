@@ -35,6 +35,7 @@ export const photoCredits = [
   { file: "onderdelen/tentamens.webp", what: "antwoordformulier", author: "Nguyen Dang Hoang Nhu", url: "https://unsplash.com/photos/cbEvoHbJnIE" },
   { file: "onderdelen/flashcards.webp", what: "stapel kaartjes", author: "Kate Trysh", url: "https://unsplash.com/photos/WX5jK0BT5JQ" },
   { file: "onderdelen/oefenen.webp", what: "stethoscoop op studieboeken", author: "Bermix Studio", url: "https://unsplash.com/photos/vT-Hkq0_FBU" },
+  { file: "onderdelen/kernmedicatie.webp", what: "medicijnen uit een potje", author: "Towfiqu barbhuiya", url: "https://unsplash.com/photos/w8p9cQDLX7I" },
 ] as const;
 
 /** Subscription pricing, shown in the paywall and on the marketing pages. One place to change it. */

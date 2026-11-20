@@ -189,13 +189,16 @@ function Flashcards({ all, categories, onBack }: { all: CoreMedication[]; catego
           >
             {!flipped ? (
               <>
-                {card.subgroup ? <p className="text-xs font-semibold uppercase tracking-[0.06em] text-muted-ink">{card.category} · {card.subgroup}</p> : <p className="text-xs font-semibold uppercase tracking-[0.06em] text-muted-ink">{card.category}</p>}
-                <p className="mt-2 text-2xl font-bold text-navy sm:text-3xl">{card.name}</p>
+                {/* Alleen de naam voorop: de groep/klasse zou het antwoord verklappen. */}
+                <p className="text-2xl font-bold text-navy sm:text-3xl">{card.name}</p>
                 <p className="mt-4 text-sm text-muted-ink">Tik of druk op spatie om om te draaien</p>
               </>
             ) : (
               <div className="w-full max-w-xl">
                 <p className="text-lg font-semibold text-navy">{card.name}</p>
+                <p className="mt-0.5 text-xs font-semibold uppercase tracking-[0.06em] text-muted-ink">
+                  {card.subgroup ? `${card.category} · ${card.subgroup}` : card.category}
+                </p>
                 <Facts m={card} className="mt-3" />
               </div>
             )}

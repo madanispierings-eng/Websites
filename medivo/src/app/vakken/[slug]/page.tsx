@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, FileText, GraduationCap, Landmark, Lock, Pill } from "lucide-react";
+import { ChevronRight, FileText, GraduationCap, Landmark, Lock } from "lucide-react";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { courseSections } from "@/components/course/course-sections";
 import { StudyProgress } from "@/components/course/study-progress";
@@ -39,6 +39,20 @@ export default async function CoursePage({ params }: Props) {
   const base = `/vakken/${course.slug}`;
   const image = courseImage(course.slug);
   const locked = !overview.hasAccess;
+  // The five standard sections, plus the kernmedicatielijst as a card when the course has one.
+  const cards = [
+    ...courseSections.map((s) => ({ key: s.key as string, title: s.title, body: s.body, image: s.image, n: s.count(overview), countLabel: s.countLabel })),
+    ...(overview.coreMeds > 0
+      ? [{
+          key: "kernmedicatie",
+          title: "Kernmedicatielijst",
+          body: "De kernmedicatie van dit vak, als flashcards of met uitleg.",
+          image: "/images/onderdelen/kernmedicatie.webp",
+          n: overview.coreMeds,
+          countLabel: (x: number) => `${x} ${x === 1 ? "middel" : "middelen"}`,
+        }]
+      : []),
+  ];
 
   return (
     <main id="inhoud" className={cn(container, "flex-1 pb-16 pt-6")}>
@@ -82,78 +96,45 @@ export default async function CoursePage({ params }: Props) {
         </div>
       </section>
 
-      {/* The five sections */}
-      <section aria-label="Onderdelen" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-5">
-        {courseSections.map((s, i) => {
-          const n = s.count(overview);
-          return (
-            <Link
-              key={s.key}
-              href={`${base}/${s.key}`}
-              className={cn(
-                "group flex overflow-hidden rounded-xl border border-line bg-white shadow-[var(--shadow-card)] transition-shadow max-sm:flex-row sm:flex-col hover:shadow-[var(--shadow-lift)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue",
-                // Three over two on tablets, with the bottom two centred; one row of five on wide screens.
-                "lg:col-span-2 xl:col-span-1",
-                i === 3 && "lg:col-start-2 xl:col-start-auto",
-                i === 4 && "sm:col-span-2",
-              )}
-            >
-              <div className={cn("relative shrink-0 overflow-hidden bg-sky max-sm:w-28 sm:aspect-[16/7]", i === 4 && "sm:aspect-[32/7] lg:aspect-[16/7]")}>
-                <Image
-                  src={s.image}
-                  alt=""
-                  fill
-                  sizes="(min-width: 1280px) 260px, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-                />
-                {locked ? (
-                  <span
-                    className="absolute right-2 top-2 grid size-7 place-items-center rounded-full bg-white/95 text-navy shadow-[var(--shadow-card)]"
-                    title="Beschikbaar met een abonnement"
-                  >
-                    <Lock className="size-3.5" aria-hidden="true" />
-                    <span className="sr-only">Beschikbaar met een abonnement</span>
-                  </span>
-                ) : null}
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col px-4 pb-4 pt-3.5 max-sm:py-3">
-                <h2 className="font-semibold leading-snug text-navy">{s.title}</h2>
-                <p className="mt-1 text-sm text-muted-ink">{s.body}</p>
-                <p className="mt-auto flex items-center justify-between gap-3 pt-4 max-sm:pt-2 text-xs font-medium text-muted-ink">
-                  {n > 0 ? s.countLabel(n) : "Wordt voorbereid"}
-                  <span className="grid size-8 place-items-center rounded-full bg-sky text-navy transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none">
-                    <ChevronRight className="size-4" aria-hidden="true" />
-                  </span>
-                </p>
-              </div>
-            </Link>
-          );
-        })}
+      {/* The course sections; the kernmedicatielijst joins as a card when the course has one. */}
+      <section aria-label="Onderdelen" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map((s) => (
+          <Link
+            key={s.key}
+            href={`${base}/${s.key}`}
+            className="group flex overflow-hidden rounded-xl border border-line bg-white shadow-[var(--shadow-card)] transition-shadow max-sm:flex-row sm:flex-col hover:shadow-[var(--shadow-lift)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
+          >
+            <div className="relative shrink-0 overflow-hidden bg-sky max-sm:w-28 sm:aspect-[16/7]">
+              <Image
+                src={s.image}
+                alt=""
+                fill
+                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+              />
+              {locked ? (
+                <span
+                  className="absolute right-2 top-2 grid size-7 place-items-center rounded-full bg-white/95 text-navy shadow-[var(--shadow-card)]"
+                  title="Beschikbaar met een abonnement"
+                >
+                  <Lock className="size-3.5" aria-hidden="true" />
+                  <span className="sr-only">Beschikbaar met een abonnement</span>
+                </span>
+              ) : null}
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col px-4 pb-4 pt-3.5 max-sm:py-3">
+              <h2 className="font-semibold leading-snug text-navy">{s.title}</h2>
+              <p className="mt-1 text-sm text-muted-ink">{s.body}</p>
+              <p className="mt-auto flex items-center justify-between gap-3 pt-4 max-sm:pt-2 text-xs font-medium text-muted-ink">
+                {s.n > 0 ? s.countLabel(s.n) : "Wordt voorbereid"}
+                <span className="grid size-8 place-items-center rounded-full bg-sky text-navy transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none">
+                  <ChevronRight className="size-4" aria-hidden="true" />
+                </span>
+              </p>
+            </div>
+          </Link>
+        ))}
       </section>
-
-      {overview.coreMeds > 0 ? (
-        <Link
-          href={`${base}/kernmedicatie`}
-          className="group mt-4 flex items-center gap-4 rounded-xl border border-line bg-white px-5 py-4 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-lift)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
-        >
-          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-sky text-blue">
-            <Pill className="size-5" aria-hidden="true" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <h2 className="font-semibold leading-snug text-navy">Kernmedicatielijst</h2>
-            <p className="mt-0.5 text-sm text-muted-ink">
-              De kernmedicatie van dit vak — als flashcards of met uitleg per middel.
-            </p>
-          </div>
-          <span className="flex items-center gap-2 text-xs font-medium text-muted-ink">
-            {locked ? <Lock className="size-4" aria-hidden="true" /> : null}
-            {overview.coreMeds} {overview.coreMeds === 1 ? "middel" : "middelen"}
-            <span className="grid size-8 place-items-center rounded-full bg-sky text-navy transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none">
-              <ChevronRight className="size-4" aria-hidden="true" />
-            </span>
-          </span>
-        </Link>
-      ) : null}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-start">
         <section aria-labelledby="onderwerpen-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">

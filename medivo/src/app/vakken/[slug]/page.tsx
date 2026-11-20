@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, FileText, GraduationCap, Landmark, Lock } from "lucide-react";
+import { ChevronRight, FileText, GraduationCap, Landmark, Lock, Pill } from "lucide-react";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { courseSections } from "@/components/course/course-sections";
 import { StudyProgress } from "@/components/course/study-progress";
@@ -130,6 +130,30 @@ export default async function CoursePage({ params }: Props) {
           );
         })}
       </section>
+
+      {overview.coreMeds > 0 ? (
+        <Link
+          href={`${base}/kernmedicatie`}
+          className="group mt-4 flex items-center gap-4 rounded-xl border border-line bg-white px-5 py-4 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-lift)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
+        >
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-sky text-blue">
+            <Pill className="size-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="font-semibold leading-snug text-navy">Kernmedicatielijst</h2>
+            <p className="mt-0.5 text-sm text-muted-ink">
+              De kernmedicatie van dit vak — als flashcards of met uitleg per middel.
+            </p>
+          </div>
+          <span className="flex items-center gap-2 text-xs font-medium text-muted-ink">
+            {locked ? <Lock className="size-4" aria-hidden="true" /> : null}
+            {overview.coreMeds} {overview.coreMeds === 1 ? "middel" : "middelen"}
+            <span className="grid size-8 place-items-center rounded-full bg-sky text-navy transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none">
+              <ChevronRight className="size-4" aria-hidden="true" />
+            </span>
+          </span>
+        </Link>
+      ) : null}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-start">
         <section aria-labelledby="onderwerpen-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">

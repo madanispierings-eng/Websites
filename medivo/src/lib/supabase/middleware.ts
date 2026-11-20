@@ -29,13 +29,31 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const { data } = await supabase.auth.getUser();
-
-  if (!data.user && isProtected) {
+  const loginRedirect = () => {
     const url = request.nextUrl.clone();
     url.pathname = "/inloggen";
     url.search = `?volgende=${encodeURIComponent(request.nextUrl.pathname)}`;
     return NextResponse.redirect(url);
+  };
+
+  // Verifying the session is a network call to Supabase. If it is slow or unreachable, don't let the
+  // whole request hang (that surfaces as a Vercel 504 MIDDLEWARE_INVOCATION_TIMEOUT): cap it, and
+  // degrade gracefully — public pages load without a refreshed session, protected pages fail closed.
+  let user = null;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const result = await Promise.race([
+      supabase.auth.getUser(),
+      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("auth-timeout")), 3500); }),
+    ]);
+    user = result.data.user;
+  } catch {
+    if (isProtected) return loginRedirect();
+    return response;
+  } finally {
+    clearTimeout(timer);
   }
+
+  if (!user && isProtected) return loginRedirect();
   return response;
 }

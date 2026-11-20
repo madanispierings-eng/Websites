@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -96,8 +97,13 @@ export default async function CoursePage({ params }: Props) {
         </div>
       </section>
 
-      {/* The course sections; the kernmedicatielijst joins as a card when the course has one. */}
-      <section aria-label="Onderdelen" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* The course sections; the kernmedicatielijst joins as a card when the course has one.
+          On wide screens all cards sit on one row (as many columns as there are cards). */}
+      <section
+        aria-label="Onderdelen"
+        style={{ "--cards": cards.length } as CSSProperties}
+        className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:[grid-template-columns:repeat(var(--cards),minmax(0,1fr))]"
+      >
         {cards.map((s) => (
           <Link
             key={s.key}

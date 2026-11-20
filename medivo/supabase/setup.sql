@@ -2752,6 +2752,71 @@ begin
   return v_session;
 end $function$;
 
+-- ===== supabase/migrations/20261120140000_core_medications.sql =====
+-- Kernmedicatielijst: een vak-specifieke lijst kernmedicatie. Per medicijn leggen we vast wat de
+-- student moet kennen (werkingsmechanisme, indicatie(s), belangrijkste bijwerkingen) plus een
+-- uitleg ("wat is het, hoe werkt het"). Premium-inhoud, net als de rest van een vak; de lijst wordt
+-- getoond met flashcards (naam voorop, de rest achterop) en als doorzoekbaar overzicht.
+create table public.core_medications (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid not null references public.courses (id) on delete cascade,
+  -- Groep (bv. "Anti-emetica") en optioneel een subgroep/klasse (bv. "Dopamine D2-antagonisten").
+  category text not null,
+  category_sort integer not null default 0,
+  subgroup text,
+  name text not null,
+  sort_order integer not null default 0,
+  -- De drie dingen die de student moet kennen.
+  mechanism text not null,
+  indications text not null,
+  side_effects text not null,
+  -- Langere uitleg zodat de student begrijpt wat het middel is en hoe het werkt.
+  explanation text not null,
+  is_premium boolean not null default true,
+  reviewed_by uuid references auth.users (id),
+  reviewed_at timestamptz,
+  status public.publication_status not null default 'draft',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint core_medications_publishable check (status <> 'published' or reviewed_at is not null)
+);
+create index core_medications_course on public.core_medications (course_id, category_sort, sort_order);
+
+alter table public.core_medications enable row level security;
+
+-- Studenten zien gepubliceerde kernmedicatie alleen met toegang tot het vak; admins zien alles.
+create policy "core medications readable with access" on public.core_medications for select using (
+  public.is_admin() or (
+    status = 'published' and auth.uid() is not null
+    and (not is_premium or public.has_course_access(course_id))
+  )
+);
+create policy "admins manage core medications" on public.core_medications for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
+
+-- ===== supabase/migrations/20261120150000_overview_core_medications.sql =====
+-- Neem de kernmedicatielijst mee in het vakoverzicht, zodat het tabblad en de kaart alleen
+-- verschijnen bij een vak dat er inhoud voor heeft. Security definer: telt onafhankelijk van de
+-- toegang van de kijker (net als de andere tellingen), zodat een vergrendeld vak het tabblad
+-- ook ziet. Zelfde signatuur, dus CREATE OR REPLACE behoudt de rechten.
+create or replace function public.course_content_overview(p_course_id uuid)
+returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'summaries', (select count(*) from public.summaries s join public.topics t on t.id = s.topic_id
+                  where t.course_id = p_course_id and s.status = 'published' and t.status = 'published'),
+    'objectives', (select count(*) from public.learning_objectives o join public.topics t on t.id = o.topic_id
+                   where t.course_id = p_course_id and o.status = 'published' and t.status = 'published'),
+    'exams', (select count(*) from public.exams e where e.course_id = p_course_id and e.status = 'published'),
+    'questions', (select count(*) from public.questions q
+                  where q.course_id = p_course_id and q.status = 'published' and q.exam_id is null),
+    'flashcards', (select count(*) from public.flashcards f where f.course_id = p_course_id and f.status = 'published'),
+    'core_medications', (select count(*) from public.core_medications m where m.course_id = p_course_id and m.status = 'published'),
+    'has_access', public.has_course_access(p_course_id)
+  )
+  where exists (select 1 from public.courses where id = p_course_id and status = 'published');
+$$;
+
 -- ===== supabase/seed.sql =====
 -- Initial catalogue: bachelor Geneeskunde, Universiteit Leiden.
 -- Course titles and EC values as supplied by the Medivo team. Use NULL for an EC value that has not been verified;

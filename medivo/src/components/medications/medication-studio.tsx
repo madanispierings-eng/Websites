@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, RotateCcw, Search, Shuffle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, RotateCcw, Search, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CoreMedication, MedicationGroup } from "@/lib/data/core-medications";
 import { cn } from "@/lib/utils";
@@ -232,6 +232,7 @@ function Flashcards({ all, categories, onBack }: { all: CoreMedication[]; catego
 
 function Uitleg({ groups, onBack }: { groups: MedicationGroup[]; onBack: () => void }) {
   const [q, setQ] = useState("");
+  const [open, setOpen] = useState<Set<string>>(new Set());
   const needle = q.trim().toLowerCase();
   const filtered = useMemo(() => {
     if (!needle) return groups;
@@ -246,44 +247,73 @@ function Uitleg({ groups, onBack }: { groups: MedicationGroup[]; onBack: () => v
       .filter((g) => g.medications.length > 0);
   }, [groups, needle]);
 
+  const allIds = useMemo(() => filtered.flatMap((g) => g.medications.map((m) => m.id)), [filtered]);
+  const allOpen = allIds.length > 0 && allIds.every((id) => open.has(id));
+  const toggle = (id: string) => setOpen((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const toggleAll = () => setOpen(allOpen ? new Set() : new Set(allIds));
+  // While searching, show every match open so the result is visible right away.
+  const isOpen = (id: string) => (needle ? true : open.has(id));
+
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <Button type="button" variant="ghost" onClick={onBack} className="text-navy">
           <ArrowLeft aria-hidden="true" /> Andere modus
         </Button>
-        <label className="relative flex-1 sm:max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-ink" aria-hidden="true" />
-          <span className="sr-only">Zoek een medicijn</span>
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Zoek op naam, groep of werking…"
-            className="h-10 w-full rounded-lg border border-input bg-white pl-9 pr-3 text-sm text-navy"
-          />
-        </label>
+        <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+          <label className="relative min-w-0 flex-1 sm:max-w-xs">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-ink" aria-hidden="true" />
+            <span className="sr-only">Zoek een medicijn</span>
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Zoek op naam, groep of werking…"
+              className="h-10 w-full rounded-lg border border-input bg-white pl-9 pr-3 text-sm text-navy"
+            />
+          </label>
+          {!needle ? (
+            <Button type="button" variant="outline" onClick={toggleAll} className="h-10 shrink-0 border-line text-navy">
+              {allOpen ? "Alles inklappen" : "Alles uitklappen"}
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {filtered.length === 0 ? (
         <p className="text-sm text-muted-ink">Geen middelen gevonden voor “{q}”.</p>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-7">
           {filtered.map((g) => (
             <section key={g.category} aria-labelledby={`cat-${g.category}`}>
               <h2 id={`cat-${g.category}`} className="text-sm font-semibold uppercase tracking-[0.06em] text-muted-ink">{g.category}</h2>
-              <div className="mt-3 grid gap-4 lg:grid-cols-2">
-                {g.medications.map((m) => (
-                  <article key={m.id} className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)]">
-                    <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <h3 className="text-lg font-semibold text-navy">{m.name}</h3>
-                      {m.subgroup ? <span className="rounded-full bg-sky px-2.5 py-0.5 text-xs font-medium text-blue">{m.subgroup}</span> : null}
-                    </div>
-                    <p className="mt-2 text-[0.95rem] leading-relaxed text-navy/90">{m.explanation}</p>
-                    <Facts m={m} className="mt-4 border-t border-line pt-4" />
-                  </article>
-                ))}
-              </div>
+              <ul className="mt-3 space-y-2">
+                {g.medications.map((m) => {
+                  const expanded = isOpen(m.id);
+                  return (
+                    <li key={m.id} className="overflow-hidden rounded-xl border border-line bg-white shadow-[var(--shadow-card)]">
+                      <button
+                        type="button"
+                        onClick={() => toggle(m.id)}
+                        aria-expanded={expanded}
+                        className="flex w-full items-center gap-3 px-4 py-3.5 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-blue sm:px-5"
+                      >
+                        <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2.5 gap-y-1">
+                          <span className="font-semibold text-navy">{m.name}</span>
+                          {m.subgroup ? <span className="rounded-full bg-sky px-2.5 py-0.5 text-xs font-medium text-blue">{m.subgroup}</span> : null}
+                        </span>
+                        <ChevronDown className={cn("size-5 shrink-0 text-muted-ink transition-transform duration-200", expanded && "rotate-180")} aria-hidden="true" />
+                      </button>
+                      {expanded ? (
+                        <div className="border-t border-line px-4 pb-5 pt-4 sm:px-5">
+                          <p className="text-[0.95rem] leading-relaxed text-navy/90">{m.explanation}</p>
+                          <Facts m={m} className="mt-4" />
+                        </div>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
             </section>
           ))}
         </div>

@@ -170,6 +170,9 @@ export async function resumableSession(courseId: string, kind: "practice" | "exa
     .from("question_attempts")
     .select("question_id", { count: "exact", head: true })
     .eq("session_id", session.id);
+  // Een sessie zonder enig beantwoord item valt niets aan te "hervatten"; opnieuw beginnen is
+  // hetzelfde. Zo'n lege sessie bieden we niet aan, anders blijft de "ga door"-balk hangen.
+  if ((count ?? 0) === 0) return null;
   return {
     sessionId: session.id as string,
     mode: session.mode as PracticeMode,

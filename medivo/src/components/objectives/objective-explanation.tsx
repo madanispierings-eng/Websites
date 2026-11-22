@@ -20,7 +20,7 @@ export function ObjectiveExplanation({ id, explanation }: { id: string; explanat
             {explanation.videos.length === 1 ? "Uitlegvideo" : "Uitlegvideo’s"}
           </h4>
           <p className="mt-0.5 text-xs text-muted-ink">Engelstalig, van externe kanalen. De samenvatting en de colleges zijn leidend.</p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {explanation.videos.map((v) => <YouTubeVideo key={v.youtubeId} video={v} />)}
           </div>
         </section>

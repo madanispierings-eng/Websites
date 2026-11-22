@@ -63,7 +63,7 @@ function Overview({ progress, base, courseSlug }: { progress: NonNullable<Awaite
         </section>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section aria-labelledby="stof-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
           <h2 id="stof-titel" className="text-lg font-semibold text-navy">Doorgewerkte stof</h2>
           <p className="mt-0.5 text-sm text-muted-ink">Wat je al hebt gedaan, los van of het goed ging.</p>
@@ -185,7 +185,7 @@ function Overview({ progress, base, courseSlug }: { progress: NonNullable<Awaite
         </div>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section aria-labelledby="fc-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
           <h2 id="fc-titel" className="text-lg font-semibold text-navy">Flashcards</h2>
           <p className="mt-0.5 text-sm text-muted-ink">Beheerst = op twee verschillende dagen geweten.</p>

@@ -64,7 +64,7 @@ export default async function ObjectivesPage({ params }: Props) {
       <div className={cn(container, "py-8 lg:py-10")}>
         {groups.length ? (
           <ObjectivesProgressProvider initialCompleted={[...completed]} objectiveIds={objectives.map((o) => o.id)}>
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
             <div className="space-y-5">
               {groups.map(({ topic, items, subs }, i) => (
                 <section key={topic.id} id={topic.slug} aria-labelledby={`${topic.slug}-titel`} className="scroll-mt-24 rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">

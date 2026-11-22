@@ -52,7 +52,7 @@ export default async function DashboardPage() {
         ))}
       </dl>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Panel title="Recent bekeken vakken" icon={History}>
           {data.recent.length ? (
             <ul className="divide-y divide-line">

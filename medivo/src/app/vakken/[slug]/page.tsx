@@ -142,7 +142,7 @@ export default async function CoursePage({ params }: Props) {
         ))}
       </section>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-start">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-start">
         <section aria-labelledby="onderwerpen-titel" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
           <h2 id="onderwerpen-titel" className="text-lg font-semibold text-navy">Inhoud per onderwerp</h2>
           {topics.length ? (

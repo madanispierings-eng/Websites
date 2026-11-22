@@ -336,7 +336,7 @@ export function PracticeWorkspace({
           >
             <span className="inline-flex items-center gap-2 text-lg font-semibold tabular-nums text-navy" role="timer" aria-label="Resterende tijd">
               <Clock className="size-5 text-blue" aria-hidden="true" />
-              {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, "0")}
+              {formatRemaining(remaining)}
               {timerPaused ? <span className="text-sm font-normal text-muted-ink"> · gepauzeerd</span> : null}
             </span>
             {!engine?.finished ? (
@@ -748,4 +748,12 @@ function ExamIntroScreen({ intro, starting, onBegin, onCancel }: {
       </div>
     </section>
   );
+}
+
+/** Aftelklok: 1:27:42 boven het uur, anders 27:42. */
+function formatRemaining(total: number) {
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const sec = String(total % 60).padStart(2, "0");
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
 }

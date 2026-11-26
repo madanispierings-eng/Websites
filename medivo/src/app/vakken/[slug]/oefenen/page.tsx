@@ -66,7 +66,7 @@ export default async function PracticePage({ params, searchParams }: Props) {
             stats={stats}
             initialMode={initialMode}
             initialTopicId={initialTopicId}
-            exams={exams.map((e) => ({ id: e.id, label: examTitle(e), questionCount: e.questionCount }))}
+            exams={exams.map((e) => ({ id: e.id, label: examTitle(e), questionCount: e.questionCount, structure: e.structure }))}
             initialExamId={initialExamId}
             resumable={resumable}
             api={{ startSession: startSession.bind(null, course.id), submitAnswer, revealAnswer, selfGrade, finishSession, toggleBookmark, resumeSession }}

@@ -80,7 +80,7 @@ export type SessionReview = {
 
 export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string; code?: string };
 
-export type PracticeExam = { id: string; label: string; questionCount: number | null };
+export type PracticeExam = { id: string; label: string; questionCount: number | null; structure: { label: string; points: number }[] };
 
 /** One recorded answer in an unfinished session, normalised for the engine to rehydrate. */
 export type ResumeAnswer = {

@@ -90,7 +90,7 @@ export const getExams = cache(async (courseId: string): Promise<Exam[]> => {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("exams")
-    .select("id, exam_year, exam_type, title, question_count, has_explanations, source")
+    .select("id, exam_year, exam_type, title, question_count, has_explanations, source, structure")
     .eq("course_id", courseId)
     .order("exam_year", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: true });
@@ -101,6 +101,7 @@ export const getExams = cache(async (courseId: string): Promise<Exam[]> => {
     examType: e.exam_type,
     title: e.title,
     questionCount: e.question_count,
+    structure: Array.isArray(e.structure) ? (e.structure as { label: string; points: number }[]).map((x) => ({ label: String(x.label), points: Number(x.points) })) : [],
     hasExplanations: e.has_explanations,
     source: e.source,
   }));

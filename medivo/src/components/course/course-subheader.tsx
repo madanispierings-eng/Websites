@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Pill } from "lucide-react";
+import { ArrowLeft, Bone, Pill } from "lucide-react";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { courseSections } from "@/components/course/course-sections";
 import { TabScroller } from "@/components/course/tab-scroller";
@@ -10,11 +10,12 @@ import { cn } from "@/lib/utils";
 
 /** Compact header for the course sections, with tabs to move between them. */
 export async function CourseSubheader({ course, active, title, intro }: { course: Course; active: string; title: string; intro?: string }) {
-  // The kernmedicatielijst is optional content: its tab only appears for a course that has it.
+  // The kernmedicatielijst and anatomie are optional content: their tabs only appear for a course that has them.
   const overview = await getCourseOverview(course.id);
   const tabs = [
     ...courseSections.map((s) => ({ key: s.key as string, title: s.title, icon: s.icon })),
     ...(overview.coreMeds > 0 || active === "kernmedicatie" ? [{ key: "kernmedicatie", title: "Kernmedicatielijst", icon: Pill }] : []),
+    ...(overview.anatomy > 0 || active === "anatomie" ? [{ key: "anatomie", title: "Anatomie", icon: Bone }] : []),
   ];
   return (
     <div className="border-b border-line bg-white">

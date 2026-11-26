@@ -36,7 +36,7 @@ export default async function AnatomiePage({ params, searchParams }: Props) {
         course={course}
         active="anatomie"
         title="Anatomie"
-        intro="Per practicum zie je wat je moet kennen en oefen je precies die structuren op anatomische platen: benoemen, aanwijzen en de naam typen. Wat je fout hebt of nog niet zeker weet, komt vaker terug."
+        intro="Per practicum zie je wat je moet kennen en oefen je precies die structuren op anatomische platen met meerkeuzevragen. Wat je fout hebt of nog niet zeker weet, komt vaker terug."
       />
       <div className={cn(container, "py-8 lg:py-10")}>
         {overview.anatomyUnits === 0 ? (

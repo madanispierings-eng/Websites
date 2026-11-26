@@ -19,7 +19,9 @@ export type AnatomyStructure = {
   clinical: string | null;
 };
 
-export type AnatomyMarker = { id: string; structureId: string | null; x: number; y: number };
+export type AnatomyMarker = { id: string; structureId: string | null; x: number; y: number;
+  /** Where the leader line ends (on the structure), as a fraction of the image; null when not set. */
+  tip: { x: number; y: number } | null };
 
 export type AnatomyImage = {
   id: string;
@@ -49,7 +51,7 @@ export const getAnatomy = cache(async (courseId: string): Promise<{ structures: 
       .order("name"),
     supabase
       .from("anatomy_images")
-      .select("id, slug, title, region, image_path, width, height, credit, anatomy_markers(id, structure_id, x, y, sort_order)")
+      .select("id, slug, title, region, image_path, width, height, credit, anatomy_markers(id, structure_id, x, y, tip_x, tip_y, sort_order)")
       .eq("course_id", courseId)
       .eq("status", "published")
       .order("sort_order"),
@@ -77,9 +79,15 @@ export const getAnatomy = cache(async (courseId: string): Promise<{ structures: 
     width: r.width as number,
     height: r.height as number,
     credit: r.credit as string,
-    markers: ((r.anatomy_markers as { id: string; structure_id: string | null; x: number | string; y: number | string; sort_order: number }[]) ?? [])
+    markers: ((r.anatomy_markers as { id: string; structure_id: string | null; x: number | string; y: number | string; tip_x: number | string | null; tip_y: number | string | null; sort_order: number }[]) ?? [])
       .sort((a, b) => a.sort_order - b.sort_order)
-      .map((m) => ({ id: m.id, structureId: m.structure_id && known.has(m.structure_id) ? m.structure_id : null, x: Number(m.x), y: Number(m.y) })),
+      .map((m) => ({
+        id: m.id,
+        structureId: m.structure_id && known.has(m.structure_id) ? m.structure_id : null,
+        x: Number(m.x),
+        y: Number(m.y),
+        tip: m.tip_x !== null && m.tip_y !== null ? { x: Number(m.tip_x), y: Number(m.tip_y) } : null,
+      })),
   }));
   return { structures, images };
 });

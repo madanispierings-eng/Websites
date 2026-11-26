@@ -3003,6 +3003,14 @@ language sql stable security definer set search_path = public as $$
   where exists (select 1 from public.courses where id = p_course_id and status = 'published');
 $$;
 
+-- ===== supabase/migrations/20261126120000_anatomy_marker_tips.sql =====
+-- Waar het verwijslijntje van een genummerd punt eindigt (fractie van breedte/hoogte). De app tekent daar een
+-- dikke lijn naartoe, zodat duidelijk is welke structuur bedoeld is; de gedrukte stippellijnen zijn te dun.
+alter table public.anatomy_markers
+  add column tip_x numeric(5, 4) check (tip_x between 0 and 1),
+  add column tip_y numeric(5, 4) check (tip_y between 0 and 1),
+  add constraint anatomy_markers_tip_pair check ((tip_x is null) = (tip_y is null));
+
 -- ===== supabase/seed.sql =====
 -- Initial catalogue: bachelor Geneeskunde, Universiteit Leiden.
 -- Course titles and EC values as supplied by the Medivo team. Use NULL for an EC value that has not been verified;

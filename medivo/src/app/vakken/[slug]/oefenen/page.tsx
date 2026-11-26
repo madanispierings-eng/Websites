@@ -51,7 +51,8 @@ export default async function PracticePage({ params, searchParams }: Props) {
       />
       {/* Wider than the default container so the "lees de theorie" panel next to a question has room. */}
       <div className="mx-auto w-full max-w-[1520px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        {total === 0 ? (
+        {/* A course with only an exam (no practice questions yet) must still open that exam via ?tentamen=…. */}
+        {total === 0 && !initialExamId ? (
           <EmptyState icon={ListChecks} title="Nog geen oefenvragen voor dit vak">
             Vragen worden per onderwerp gepubliceerd zodra ze inhoudelijk zijn gecontroleerd en de rechten zijn geregeld.
           </EmptyState>

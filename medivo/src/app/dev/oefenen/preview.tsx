@@ -190,7 +190,7 @@ export function PracticePreview() {
       stats={{ t1a: { answered: 2, correct: 1 } }}
       initialMode="topic"
       initialTopicId="t1a"
-      exams={[{ id: "e1", label: "Voorbeeldtentamen", questionCount: 5 }]}
+      exams={[{ id: "e1", label: "Voorbeeldtentamen", questionCount: 5, structure: [{ label: "Deel A – 4 meerkeuzevragen (1 punt per vraag)", points: 4 }, { label: "Deel B – 1 open vraag", points: 2 }] }]}
       resumable={{ sessionId: "preview", mode: "topic", startedAt: new Date(Date.now() - 20 * 60_000).toISOString(), examId: null, total: 5, answered: 2 }}
       api={api}
     />

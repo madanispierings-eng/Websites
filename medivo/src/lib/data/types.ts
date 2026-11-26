@@ -24,12 +24,16 @@ export type TopicNode = Topic & { children: Topic[] };
 
 export type LearningObjective = { id: string; topicId: string; body: string; source: string | null };
 
+export type ExamPart = { label: string; points: number };
+
 export type Exam = {
   id: string;
   examYear: number | null;
   examType: "regular" | "resit" | "midterm" | "practice";
   title: string | null;
   questionCount: number | null;
+  /** Opbouw volgens de toetsmatrijs (onderdelen met punten); leeg als onbekend. */
+  structure: ExamPart[];
   hasExplanations: boolean;
   source: string;
 };

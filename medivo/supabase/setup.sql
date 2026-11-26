@@ -3088,6 +3088,12 @@ language sql stable security definer set search_path = public as $$
   where exists (select 1 from public.courses where id = p_course_id and status = 'published');
 $$;
 
+-- ===== supabase/migrations/20261128090000_exam_structure.sql =====
+-- Opbouw van een (oefen)tentamen volgens de toetsmatrijs, voor het instructiescherm:
+-- [{"label": "Deel A – 36 meerkeuzevragen (1 punt per vraag)", "points": 36}, ...]. Leeg = onbekend.
+alter table public.exams add column structure jsonb not null default '[]'::jsonb;
+alter table public.exams add constraint exams_structure_is_array check (jsonb_typeof(structure) = 'array');
+
 -- ===== supabase/seed.sql =====
 -- Initial catalogue: bachelor Geneeskunde, Universiteit Leiden.
 -- Course titles and EC values as supplied by the Medivo team. Use NULL for an EC value that has not been verified;

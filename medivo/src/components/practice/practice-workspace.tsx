@@ -25,7 +25,7 @@ type StartOpts = {
 };
 
 /** Shown before an exam starts: the instructions screen. */
-type ExamIntro = { opts: StartOpts; count: number; minutes: number | null; label: string };
+type ExamIntro = { opts: StartOpts; count: number; minutes: number | null; label: string; structure: PracticeExam["structure"] };
 
 /** Indicatief cijfer (1–10) volgens een Cohen-Schotanus-variant: eerst de gokscore (`guess`)
  *  aftrekken, dan de 5,5-grens (cesuur) op 60% van het bereik tussen gokscore en maximumscore.
@@ -165,6 +165,7 @@ export function PracticeWorkspace({
       count: ex?.questionCount ?? 0,
       minutes: null,
       label: ex?.label ?? "Oefententamen",
+      structure: ex?.structure ?? [],
     });
   }, [autoStart, initialExamId, engine, examIntro, exams, resumeMatchesExam]);
 
@@ -696,7 +697,8 @@ function ExamIntroScreen({ intro, starting, onBegin, onCancel }: {
   onBegin: () => void;
   onCancel: () => void;
 }) {
-  const { count, minutes, label } = intro;
+  const { count, minutes, label, structure } = intro;
+  const totalPoints = structure.reduce((s, p) => s + p.points, 0);
   const Point = ({ children }: { children: React.ReactNode }) => (
     <li className="flex gap-2.5">
       <span className="mt-[0.45rem] size-1.5 shrink-0 rounded-full bg-accent-blue" aria-hidden="true" />
@@ -724,10 +726,28 @@ function ExamIntroScreen({ intro, starting, onBegin, onCancel }: {
           <dd className="text-base font-semibold text-navy">{minutes ? `${minutes} min` : "Geen limiet"}</dd>
         </div>
         <div className="rounded-lg border border-line bg-canvas px-3 py-2">
-          <dt className="text-xs text-muted-ink">Per vraag</dt>
-          <dd className="text-base font-semibold text-navy">1 punt</dd>
+          <dt className="text-xs text-muted-ink">Punten</dt>
+          <dd className="text-base font-semibold text-navy">{totalPoints ? `${fmtPoints(totalPoints)} totaal` : "—"}</dd>
         </div>
       </dl>
+
+      {structure.length ? (
+        <>
+          <h3 className="mt-6 text-sm font-semibold text-navy">Opbouw van het tentamen</h3>
+          <ul className="mt-2.5 divide-y divide-line overflow-hidden rounded-lg border border-line text-sm">
+            {structure.map((p) => (
+              <li key={p.label} className="flex items-baseline justify-between gap-4 px-3 py-2">
+                <span className="text-navy/90">{p.label}</span>
+                <span className="shrink-0 font-semibold tabular-nums text-navy">{fmtPoints(p.points)} {p.points === 1 ? "punt" : "punten"}</span>
+              </li>
+            ))}
+            <li className="flex items-baseline justify-between gap-4 bg-canvas px-3 py-2 font-semibold text-navy">
+              <span>Totaal</span>
+              <span className="shrink-0 tabular-nums">{fmtPoints(totalPoints)} punten</span>
+            </li>
+          </ul>
+        </>
+      ) : null}
 
       <h3 className="mt-6 text-sm font-semibold text-navy">Lees dit voordat je begint</h3>
       <ul className="mt-2.5 space-y-2.5 text-sm leading-relaxed text-navy/90">
@@ -748,6 +768,11 @@ function ExamIntroScreen({ intro, starting, onBegin, onCancel }: {
       </div>
     </section>
   );
+}
+
+/** 80 → "80", 2.5 → "2,5". */
+function fmtPoints(n: number) {
+  return Number.isInteger(n) ? String(n) : n.toLocaleString("nl-NL");
 }
 
 /** Aftelklok: 1:27:42 boven het uur, anders 27:42. */

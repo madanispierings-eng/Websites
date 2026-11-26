@@ -53,14 +53,14 @@ export default async function CoursePage({ params }: Props) {
           countLabel: (x: number) => `${x} ${x === 1 ? "middel" : "middelen"}`,
         }]
       : []),
-    ...(overview.anatomy > 0
+    ...(overview.anatomyUnits > 0
       ? [{
           key: "anatomie",
           title: "Anatomie",
-          body: "Benoem en wijs structuren aan op anatomische platen.",
+          body: "Per practicum: wat je moet kennen, en oefenen op anatomische platen.",
           image: "/images/onderdelen/anatomie.webp",
-          n: overview.anatomy,
-          countLabel: (x: number) => `${x} ${x === 1 ? "structuur" : "structuren"}`,
+          n: overview.anatomyUnits,
+          countLabel: (x: number) => `${x} ${x === 1 ? "practicum" : "practica"}`,
         }]
       : []),
   ];

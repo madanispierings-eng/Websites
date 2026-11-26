@@ -23,8 +23,20 @@ export type AnatomyMarker = { id: string; structureId: string | null; x: number;
   /** Where the leader line ends (on the structure), as a fraction of the image; null when not set. */
   tip: { x: number; y: number } | null };
 
+/** One practicum (as on Brightspace): what you must know and the checklist of structures. */
+export type AnatomyUnit = {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string | null;
+  mustKnow: string | null;
+  /** Checklist in order, grouped by category. Only structures the viewer may read. */
+  items: { structureId: string; category: string }[];
+};
+
 export type AnatomyImage = {
   id: string;
+  unitId: string | null;
   slug: string;
   title: string;
   region: string;
@@ -38,10 +50,10 @@ export type AnatomyImage = {
 export type AnatomyProgress = { box: number; reviews: number; lastCorrect: boolean; lastConfidence: string; dueAt: string };
 
 /** Structures and plates of a course that the viewer may read (RLS returns nothing without access). */
-export const getAnatomy = cache(async (courseId: string): Promise<{ structures: AnatomyStructure[]; images: AnatomyImage[] }> => {
+export const getAnatomy = cache(async (courseId: string): Promise<{ structures: AnatomyStructure[]; images: AnatomyImage[]; units: AnatomyUnit[] }> => {
   const supabase = await createClient();
-  if (!supabase) return { structures: [], images: [] };
-  const [{ data: s }, { data: i }] = await Promise.all([
+  if (!supabase) return { structures: [], images: [], units: [] };
+  const [{ data: s }, { data: i }, { data: u }] = await Promise.all([
     supabase
       .from("anatomy_structures")
       .select("id, slug, name, synonyms, dutch_name, level, region, region_sort, summary, explanation, clinical")
@@ -51,7 +63,13 @@ export const getAnatomy = cache(async (courseId: string): Promise<{ structures: 
       .order("name"),
     supabase
       .from("anatomy_images")
-      .select("id, slug, title, region, image_path, width, height, credit, anatomy_markers(id, structure_id, x, y, tip_x, tip_y, sort_order)")
+      .select("id, unit_id, slug, title, region, image_path, width, height, credit, anatomy_markers(id, structure_id, x, y, tip_x, tip_y, sort_order)")
+      .eq("course_id", courseId)
+      .eq("status", "published")
+      .order("sort_order"),
+    supabase
+      .from("anatomy_units")
+      .select("id, slug, title, subtitle, must_know, anatomy_unit_structures(structure_id, category, sort_order)")
       .eq("course_id", courseId)
       .eq("status", "published")
       .order("sort_order"),
@@ -72,6 +90,7 @@ export const getAnatomy = cache(async (courseId: string): Promise<{ structures: 
   const known = new Set(structures.map((x) => x.id));
   const images: AnatomyImage[] = (i ?? []).map((r) => ({
     id: r.id as string,
+    unitId: (r.unit_id as string | null) ?? null,
     slug: r.slug as string,
     title: r.title as string,
     region: r.region as string,
@@ -89,7 +108,18 @@ export const getAnatomy = cache(async (courseId: string): Promise<{ structures: 
         tip: m.tip_x !== null && m.tip_y !== null ? { x: Number(m.tip_x), y: Number(m.tip_y) } : null,
       })),
   }));
-  return { structures, images };
+  const units: AnatomyUnit[] = (u ?? []).map((r) => ({
+    id: r.id as string,
+    slug: r.slug as string,
+    title: r.title as string,
+    subtitle: (r.subtitle as string | null) ?? null,
+    mustKnow: (r.must_know as string | null) ?? null,
+    items: ((r.anatomy_unit_structures as { structure_id: string; category: string; sort_order: number }[]) ?? [])
+      .filter((x) => known.has(x.structure_id))
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((x) => ({ structureId: x.structure_id, category: x.category })),
+  }));
+  return { structures, images, units };
 });
 
 /** The viewer's own progress per structure. */

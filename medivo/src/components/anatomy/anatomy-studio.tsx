@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Images, Maximize2, Minimize2, RotateCcw, Target, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { AnatomyImage, AnatomyProgress, AnatomyStructure } from "@/lib/data/anatomy";
+import type { AnatomyImage, AnatomyProgress, AnatomyStructure, AnatomyUnit } from "@/lib/data/anatomy";
+import { MarkupText } from "@/components/markup-text";
 import { cn } from "@/lib/utils";
 import { reviewAnatomy } from "@/app/vakken/[slug]/anatomie/actions";
 
@@ -62,25 +63,56 @@ function statusOf(p: AnatomyProgress | undefined): Status {
   return "bezig";
 }
 
+type Counts = { nieuw: number; aandacht: number; bezig: number; beheerst: number };
+function countStatus(ids: string[], progress: Record<string, AnatomyProgress>): Counts {
+  const c = { nieuw: 0, aandacht: 0, bezig: 0, beheerst: 0 };
+  for (const id of ids) c[statusOf(progress[id])]++;
+  return c;
+}
+
+/** A practicum with only what the viewer can practise: its checklist, its plates (markers outside the checklist unnumbered). */
+function scopeUnit(unit: AnatomyUnit, images: AnatomyImage[], byIdAll: Map<string, AnatomyStructure>) {
+  const ids = unit.items.map((i) => i.structureId).filter((id) => byIdAll.has(id));
+  const set = new Set(ids);
+  const unitImages = images
+    .filter((img) => img.unitId === unit.id)
+    .map((img) => ({ ...img, markers: img.markers.map((m) => (m.structureId && set.has(m.structureId) ? m : { ...m, structureId: null })) }));
+  const onPlate = new Set<string>();
+  for (const img of unitImages) for (const m of img.markers) if (m.structureId) onPlate.add(m.structureId);
+  const byId = new Map(ids.map((id) => [id, byIdAll.get(id)!]));
+  return { ids, practisable: ids.filter((id) => onPlate.has(id)), images: unitImages, byId };
+}
+
 export function AnatomyStudio({
+  units,
   structures,
   images,
   initialProgress,
+  initialUnit,
 }: {
+  units: AnatomyUnit[];
   structures: AnatomyStructure[];
   images: AnatomyImage[];
   initialProgress: Record<string, AnatomyProgress>;
+  initialUnit: string | null;
 }) {
   const [progress, setProgress] = useState(initialProgress);
-  const [view, setView] = useState<{ kind: "start" } | { kind: "oefenen"; ids: string[] } | { kind: "platen"; imageId?: string }>({ kind: "start" });
-  const byId = useMemo(() => new Map(structures.map((s) => [s.id, s])), [structures]);
-  // Only structures that appear on a plate can be asked.
-  const onPlate = useMemo(() => {
-    const set = new Set<string>();
-    for (const i of images) for (const m of i.markers) if (m.structureId) set.add(m.structureId);
-    return structures.filter((s) => set.has(s.id));
-  }, [structures, images]);
-  const regions = useMemo(() => [...new Map(onPlate.map((s) => [s.region, s.regionSort])).entries()].sort((a, b) => a[1] - b[1]).map(([r]) => r), [onPlate]);
+  const [unitSlug, setUnitSlug] = useState<string | null>(units.some((u) => u.slug === initialUnit) ? initialUnit : null);
+  const [view, setView] = useState<{ kind: "unit" } | { kind: "oefenen"; ids: string[] } | { kind: "platen"; imageId?: string }>({ kind: "unit" });
+  const byIdAll = useMemo(() => new Map(structures.map((s) => [s.id, s])), [structures]);
+  const unit = units.find((u) => u.slug === unitSlug) ?? null;
+  const scoped = useMemo(() => (unit ? scopeUnit(unit, images, byIdAll) : null), [unit, images, byIdAll]);
+
+  // Keep the chosen practicum in the address bar, so a refresh or a shared link opens it again.
+  const openUnit = (slug: string | null) => {
+    setUnitSlug(slug);
+    setView({ kind: "unit" });
+    const url = new URL(window.location.href);
+    if (slug) url.searchParams.set("practicum", slug);
+    else url.searchParams.delete("practicum");
+    window.history.replaceState(null, "", url);
+    window.scrollTo({ top: 0 });
+  };
 
   const record = (o: Outcome) => {
     setProgress((p) => {
@@ -91,156 +123,266 @@ export function AnatomyStudio({
     void reviewAnatomy(o);
   };
 
+  if (!unit || !scoped) return <UnitGrid units={units} byIdAll={byIdAll} progress={progress} onOpen={openUnit} />;
+
   if (view.kind === "oefenen")
     return (
       <Session
         key={view.ids.join()}
         ids={view.ids}
-        byId={byId}
-        images={images}
+        byId={scoped.byId}
+        images={scoped.images}
+        unit={unit}
+        progress={progress}
         onRecord={record}
-        onExit={() => setView({ kind: "start" })}
+        onExit={() => setView({ kind: "unit" })}
         onAgain={(ids) => setView({ kind: "oefenen", ids })}
       />
     );
   if (view.kind === "platen")
-    return <PlateBrowser images={images} byId={byId} initial={view.imageId} onBack={() => setView({ kind: "start" })} />;
+    return <PlateBrowser images={scoped.images} byId={scoped.byId} initial={view.imageId} onBack={() => setView({ kind: "unit" })} />;
 
   return (
-    <Start
-      regions={regions}
-      structures={onPlate}
-      images={images}
+    <UnitDetail
+      unit={unit}
+      scoped={scoped}
       progress={progress}
+      onBack={() => openUnit(null)}
       onStart={(ids) => setView({ kind: "oefenen", ids })}
       onPlates={(imageId) => setView({ kind: "platen", imageId })}
     />
   );
 }
 
-// ---------- start screen ----------
-function Start({
-  regions,
-  structures,
-  images,
+// ---------- the practica ----------
+function UnitGrid({
+  units,
+  byIdAll,
   progress,
+  onOpen,
+}: {
+  units: AnatomyUnit[];
+  byIdAll: Map<string, AnatomyStructure>;
+  progress: Record<string, AnatomyProgress>;
+  onOpen: (slug: string) => void;
+}) {
+  return (
+    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {units.map((u, i) => {
+        const ids = u.items.map((x) => x.structureId).filter((id) => byIdAll.has(id));
+        const c = countStatus(ids, progress);
+        const ready = ids.length > 0;
+        return (
+          <li key={u.id}>
+            <button
+              type="button"
+              onClick={() => onOpen(u.slug)}
+              className="group flex h-full w-full flex-col rounded-xl border border-line bg-white p-5 text-left shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-lift)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
+            >
+              <span className="grid size-9 place-items-center rounded-lg bg-sky text-sm font-bold tabular-nums text-blue">{i + 1}</span>
+              <span className="mt-3 font-semibold leading-snug text-navy">{u.title}</span>
+              {u.subtitle ? <span className="mt-1 text-sm text-muted-ink">{u.subtitle}</span> : null}
+              <span className="mt-auto pt-4">
+                {ready ? (
+                  <>
+                    <span className="flex items-baseline justify-between gap-2 text-xs text-muted-ink">
+                      <span>{ids.length} te kennen structuren</span>
+                      <span className="tabular-nums">{c.beheerst} beheerst</span>
+                    </span>
+                    <StatusBar c={c} total={ids.length} className="mt-1.5" />
+                  </>
+                ) : (
+                  <span className="text-xs font-medium text-muted-ink">Wordt voorbereid</span>
+                )}
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function StatusBar({ c, total, className }: { c: Counts; total: number; className?: string }) {
+  const pct = (n: number) => `${total ? (n / total) * 100 : 0}%`;
+  return (
+    <span className={cn("flex h-1.5 overflow-hidden rounded-full bg-canvas", className)} aria-hidden="true">
+      <span className="bg-success" style={{ width: pct(c.beheerst) }} />
+      <span className="bg-accent-blue/60" style={{ width: pct(c.bezig) }} />
+      <span className="bg-danger/70" style={{ width: pct(c.aandacht) }} />
+    </span>
+  );
+}
+
+const STATUS_LABEL: Record<Status, string> = { nieuw: "Nog niet geoefend", bezig: "Mee bezig", beheerst: "Beheerst", aandacht: "Fout, komt terug" };
+function StatusIcon({ s }: { s: Status }) {
+  return (
+    <span
+      title={STATUS_LABEL[s]}
+      className={cn(
+        "grid size-5 shrink-0 place-items-center rounded-full border-2",
+        s === "nieuw" && "border-line",
+        s === "bezig" && "border-accent-blue/60 bg-accent-blue/15",
+        s === "beheerst" && "border-success bg-success text-white",
+        s === "aandacht" && "border-danger bg-danger text-white",
+      )}
+    >
+      {s === "beheerst" ? <Check className="size-3" aria-hidden="true" /> : s === "aandacht" ? <X className="size-3" aria-hidden="true" /> : null}
+      <span className="sr-only">{STATUS_LABEL[s]}</span>
+    </span>
+  );
+}
+
+/** The checklist of a practicum, grouped by category, with level and status per structure. */
+function Checklist({ unit, byId, progress, compact }: { unit: AnatomyUnit; byId: Map<string, AnatomyStructure>; progress: Record<string, AnatomyProgress>; compact?: boolean }) {
+  // Grouped per category, categories in order of first appearance.
+  const map = new Map<string, string[]>();
+  for (const it of unit.items) {
+    if (!byId.has(it.structureId)) continue;
+    map.set(it.category, [...(map.get(it.category) ?? []), it.structureId]);
+  }
+  const groups = [...map.entries()].map(([category, ids]) => ({ category, ids }));
+  return (
+    <div className={cn("space-y-5", compact && "space-y-4")}>
+      {groups.map((g) => (
+        <section key={g.category}>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-ink">{g.category}</h3>
+          <ul className="mt-2 divide-y divide-line rounded-lg border border-line">
+            {g.ids.map((id) => {
+              const s = byId.get(id)!;
+              return (
+                <li key={id} className="flex items-center gap-3 px-3 py-2">
+                  <StatusIcon s={statusOf(progress[id])} />
+                  <span className="min-w-0 flex-1 text-sm text-navy">
+                    {s.name}
+                    {s.dutchName && !compact ? <span className="text-muted-ink"> · {s.dutchName}</span> : null}
+                  </span>
+                  <span
+                    className={cn(
+                      "shrink-0 rounded-full px-2 py-0.5 text-[0.7rem] font-semibold",
+                      s.level === "toepassen" ? "bg-sky text-blue" : "bg-canvas text-muted-ink",
+                    )}
+                  >
+                    {s.level === "toepassen" ? "Toepassen" : "Basis"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function UnitDetail({
+  unit,
+  scoped,
+  progress,
+  onBack,
   onStart,
   onPlates,
 }: {
-  regions: string[];
-  structures: AnatomyStructure[];
-  images: AnatomyImage[];
+  unit: AnatomyUnit;
+  scoped: ReturnType<typeof scopeUnit>;
   progress: Record<string, AnatomyProgress>;
+  onBack: () => void;
   onStart: (ids: string[]) => void;
   onPlates: (imageId?: string) => void;
 }) {
-  const [selected, setSelected] = useState<string[]>([]);
-  const pool = structures.filter((s) => !selected.length || selected.includes(s.region));
+  const { ids, practisable, images, byId } = scoped;
+  const c = countStatus(ids, progress);
   const now = Date.now();
-  const toRepeat = structures.filter((s) => statusOf(progress[s.id]) === "aandacht");
-  const counts = (list: AnatomyStructure[]) => {
-    const c = { nieuw: 0, aandacht: 0, bezig: 0, beheerst: 0 };
-    for (const s of list) c[statusOf(progress[s.id])]++;
-    return c;
-  };
-  const total = counts(structures);
-
+  const toRepeat = practisable.filter((id) => statusOf(progress[id]) === "aandacht");
   // Session order: wrong first, then due, then new, then the rest; shuffled within each group.
   const startSession = () => {
-    const rank = (s: AnatomyStructure) => {
-      const p = progress[s.id];
+    const rank = (id: string) => {
+      const p = progress[id];
       if (p && !p.lastCorrect) return 0;
       if (p && new Date(p.dueAt).getTime() <= now) return 1;
       if (!p) return 2;
       return 3 + p.box;
     };
-    const groups = new Map<number, AnatomyStructure[]>();
-    for (const s of pool) groups.set(rank(s), [...(groups.get(rank(s)) ?? []), s]);
-    const ordered = [...groups.keys()].sort((a, b) => a - b).flatMap((k) => shuffle(groups.get(k)!));
-    onStart(ordered.slice(0, SESSION_SIZE).map((s) => s.id));
+    const groups = new Map<number, string[]>();
+    for (const id of practisable) groups.set(rank(id), [...(groups.get(rank(id)) ?? []), id]);
+    onStart([...groups.keys()].sort((a, b) => a - b).flatMap((k) => shuffle(groups.get(k)!)).slice(0, SESSION_SIZE));
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-start">
-      <section className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
-        <h2 className="text-lg font-semibold text-navy">Oefenen</h2>
-        <p className="mt-1 text-sm text-muted-ink">
-          Benoem en wijs structuren aan op echte anatomische platen. Geef bij elk antwoord aan hoe zeker je bent: wat je fout had of
-          gokte, komt eerder terug.
-        </p>
-        <fieldset className="mt-5">
-          <legend className="text-sm font-semibold text-navy">Kies regio&apos;s</legend>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Chip active={!selected.length} onClick={() => setSelected([])}>Alles</Chip>
-            {regions.map((r) => (
-              <Chip key={r} active={selected.includes(r)} onClick={() => setSelected((x) => (x.includes(r) ? x.filter((y) => y !== r) : [...x, r]))}>
-                {r}
-              </Chip>
-            ))}
-          </div>
-        </fieldset>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Button type="button" className="h-11 px-5 font-semibold" onClick={startSession} disabled={!pool.length}>
-            <Target className="size-4" aria-hidden="true" />
-            Start oefensessie ({Math.min(SESSION_SIZE, pool.length)} vragen)
-          </Button>
-          {toRepeat.length ? (
-            <Button type="button" variant="outline" className="h-11 px-5" onClick={() => onStart(shuffle(toRepeat).slice(0, SESSION_SIZE).map((s) => s.id))}>
-              <RotateCcw className="size-4" aria-hidden="true" />
-              Herhaal wat je fout had ({toRepeat.length})
-            </Button>
-          ) : null}
-          <Button type="button" variant="outline" className="h-11 px-5" onClick={() => onPlates()}>
-            <Images className="size-4" aria-hidden="true" />
-            Platen bekijken
-          </Button>
-        </div>
-      </section>
+    <div>
+      <button type="button" onClick={onBack} className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-blue hover:underline">
+        <ArrowLeft className="size-4" aria-hidden="true" />
+        Alle practica
+      </button>
+      <h2 className="text-2xl font-bold tracking-[-0.01em] text-navy">{unit.title}</h2>
+      {unit.subtitle ? <p className="mt-1 text-muted-ink">{unit.subtitle}</p> : null}
 
-      <aside className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
-        <h2 className="text-lg font-semibold text-navy">Jouw niveau</h2>
-        <p className="mt-0.5 text-sm text-muted-ink">
-          {total.beheerst} van {structures.length} structuren beheerst
+      {!ids.length ? (
+        <p className="mt-6 rounded-xl border border-dashed border-line bg-white p-6 text-sm text-muted-ink">
+          Dit practicum wordt voorbereid. Zodra de structuren en platen klaar zijn, zie je hier wat je moet kennen en kun je oefenen.
         </p>
-        <ul className="mt-4 space-y-3.5">
-          {regions.map((r) => {
-            const list = structures.filter((s) => s.region === r);
-            const c = counts(list);
-            const pct = (n: number) => `${(n / list.length) * 100}%`;
-            return (
-              <li key={r}>
-                <div className="flex items-baseline justify-between gap-2 text-sm">
-                  <span className="font-medium text-navy">{r}</span>
-                  <span className="shrink-0 text-xs tabular-nums text-muted-ink">
-                    {c.beheerst}/{list.length}
-                    {c.aandacht ? <span className="ml-1.5 font-semibold text-danger">· {c.aandacht} fout</span> : null}
-                  </span>
-                </div>
-                <div className="mt-1.5 flex h-1.5 overflow-hidden rounded-full bg-canvas" aria-hidden="true">
-                  <span className="bg-success" style={{ width: pct(c.beheerst) }} />
-                  <span className="bg-accent-blue/60" style={{ width: pct(c.bezig) }} />
-                  <span className="bg-danger/70" style={{ width: pct(c.aandacht) }} />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-        <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-ink">
-          <Legend className="bg-success">Beheerst</Legend>
-          <Legend className="bg-accent-blue/60">Mee bezig</Legend>
-          <Legend className="bg-danger/70">Fout</Legend>
-        </p>
-        <h3 className="mt-6 text-sm font-semibold text-navy">Platen</h3>
-        <ul className="mt-2 space-y-1">
-          {images.map((i) => (
-            <li key={i.id}>
-              <button type="button" onClick={() => onPlates(i.id)} className="text-left text-sm text-blue hover:underline">
-                {i.title}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </aside>
+      ) : (
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-start">
+          <div className="space-y-6">
+            {unit.mustKnow ? (
+              <section className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
+                <h3 className="text-lg font-semibold text-navy">Wat moet je weten?</h3>
+                <MarkupText source={unit.mustKnow} idPrefix={`${unit.id}-weten`} className="mt-3 space-y-3 text-[0.95rem] leading-relaxed text-navy" />
+              </section>
+            ) : null}
+            <section className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
+              <div className="flex items-baseline justify-between gap-3">
+                <h3 className="text-lg font-semibold text-navy">Deze structuren moet je kennen</h3>
+                <span className="shrink-0 text-sm tabular-nums text-muted-ink">
+                  {c.beheerst} van {ids.length} beheerst
+                </span>
+              </div>
+              <StatusBar c={c} total={ids.length} className="mt-3" />
+              <p className="mt-3 text-sm text-muted-ink">
+                <span className="font-semibold text-blue">Toepassen</span>: aanwijzen, benoemen én kunnen toepassen (ligging, relaties, klinisch).{" "}
+                <span className="font-semibold text-navy">Basis</span>: aanwijzen en benoemen.
+              </p>
+              <div className="mt-5">
+                <Checklist unit={unit} byId={byId} progress={progress} />
+              </div>
+            </section>
+          </div>
+
+          <aside className="space-y-4 lg:sticky lg:top-24">
+            <section className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
+              <h3 className="text-lg font-semibold text-navy">Oefenen</h3>
+              <p className="mt-1 text-sm text-muted-ink">
+                Je oefent alleen de structuren van dit practicum. Geef bij elk antwoord aan hoe zeker je bent: wat je fout had of gokte, komt
+                eerder terug.
+              </p>
+              <div className="mt-5 flex flex-col gap-3">
+                <Button type="button" className="h-11 font-semibold" onClick={startSession} disabled={!practisable.length}>
+                  <Target className="size-4" aria-hidden="true" />
+                  Start oefensessie ({Math.min(SESSION_SIZE, practisable.length)} vragen)
+                </Button>
+                {toRepeat.length ? (
+                  <Button type="button" variant="outline" className="h-11" onClick={() => onStart(shuffle(toRepeat).slice(0, SESSION_SIZE))}>
+                    <RotateCcw className="size-4" aria-hidden="true" />
+                    Herhaal wat je fout had ({toRepeat.length})
+                  </Button>
+                ) : null}
+                <Button type="button" variant="outline" className="h-11" onClick={() => onPlates()} disabled={!images.length}>
+                  <Images className="size-4" aria-hidden="true" />
+                  Platen bekijken ({images.length})
+                </Button>
+              </div>
+              {practisable.length < ids.length ? (
+                <p className="mt-3 text-xs text-muted-ink">{ids.length - practisable.length} structuren staan nog niet op een plaat en worden nog niet gevraagd.</p>
+              ) : null}
+              <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-ink">
+                <Legend className="bg-success">Beheerst</Legend>
+                <Legend className="bg-accent-blue/60">Mee bezig</Legend>
+                <Legend className="bg-danger/70">Fout</Legend>
+              </p>
+            </section>
+          </aside>
+        </div>
+      )}
     </div>
   );
 }
@@ -416,7 +558,8 @@ function buildQuestion(structureId: string, images: AnatomyImage[], byId: Map<st
   const target = byId.get(structureId)!;
   // Distractors: other structures on the same plate, preferring the same region; then the same region elsewhere.
   const same = shuffle(others).sort((a, b) => Number(byId.get(b)?.region === target.region) - Number(byId.get(a)?.region === target.region));
-  const extra = shuffle([...byId.values()].filter((s) => s.region === target.region && s.id !== structureId && !same.includes(s.id)).map((s) => s.id));
+  const rest = [...byId.values()].filter((s) => s.id !== structureId && !same.includes(s.id));
+  const extra = [...shuffle(rest.filter((s) => s.region === target.region)), ...shuffle(rest.filter((s) => s.region !== target.region))].map((s) => s.id);
   const options = shuffle([structureId, ...[...same, ...extra].slice(0, 3)]);
   return { key: `${structureId}-${Math.random()}`, structureId, imageId: img.id, markerId: m.id, type, options };
 }
@@ -425,6 +568,8 @@ function Session({
   ids,
   byId,
   images,
+  unit,
+  progress,
   onRecord,
   onExit,
   onAgain,
@@ -432,6 +577,8 @@ function Session({
   ids: string[];
   byId: Map<string, AnatomyStructure>;
   images: AnatomyImage[];
+  unit: AnatomyUnit;
+  progress: Record<string, AnatomyProgress>;
   onRecord: (o: Outcome) => void;
   onExit: () => void;
   onAgain: (ids: string[]) => void;
@@ -494,6 +641,8 @@ function Session({
       total={queue.length}
       byId={byId}
       image={images.find((i) => i.id === q.imageId)!}
+      unit={unit}
+      progress={progress}
       onExit={onExit}
       onDone={(o) => {
         onRecord(o);
@@ -530,6 +679,8 @@ function QuestionView({
   total,
   byId,
   image,
+  unit,
+  progress,
   onExit,
   onDone,
 }: {
@@ -538,6 +689,8 @@ function QuestionView({
   total: number;
   byId: Map<string, AnatomyStructure>;
   image: AnatomyImage;
+  unit: AnatomyUnit;
+  progress: Record<string, AnatomyProgress>;
   onExit: () => void;
   onDone: (o: Outcome) => void;
 }) {
@@ -599,6 +752,21 @@ function QuestionView({
           Vraag {n} van {total}
         </p>
       </div>
+      {/* Always clear what you are practising: the practicum and its checklist, one tap away. */}
+      <details className="group mb-4 rounded-xl border border-line bg-white px-4 py-3 shadow-[var(--shadow-card)]">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm">
+          <span className="min-w-0">
+            <span className="text-muted-ink">Je oefent: </span>
+            <span className="font-semibold text-navy">{unit.title}</span>
+            <span className="text-muted-ink"> · {byId.size} te kennen structuren</span>
+          </span>
+          <span className="shrink-0 font-medium text-blue group-open:hidden">Toon checklist</span>
+          <span className="hidden shrink-0 font-medium text-blue group-open:inline">Verberg</span>
+        </summary>
+        <div className="mt-4 max-h-[50vh] overflow-auto pr-1">
+          <Checklist unit={unit} byId={byId} progress={progress} compact />
+        </div>
+      </details>
       <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-canvas" aria-hidden="true">
         <div className="h-full rounded-full bg-accent-blue transition-[width]" style={{ width: `${((n - 1) / total) * 100}%` }} />
       </div>

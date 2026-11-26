@@ -12,15 +12,16 @@ import { container } from "@/lib/site";
 import { getViewer } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ practicum?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const course = await getCourse((await params).slug);
   return course ? { title: `Anatomie ${course.title}`, robots: { index: false, follow: true } } : {};
 }
 
-export default async function AnatomiePage({ params }: Props) {
+export default async function AnatomiePage({ params, searchParams }: Props) {
   const course = await getCourse((await params).slug);
+  const { practicum } = await searchParams;
   if (!course) notFound();
   const [overview, viewer, anatomy, progress] = await Promise.all([
     getCourseOverview(course.id),
@@ -35,19 +36,19 @@ export default async function AnatomiePage({ params }: Props) {
         course={course}
         active="anatomie"
         title="Anatomie"
-        intro="Oefen de structuren uit de structurenlijst op anatomische platen: benoemen, aanwijzen en de naam typen. Wat je fout hebt of nog niet zeker weet, komt vaker terug."
+        intro="Per practicum zie je wat je moet kennen en oefen je precies die structuren op anatomische platen: benoemen, aanwijzen en de naam typen. Wat je fout hebt of nog niet zeker weet, komt vaker terug."
       />
       <div className={cn(container, "py-8 lg:py-10")}>
-        {overview.anatomy === 0 ? (
+        {overview.anatomyUnits === 0 ? (
           <EmptyState icon={Bone} title="Nog geen anatomie voor dit vak">
             De anatomie-oefenmodus wordt voorbereid.
           </EmptyState>
         ) : !viewer ? (
           <AccessNotice signedIn={false} next={`/vakken/${course.slug}/anatomie`} />
-        ) : !anatomy.images.length ? (
+        ) : !overview.hasAccess ? (
           <AccessNotice signedIn next={`/vakken/${course.slug}/anatomie`} />
         ) : (
-          <AnatomyStudio structures={anatomy.structures} images={anatomy.images} initialProgress={progress} />
+          <AnatomyStudio units={anatomy.units} structures={anatomy.structures} images={anatomy.images} initialProgress={progress} initialUnit={practicum ?? null} />
         )}
       </div>
     </main>

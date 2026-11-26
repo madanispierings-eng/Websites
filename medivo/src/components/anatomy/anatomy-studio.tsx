@@ -270,6 +270,15 @@ function Legend({ className, children }: { className: string; children: React.Re
 }
 
 // ---------- the plate ----------
+const LINE: Record<MarkState, string> = {
+  target: "#1760b5",
+  picked: "#1760b5",
+  correct: "#16a085",
+  wrong: "#c0392b",
+  plain: "#0b2345",
+  "hidden-number": "#0b2345",
+  dim: "transparent",
+};
 /** Numbers 1..n for the tested markers only, top to bottom, so numbering has no gaps. */
 function numbering(image: AnatomyImage) {
   const tested = image.markers.filter((m) => m.structureId).sort((a, b) => a.y - b.y || a.x - b.x);
@@ -309,6 +318,28 @@ function Plate({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={image.url} alt={image.title} width={image.width} height={image.height} className="block h-auto w-full select-none" draggable={false} />
+          {/* The printed leader lines are too thin to follow: draw a clear line from each number to the structure. */}
+          <svg
+            viewBox={`0 0 ${image.width} ${image.height}`}
+            preserveAspectRatio="none"
+            className="pointer-events-none absolute inset-0 size-full"
+            aria-hidden="true"
+          >
+            {image.markers.map((m) => {
+              const st = marks(m);
+              if (!m.tip || st === "dim") return null;
+              const col = LINE[st];
+              const x1 = m.x * image.width, y1 = m.y * image.height, x2 = m.tip.x * image.width, y2 = m.tip.y * image.height;
+              const strong = st !== "plain" && st !== "hidden-number";
+              return (
+                <g key={m.id} opacity={strong ? 1 : 0.85}>
+                  <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="white" strokeWidth={strong ? 7 : 5.5} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                  <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={col} strokeWidth={strong ? 3.5 : 2.5} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                  <circle cx={x2} cy={y2} r={strong ? 16 : 12} fill={col} stroke="white" strokeWidth={3} vectorEffect="non-scaling-stroke" />
+                </g>
+              );
+            })}
+          </svg>
           {image.markers.map((m) => {
             const st = marks(m);
             const label = labels?.(m);

@@ -15,7 +15,7 @@ export async function CourseSubheader({ course, active, title, intro }: { course
   const tabs = [
     ...courseSections.map((s) => ({ key: s.key as string, title: s.title, icon: s.icon })),
     ...(overview.coreMeds > 0 || active === "kernmedicatie" ? [{ key: "kernmedicatie", title: "Kernmedicatielijst", icon: Pill }] : []),
-    ...(overview.anatomy > 0 || active === "anatomie" ? [{ key: "anatomie", title: "Anatomie", icon: Bone }] : []),
+    ...(overview.anatomyUnits > 0 || active === "anatomie" ? [{ key: "anatomie", title: "Anatomie", icon: Bone }] : []),
   ];
   return (
     <div className="border-b border-line bg-white">

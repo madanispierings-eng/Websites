@@ -300,6 +300,8 @@ function Plate({
   zoomTo?: string;
 }) {
   const [zoom, setZoom] = useState(false);
+  const [loaded, setLoaded] = useState<string | null>(null);
+  const ready = loaded === image.id;
   const scroller = useRef<HTMLDivElement>(null);
   const numbers = numbering(image);
   useEffect(() => {
@@ -312,17 +314,28 @@ function Plate({
     <div className="relative">
       <div ref={scroller} className={cn("rounded-xl border border-line bg-white", zoom ? "max-h-[75vh] overflow-auto" : "overflow-hidden")}>
         {/* Not zoomed: the whole plate fits on screen (height-limited), so the asked point is always visible. */}
+        {/* Keyed by plate: a new <img> per plate, so the previous plate never shows under the new numbers while loading. */}
         <div
+          key={image.id}
           className="relative mx-auto [--ph:56svh] lg:[--ph:calc(100vh-13rem)]"
           style={{ width: zoom ? "200%" : `min(100%, calc(var(--ph) * ${image.width / image.height}))` }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={image.url} alt={image.title} width={image.width} height={image.height} className="block h-auto w-full select-none" draggable={false} />
+          <img
+            src={image.url}
+            alt={image.title}
+            width={image.width}
+            height={image.height}
+            onLoad={() => setLoaded(image.id)}
+            className="block h-auto w-full select-none bg-canvas"
+            style={{ aspectRatio: `${image.width} / ${image.height}` }}
+            draggable={false}
+          />
           {/* The printed leader lines are too thin to follow: draw a clear line from each number to the structure. */}
           <svg
             viewBox={`0 0 ${image.width} ${image.height}`}
             preserveAspectRatio="none"
-            className="pointer-events-none absolute inset-0 size-full"
+            className={cn("pointer-events-none absolute inset-0 size-full transition-opacity", ready ? "opacity-100" : "opacity-0")}
             aria-hidden="true"
           >
             {image.markers.map((m) => {
@@ -350,7 +363,8 @@ function Plate({
                 key={m.id}
                 {...(clickable ? { type: "button" as const, onClick: () => onMarkerClick!(m.id), "aria-label": `Punt ${numbers.get(m.id)}` } : { "aria-hidden": true })}
                 className={cn(
-                  "absolute -translate-x-1/2 -translate-y-1/2 rounded-full",
+                  "absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition-opacity",
+                  !ready && "pointer-events-none opacity-0",
                   st === "dim" && "size-2.5 bg-navy/35",
                   st !== "dim" && "grid size-5 place-items-center border-2 bg-white text-[0.6rem] font-bold shadow-sm sm:size-8 sm:text-xs",
                   st === "plain" && "border-navy/60 text-navy",

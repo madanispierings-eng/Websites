@@ -13,7 +13,8 @@ type QType = "benoem" | "aanwijzen" | "typ";
 type Question = { key: string; structureId: string; imageId: string; markerId: string; type: QType; options: string[] };
 type Outcome = { structureId: string; correct: boolean; confidence: Confidence };
 
-const SESSION_SIZE = 15;
+/** A short round; the main session asks every structure of the practicum once. */
+const SHORT_ROUND = 20;
 
 // ---------- answer checking ----------
 const ABBR: [RegExp, string][] = [
@@ -295,7 +296,7 @@ function UnitDetail({
   const now = Date.now();
   const toRepeat = practisable.filter((id) => statusOf(progress[id]) === "aandacht");
   // Session order: wrong first, then due, then new, then the rest; shuffled within each group.
-  const startSession = () => {
+  const startSession = (limit?: number) => {
     const rank = (id: string) => {
       const p = progress[id];
       if (p && !p.lastCorrect) return 0;
@@ -305,7 +306,7 @@ function UnitDetail({
     };
     const groups = new Map<number, string[]>();
     for (const id of practisable) groups.set(rank(id), [...(groups.get(rank(id)) ?? []), id]);
-    onStart([...groups.keys()].sort((a, b) => a - b).flatMap((k) => shuffle(groups.get(k)!)).slice(0, SESSION_SIZE));
+    onStart([...groups.keys()].sort((a, b) => a - b).flatMap((k) => shuffle(groups.get(k)!)).slice(0, limit ?? practisable.length));
   };
 
   return (
@@ -352,16 +353,22 @@ function UnitDetail({
             <section className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
               <h3 className="text-lg font-semibold text-navy">Oefenen</h3>
               <p className="mt-1 text-sm text-muted-ink">
-                Je oefent alleen de structuren van dit practicum. Geef bij elk antwoord aan hoe zeker je bent: wat je fout had of gokte, komt
-                eerder terug.
+                Meerkeuzevragen over alle structuren van dit practicum: welke structuur is aangewezen? Wat je fout had of gokte, komt
+                eerder terug. Je kunt altijd stoppen; je voortgang wordt per vraag bewaard.
               </p>
               <div className="mt-5 flex flex-col gap-3">
-                <Button type="button" className="h-11 font-semibold" onClick={startSession} disabled={!practisable.length}>
+                <Button type="button" className="h-auto min-h-11 py-2 font-semibold" onClick={() => startSession()} disabled={!practisable.length}>
                   <Target className="size-4" aria-hidden="true" />
-                  Start oefensessie ({Math.min(SESSION_SIZE, practisable.length)} vragen)
+                  Oefen alle structuren ({practisable.length} vragen)
                 </Button>
+                {practisable.length > SHORT_ROUND ? (
+                  <Button type="button" variant="outline" className="h-11" onClick={() => startSession(SHORT_ROUND)}>
+                    <Target className="size-4" aria-hidden="true" />
+                    Korte ronde ({SHORT_ROUND} vragen)
+                  </Button>
+                ) : null}
                 {toRepeat.length ? (
-                  <Button type="button" variant="outline" className="h-11" onClick={() => onStart(shuffle(toRepeat).slice(0, SESSION_SIZE))}>
+                  <Button type="button" variant="outline" className="h-11" onClick={() => onStart(shuffle(toRepeat))}>
                     <RotateCcw className="size-4" aria-hidden="true" />
                     Herhaal wat je fout had ({toRepeat.length})
                   </Button>
@@ -554,7 +561,8 @@ function buildQuestion(structureId: string, images: AnatomyImage[], byId: Map<st
   const withMarker = images.flatMap((img) => img.markers.filter((m) => m.structureId === structureId).map((m) => ({ img, m })));
   const { img, m } = pick(withMarker);
   const others = [...new Set(img.markers.map((x) => x.structureId).filter((x): x is string => !!x && x !== structureId))];
-  const type: QType = prefer ?? (others.length < 3 ? pick<QType>(["benoem", "typ"]) : pick<QType>(["benoem", "benoem", "aanwijzen", "aanwijzen", "typ"]));
+  // For now only multiple choice ("which structure is pointed out?"); pointing and typing may come back later.
+  const type: QType = prefer ?? "benoem";
   const target = byId.get(structureId)!;
   // Distractors: other structures on the same plate, preferring the same region; then the same region elsewhere.
   const same = shuffle(others).sort((a, b) => Number(byId.get(b)?.region === target.region) - Number(byId.get(a)?.region === target.region));

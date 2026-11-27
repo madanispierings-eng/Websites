@@ -53,6 +53,16 @@ export default async function CoursePage({ params }: Props) {
           countLabel: (x: number) => `${x} ${x === 1 ? "middel" : "middelen"}`,
         }]
       : []),
+    ...(overview.disorders > 0
+      ? [{
+          key: "ziektebeelden",
+          title: "Ziektebeelden",
+          body: "Alle ziektebeelden per thema, met uitleg op het niveau dat je moet kennen en als flashcards.",
+          image: "/images/onderdelen/ziektebeelden.webp",
+          n: overview.disorders,
+          countLabel: (x: number) => `${x} ${x === 1 ? "ziektebeeld" : "ziektebeelden"}`,
+        }]
+      : []),
     ...(overview.anatomyUnits > 0
       ? [{
           key: "anatomie",

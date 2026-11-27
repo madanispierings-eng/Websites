@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Bone, Pill } from "lucide-react";
+import { ArrowLeft, Bone, Pill, Stethoscope } from "lucide-react";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { courseSections } from "@/components/course/course-sections";
 import { TabScroller } from "@/components/course/tab-scroller";
@@ -15,6 +15,7 @@ export async function CourseSubheader({ course, active, title, intro }: { course
   const tabs = [
     ...courseSections.map((s) => ({ key: s.key as string, title: s.title, icon: s.icon })),
     ...(overview.coreMeds > 0 || active === "kernmedicatie" ? [{ key: "kernmedicatie", title: "Kernmedicatielijst", icon: Pill }] : []),
+    ...(overview.disorders > 0 || active === "ziektebeelden" ? [{ key: "ziektebeelden", title: "Ziektebeelden", icon: Stethoscope }] : []),
     ...(overview.anatomyUnits > 0 || active === "anatomie" ? [{ key: "anatomie", title: "Anatomie", icon: Bone }] : []),
   ];
   return (

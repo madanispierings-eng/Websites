@@ -37,6 +37,12 @@ export function TopicSidebar({
   disabled?: boolean;
 }) {
   const selected = new Set(selectedIds);
+  // Topics without practice questions (e.g. ones that only group exam questions) are not offered here.
+  const has = (id: string) => (counts[id] ?? 0) > 0;
+  const withQuestions = topics
+    .map((t) => ({ ...t, children: t.children.filter((c) => has(c.id)) }))
+    .filter((t) => has(t.id) || t.children.length > 0);
+  topics = withQuestions.length ? withQuestions : topics;
   const allIds = topics.flatMap((t) => [t.id, ...t.children.map((c) => c.id)]);
   const overall = aggregate(allIds, counts, stats);
   const pct = overall.total ? Math.round((overall.answered / overall.total) * 100) : 0;

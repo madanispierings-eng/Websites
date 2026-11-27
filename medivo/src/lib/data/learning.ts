@@ -15,10 +15,11 @@ export type CourseOverview = {
   coreMeds: number;
   anatomy: number;
   anatomyUnits: number;
+  disorders: number;
   hasAccess: boolean;
 };
 
-const EMPTY: CourseOverview = { summaries: 0, objectives: 0, exams: 0, questions: 0, flashcards: 0, coreMeds: 0, anatomy: 0, anatomyUnits: 0, hasAccess: false };
+const EMPTY: CourseOverview = { summaries: 0, objectives: 0, exams: 0, questions: 0, flashcards: 0, coreMeds: 0, anatomy: 0, anatomyUnits: 0, disorders: 0, hasAccess: false };
 
 export const getCourseOverview = cache(async (courseId: string): Promise<CourseOverview> => {
   const supabase = await createClient();
@@ -35,6 +36,7 @@ export const getCourseOverview = cache(async (courseId: string): Promise<CourseO
     coreMeds: Number(data.core_medications ?? 0),
     anatomy: Number(data.anatomy ?? 0),
     anatomyUnits: Number(data.anatomy_units ?? 0),
+    disorders: Number(data.disorders ?? 0),
     hasAccess: Boolean(data.has_access),
   };
 });

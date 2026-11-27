@@ -53,6 +53,16 @@ export default async function CoursePage({ params }: Props) {
           countLabel: (x: number) => `${x} ${x === 1 ? "middel" : "middelen"}`,
         }]
       : []),
+    ...(overview.disorders > 0
+      ? [{
+          key: "ziektebeelden",
+          title: "Ziektebeelden",
+          body: "Alle ziektebeelden per thema, met uitleg op het niveau dat je moet kennen en als flashcards.",
+          image: "/images/onderdelen/ziektebeelden.webp",
+          n: overview.disorders,
+          countLabel: (x: number) => `${x} ${x === 1 ? "ziektebeeld" : "ziektebeelden"}`,
+        }]
+      : []),
     ...(overview.anatomyUnits > 0
       ? [{
           key: "anatomie",
@@ -111,7 +121,7 @@ export default async function CoursePage({ params }: Props) {
           On wide screens all cards sit on one row (as many columns as there are cards). */}
       <section
         aria-label="Onderdelen"
-        style={{ "--cards": cards.length } as CSSProperties}
+        style={{ "--cards": cards.length > 6 ? Math.ceil(cards.length / 2) : cards.length } as CSSProperties}
         className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:[grid-template-columns:repeat(var(--cards),minmax(0,1fr))]"
       >
         {cards.map((s) => (

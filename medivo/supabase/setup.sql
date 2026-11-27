@@ -3172,6 +3172,18 @@ language sql stable security definer set search_path = public as $$
   where exists (select 1 from public.courses where id = p_course_id and status = 'published');
 $$;
 
+-- ===== supabase/migrations/20261129090000_disorder_cases.sql =====
+-- Casussen bij ziektebeelden: per ziektebeeld een casus op tentamenniveau, de uitleg waarom het dit
+-- ziektebeeld is, en de afleiders (slugs van andere ziektebeelden van hetzelfde vak) waaruit de
+-- student moet kiezen. Getoond in de modus "Casussen oefenen" op de ziektebeeldenpagina.
+alter table public.disorders
+  add column case_vignette text,
+  add column case_explanation text,
+  add column case_distractors text[] not null default '{}';
+
+alter table public.disorders add constraint disorders_case_complete
+  check ((case_vignette is null) = (case_explanation is null));
+
 -- ===== supabase/seed.sql =====
 -- Initial catalogue: bachelor Geneeskunde, Universiteit Leiden.
 -- Course titles and EC values as supplied by the Medivo team. Use NULL for an EC value that has not been verified;

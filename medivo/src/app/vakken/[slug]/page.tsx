@@ -9,7 +9,7 @@ import { courseSections } from "@/components/course/course-sections";
 import { StudyProgress } from "@/components/course/study-progress";
 import { VisitBeacon } from "@/components/course/visit-beacon";
 import { EmptyState } from "@/components/empty-state";
-import { getCourse, getTopicTree } from "@/lib/data/catalog";
+import { getCourse, getTopicsWithSummary, getTopicTree } from "@/lib/data/catalog";
 import { getCourseOverview, getCourseProgress } from "@/lib/data/learning";
 import { courseImage } from "@/lib/course-visuals";
 import { container, ecLabel, pricing, yearLabel } from "@/lib/site";
@@ -31,12 +31,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CoursePage({ params }: Props) {
   const course = await getCourse((await params).slug);
   if (!course) notFound();
-  const [overview, topics, viewer, progress] = await Promise.all([
+  const [overview, allTopics, withSummary, viewer, progress] = await Promise.all([
     getCourseOverview(course.id),
     getTopicTree(course.id),
+    getTopicsWithSummary(course.id),
     getViewer(),
     getCourseProgress(course.id),
   ]);
+  // Topics that only group exam questions have no summary to link to; leave them out (unless none has one yet).
+  const topics = withSummary.size ? allTopics.filter((t) => withSummary.has(t.id)) : allTopics;
   const base = `/vakken/${course.slug}`;
   const image = courseImage(course.slug);
   const locked = !overview.hasAccess;

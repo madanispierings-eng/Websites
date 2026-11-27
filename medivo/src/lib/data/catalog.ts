@@ -116,6 +116,16 @@ export const getQuestionCounts = cache(async (courseId: string): Promise<Record<
   return Object.fromEntries((data as { topic_id: string; question_count: number }[]).map((r) => [r.topic_id, Number(r.question_count)]));
 });
 
+/** Ids of the topics that have a published summary (so the course page only lists topics you can read about). */
+export const getTopicsWithSummary = cache(async (courseId: string): Promise<Set<string>> => {
+  const supabase = await createClient();
+  if (!supabase) return new Set();
+  const { data, error } = await supabase.rpc("topics_with_summary", { p_course_id: courseId });
+  if (error) return new Set();
+  // A set-returning function of scalars comes back as plain values or as { topics_with_summary } rows.
+  return new Set(((data ?? []) as unknown[]).map((r) => (typeof r === "string" ? r : (r as { topics_with_summary: string }).topics_with_summary)));
+});
+
 const examTypeLabel: Record<Exam["examType"], string> = {
   regular: "Tentamen",
   resit: "Hertentamen",

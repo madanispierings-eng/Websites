@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ArrowLeft, ArrowRight, BookOpen, Bookmark, BookmarkCheck, CircleAlert, CircleCheck, CircleX, Lightbulb, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Bookmark, BookmarkCheck, ChevronDown, CircleAlert, CircleCheck, CircleX, Lightbulb, Loader2 } from "lucide-react";
 import { ContentBlocks } from "@/components/content-blocks";
 import { MarkupText } from "@/components/markup-text";
 import { Button } from "@/components/ui/button";
@@ -420,6 +420,71 @@ function AnswerInput({ q, answer, locked, isExam, dispatch, onCommit }: {
   if (q.type === "dropdowns") {
     const values = r && "answers" in r ? r.answers : q.items.map(() => null);
     const key = fb?.answer.answers;
+    const setAt = (i: number, v: string | null) => {
+      const next = [...values];
+      next[i] = v;
+      dispatch({ type: "respond", response: { answers: next } });
+    };
+    if (q.grid) {
+      const { rows, cols } = q.grid;
+      return (
+        <fieldset disabled={locked} className="min-w-0">
+          <legend className="sr-only">Kies per vakje de best passende optie</legend>
+          {/* A real table where there is room; one card per row when the column is narrow (phone, next to the hint). */}
+          <div className="@container">
+            <table className="w-full border-collapse text-sm @max-2xl:block @2xl:table-fixed">
+              <thead className="@max-2xl:hidden">
+                <tr>
+                  <th scope="col" className="w-[9.5rem] border border-line bg-canvas p-2" />
+                  {cols.map((c, ci) => (
+                    <th key={ci} scope="col" className="border border-line bg-canvas p-2 text-left font-semibold text-navy">
+                      {ci + 1}. {c}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="@max-2xl:block @max-2xl:space-y-3">
+                {rows.map((rowLabel, ri) => (
+                  <tr key={ri} className="@max-2xl:block @max-2xl:rounded-lg @max-2xl:border @max-2xl:border-line @max-2xl:p-3">
+                    <th scope="row" className="border border-line bg-canvas p-2 text-left font-semibold text-navy @max-2xl:block @max-2xl:border-0 @max-2xl:bg-transparent @max-2xl:p-0">
+                      {rowLabel}
+                    </th>
+                    {cols.map((c, ci) => {
+                      const i = ri * cols.length + ci;
+                      const item = q.items[i];
+                      const value = values[i];
+                      const flagged = !key && Boolean(answer.retry?.wrongItems.includes(i)) && value === wrongValueAt(answer, i);
+                      const ok = key ? value === key[i] : flagged ? false : null;
+                      const letter = value ? LETTERS_LOWER[item.choices.indexOf(value)] : null;
+                      return (
+                        <td key={ci} className="border border-line p-1.5 align-top @max-2xl:block @max-2xl:border-0 @max-2xl:px-0 @max-2xl:pb-0 @max-2xl:pt-2.5">
+                          <span className="mb-1 block text-xs font-semibold text-muted-ink @2xl:hidden" aria-hidden="true">{ci + 1}. {c}</span>
+                          <GridCell
+                            id={`${q.id}-k${i}`}
+                            label={`${rowLabel}, ${c}`}
+                            choices={item.choices}
+                            value={value}
+                            letter={letter}
+                            ok={ok}
+                            onChange={(v) => setAt(i, v)}
+                          />
+                          {ok === false && key ? (
+                            <p className="mt-1 text-xs leading-snug text-success-ink">
+                              Juist: {LETTERS_LOWER[item.choices.indexOf(key[i])]}. {key[i]}
+                            </p>
+                          ) : null}
+                          {flagged ? <p className="mt-1 text-xs text-danger">Klopt niet</p> : null}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </fieldset>
+      );
+    }
     return (
       <fieldset disabled={locked}>
         <legend className="sr-only">Kies per onderdeel het juiste antwoord</legend>
@@ -630,6 +695,48 @@ function SelfGrade({ questionId, fb, onSelfGrade }: {
         ))}
       </div>
       {error ? <p role="alert" className="mt-2 text-sm text-danger">{error}</p> : null}
+    </div>
+  );
+}
+
+const LETTERS_LOWER = ["a", "b", "c", "d", "e", "f", "g", "h"];
+
+/**
+ * One cell of a table question: shows the chosen letter and option text, and opens the native list of options on
+ * click (the select lies invisibly over the cell, so keyboard, screen readers and phones get the platform picker).
+ */
+function GridCell({ id, label, choices, value, letter, ok, onChange }: {
+  id: string; label: string; choices: string[]; value: string | null; letter: string | null; ok: boolean | null;
+  onChange: (v: string | null) => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative flex min-h-11 items-start gap-2 rounded-md border bg-white px-2 py-1.5 transition-colors has-[select:focus-visible]:outline-2 has-[select:focus-visible]:outline-accent-blue",
+        ok === true ? "border-success bg-success-soft" : ok === false ? "border-danger/60 bg-danger-soft" : value ? "border-blue/50" : "border-input hover:border-[#c3d3e6]",
+      )}
+    >
+      {value ? (
+        <>
+          <span className="grid size-5 shrink-0 place-items-center rounded bg-sky text-xs font-bold text-blue">{letter}</span>
+          <span className="line-clamp-3 flex-1 text-xs leading-snug text-navy">{value}</span>
+        </>
+      ) : (
+        <span className="flex-1 self-center text-xs text-muted-ink">Kies…</span>
+      )}
+      {ok === true ? <CircleCheck className="size-4 shrink-0 text-success" aria-hidden="true" /> : null}
+      {ok === false ? <CircleX className="size-4 shrink-0 text-danger" aria-hidden="true" /> : null}
+      {ok === null ? <ChevronDown className="size-4 shrink-0 self-center text-muted-ink" aria-hidden="true" /> : null}
+      <select
+        id={id}
+        aria-label={label}
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value || null)}
+        className="absolute inset-0 size-full cursor-pointer opacity-0 disabled:cursor-default"
+      >
+        <option value="">Kies…</option>
+        {choices.map((c, k) => <option key={c} value={c}>{LETTERS_LOWER[k]}. {c}</option>)}
+      </select>
     </div>
   );
 }

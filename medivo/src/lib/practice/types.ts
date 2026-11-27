@@ -12,6 +12,9 @@ export type PracticeOption = { id: string; label: string; body: string };
 
 export type DropdownItem = { prompt: string; choices: string[]; points?: number };
 
+/** Shows a dropdowns question as a table: items are the cells, row by row (rows × cols items). */
+export type DropdownGrid = { rows: string[]; cols: string[] };
+
 export type PracticeQuestion = {
   id: string;
   topicId: string;
@@ -26,6 +29,7 @@ export type PracticeQuestion = {
   imageAlt: string | null;
   options: PracticeOption[];
   items: DropdownItem[];
+  grid: DropdownGrid | null;
   unit: string | null;
   /** The summary section that helps with this question, shown after a wrong first answer. */
   hint: { title: string; blocks: ContentBlock[] } | null;

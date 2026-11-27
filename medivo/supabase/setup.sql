@@ -3184,6 +3184,12 @@ alter table public.disorders
 alter table public.disorders add constraint disorders_case_complete
   check ((case_vignette is null) = (case_explanation is null));
 
+-- ===== supabase/migrations/20261130090000_disorder_exam_cases.sql =====
+-- Tentamenvragen per ziektebeeld in de stijl van het proeftentamen: korte casus, losse vraag,
+-- vier opties, één juist antwoord. Niveau 2 krijgt één diagnosevraag, niveau 1 er twee.
+alter table public.disorders add column cases jsonb not null default '[]'::jsonb;
+alter table public.disorders add constraint disorders_cases_array check (jsonb_typeof(cases) = 'array');
+
 -- ===== supabase/seed.sql =====
 -- Initial catalogue: bachelor Geneeskunde, Universiteit Leiden.
 -- Course titles and EC values as supplied by the Medivo team. Use NULL for an EC value that has not been verified;

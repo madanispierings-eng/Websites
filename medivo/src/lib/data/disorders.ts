@@ -15,8 +15,22 @@ export type Disorder = {
   explanation: string;
   /** Ids of the themes (topics) this disease belongs to, in theme order. */
   themeIds: string[];
-  /** An exam-level case for this disease, or null when there is none yet. */
-  case: { vignette: string; explanation: string; distractors: string[] } | null;
+  /** Exam questions in the style of the proeftentamen: one for niveau 2, two for niveau 1. */
+  cases: ExamCase[];
+};
+
+export const CASE_TYPES = ["diagnose", "diagnostiek", "beleid", "pathofysiologie", "complicatie"] as const;
+export type CaseType = (typeof CASE_TYPES)[number];
+
+/** One exam question: a short vignette, the question, four options and the index of the right one. */
+export type ExamCase = {
+  type: CaseType;
+  vignette: string;
+  question: string;
+  options: string[];
+  answer: number;
+  /** Uitleg in de summary-markup. */
+  explanation: string;
 };
 
 export type DisorderTheme = {
@@ -37,11 +51,25 @@ type Row = {
   key_points: string[] | null;
   explanation: string;
   sort_order: number;
-  case_vignette: string | null;
-  case_explanation: string | null;
-  case_distractors: string[] | null;
+  cases: unknown;
   disorder_topics: { topic_id: string; sort_order: number; topics: { title: string; sort_order: number } | null }[];
 };
+
+/** Keeps only well-formed questions, so one bad row never breaks the practice screen. */
+function parseCases(raw: unknown): ExamCase[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((c): ExamCase[] => {
+    if (!c || typeof c !== "object") return [];
+    const { type, vignette, question, options, answer, explanation } = c as Record<string, unknown>;
+    if (
+      typeof vignette !== "string" || typeof question !== "string" || typeof explanation !== "string" ||
+      !Array.isArray(options) || options.length < 2 || !options.every((o) => typeof o === "string") ||
+      typeof answer !== "number" || answer < 0 || answer >= options.length
+    ) return [];
+    const t = CASE_TYPES.includes(type as CaseType) ? (type as CaseType) : "diagnose";
+    return [{ type: t, vignette, question, options: options as string[], answer, explanation }];
+  });
+}
 
 function splitTitle(title: string): { label: string; title: string } {
   const m = title.match(/^(.+?)\s+[–-]\s+(.+)$/);
@@ -58,7 +86,7 @@ export const getDisorderThemes = cache(async (courseId: string): Promise<Disorde
   if (!supabase) return [];
   const { data } = await supabase
     .from("disorders")
-    .select("id, slug, name, level, summary, key_points, explanation, sort_order, case_vignette, case_explanation, case_distractors, disorder_topics(topic_id, sort_order, topics(title, sort_order))")
+    .select("id, slug, name, level, summary, key_points, explanation, sort_order, cases, disorder_topics(topic_id, sort_order, topics(title, sort_order))")
     .eq("course_id", courseId)
     .eq("status", "published")
     .order("sort_order", { ascending: true });
@@ -76,10 +104,7 @@ export const getDisorderThemes = cache(async (courseId: string): Promise<Disorde
       keyPoints: r.key_points ?? [],
       explanation: r.explanation,
       themeIds: links.map((l) => l.topic_id),
-      case:
-        r.case_vignette && r.case_explanation
-          ? { vignette: r.case_vignette, explanation: r.case_explanation, distractors: r.case_distractors ?? [] }
-          : null,
+      cases: parseCases(r.cases),
     };
     for (const l of links) {
       if (!l.topics) continue;

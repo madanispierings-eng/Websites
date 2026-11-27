@@ -15,6 +15,8 @@ export type Disorder = {
   explanation: string;
   /** Ids of the themes (topics) this disease belongs to, in theme order. */
   themeIds: string[];
+  /** An exam-level case for this disease, or null when there is none yet. */
+  case: { vignette: string; explanation: string; distractors: string[] } | null;
 };
 
 export type DisorderTheme = {
@@ -35,6 +37,9 @@ type Row = {
   key_points: string[] | null;
   explanation: string;
   sort_order: number;
+  case_vignette: string | null;
+  case_explanation: string | null;
+  case_distractors: string[] | null;
   disorder_topics: { topic_id: string; sort_order: number; topics: { title: string; sort_order: number } | null }[];
 };
 
@@ -53,7 +58,7 @@ export const getDisorderThemes = cache(async (courseId: string): Promise<Disorde
   if (!supabase) return [];
   const { data } = await supabase
     .from("disorders")
-    .select("id, slug, name, level, summary, key_points, explanation, sort_order, disorder_topics(topic_id, sort_order, topics(title, sort_order))")
+    .select("id, slug, name, level, summary, key_points, explanation, sort_order, case_vignette, case_explanation, case_distractors, disorder_topics(topic_id, sort_order, topics(title, sort_order))")
     .eq("course_id", courseId)
     .eq("status", "published")
     .order("sort_order", { ascending: true });
@@ -71,6 +76,10 @@ export const getDisorderThemes = cache(async (courseId: string): Promise<Disorde
       keyPoints: r.key_points ?? [],
       explanation: r.explanation,
       themeIds: links.map((l) => l.topic_id),
+      case:
+        r.case_vignette && r.case_explanation
+          ? { vignette: r.case_vignette, explanation: r.case_explanation, distractors: r.case_distractors ?? [] }
+          : null,
     };
     for (const l of links) {
       if (!l.topics) continue;

@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, RotateCcw, Search, Shuffle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, CircleCheck, CircleX, RotateCcw, Search, Shuffle } from "lucide-react";
 import { MarkupText } from "@/components/markup-text";
 import { Button } from "@/components/ui/button";
 import type { Disorder, DisorderTheme } from "@/lib/data/disorders";
 import { cn } from "@/lib/utils";
 
-type Mode = "kies" | "overzicht" | "flashcards";
+type Mode = "kies" | "overzicht" | "flashcards" | "casussen";
 
 /** What the course's niveaulijst asks per level, in the course's own words. */
 const LEVELS = {
@@ -34,12 +34,14 @@ export function DisorderStudio({ themes }: { themes: DisorderTheme[] }) {
 
   if (mode === "overzicht") return <Overzicht themes={themes} themeLabels={themeLabels} onBack={() => setMode("kies")} />;
   if (mode === "flashcards") return <Flashcards themes={themes} all={unique} themeLabels={themeLabels} onBack={() => setMode("kies")} />;
+  if (mode === "casussen") return <Cases themes={themes} all={unique} onBack={() => setMode("kies")} />;
 
   const n1 = unique.filter((d) => d.level === 1).length;
   const n2 = unique.filter((d) => d.level === 2).length;
+  const nCases = unique.filter((d) => d.case).length;
   return (
     <div>
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className={cn("grid gap-5 sm:grid-cols-2", nCases > 0 && "lg:grid-cols-3")}>
         <ModeCard
           image="/images/onderdelen/ziektebeelden.webp"
           title="Overzicht per thema"
@@ -54,6 +56,15 @@ export function DisorderStudio({ themes }: { themes: DisorderTheme[] }) {
           action="Start flashcards"
           onClick={() => setMode("flashcards")}
         />
+        {nCases > 0 ? (
+          <ModeCard
+            image="/images/onderdelen/oefenen.webp"
+            title="Casussen oefenen"
+            body="Lees een casus op tentamenniveau en kies uit acht ziektebeelden welk het is. Daarna zie je waarom."
+            action={`Start met ${nCases} casussen`}
+            onClick={() => setMode("casussen")}
+          />
+        ) : null}
       </div>
 
       <section aria-labelledby="niveaus" className="mt-6 rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
@@ -452,6 +463,201 @@ function Flashcards({ themes, all, themeLabels, onBack }: { themes: DisorderThem
         </>
       ) : (
         <p className="rounded-xl border border-line bg-white p-6 text-sm text-muted-ink">Geen ziektebeelden met deze keuze.</p>
+      )}
+    </div>
+  );
+}
+
+type CaseResult = { id: string; correct: boolean };
+
+/** Exam-style cases: read the vignette, pick the disease from eight options, then read why. */
+function Cases({ themes, all, onBack }: { themes: DisorderTheme[]; all: Disorder[]; onBack: () => void }) {
+  const [theme, setTheme] = useState<string>("all");
+  const bySlug = useMemo(() => new Map(all.map((d) => [d.slug, d])), [all]);
+  const pool = useMemo(() => {
+    const base = theme === "all" ? all : (themes.find((t) => t.id === theme)?.disorders ?? []);
+    return base.filter((d) => d.case);
+  }, [all, themes, theme]);
+  const [deck, setDeck] = useState<Disorder[]>(() => shuffle(pool));
+  const [i, setI] = useState(0);
+  const [picked, setPicked] = useState<string | null>(null);
+  const [checked, setChecked] = useState(false);
+  const [results, setResults] = useState<CaseResult[]>([]);
+  const topRef = useRef<HTMLDivElement>(null);
+
+  const poolRef = useRef(pool);
+  useEffect(() => {
+    if (poolRef.current !== pool) {
+      poolRef.current = pool;
+      setDeck(shuffle(pool));
+      setI(0);
+      setPicked(null);
+      setChecked(false);
+      setResults([]);
+    }
+  }, [pool]);
+
+  const card = deck[i] ?? null;
+  // The options are fixed per case (shuffled once), so they do not jump around after checking.
+  const options = useMemo(() => {
+    if (!card?.case) return [];
+    const others = card.case.distractors.map((s) => bySlug.get(s)).filter((d): d is Disorder => !!d && d.id !== card.id);
+    return shuffle([card, ...others.slice(0, 7)]);
+  }, [card, bySlug]);
+
+  const restart = (cards: Disorder[] = pool) => {
+    setDeck(shuffle(cards));
+    setI(0);
+    setPicked(null);
+    setChecked(false);
+    setResults([]);
+  };
+  const check = () => {
+    if (!card || !picked) return;
+    setChecked(true);
+    setResults((r) => [...r, { id: card.id, correct: picked === card.id }]);
+  };
+  const next = () => {
+    setPicked(null);
+    setChecked(false);
+    setI((n) => n + 1);
+    topRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+  };
+
+  const done = i >= deck.length;
+  const score = results.filter((r) => r.correct).length;
+  const wrong = deck.filter((d) => results.some((r) => r.id === d.id && !r.correct));
+  const selectCls = "h-9 rounded-lg border border-input bg-white px-3 text-sm text-navy";
+
+  return (
+    <div ref={topRef} className="scroll-mt-24">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <Button type="button" variant="ghost" onClick={onBack} className="text-navy">
+          <ArrowLeft aria-hidden="true" /> Andere modus
+        </Button>
+        <label className="flex items-center gap-2 text-sm font-medium text-navy">
+          Thema
+          <select value={theme} onChange={(e) => setTheme(e.target.value)} className={cn(selectCls, "max-w-[15rem]")}>
+            <option value="all">Alle thema&apos;s door elkaar</option>
+            {themes.map((t) => (
+              <option key={t.id} value={t.id}>{t.title ? `${t.label}: ${t.title}` : t.label}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {done && deck.length ? (
+        <section className="rounded-xl border border-line bg-white p-8 text-center shadow-[var(--shadow-card)]">
+          <span className="mx-auto grid size-12 place-items-center rounded-full bg-success-soft text-success-ink">
+            <Check className="size-6" aria-hidden="true" />
+          </span>
+          <h2 className="mt-3 text-lg font-semibold text-navy">Ronde klaar</h2>
+          <p className="mt-1 text-sm text-muted-ink">
+            Je had {score} van de {deck.length} casussen goed.
+          </p>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            {wrong.length ? (
+              <Button type="button" onClick={() => restart(wrong)} className="font-semibold">
+                <RotateCcw aria-hidden="true" /> Oefen de {wrong.length} foute opnieuw
+              </Button>
+            ) : null}
+            <Button type="button" variant={wrong.length ? "outline" : "default"} onClick={() => restart()} className="font-semibold">
+              <Shuffle aria-hidden="true" /> Opnieuw, alles
+            </Button>
+          </div>
+        </section>
+      ) : card?.case ? (
+        <>
+          <div className="mb-3 flex items-center justify-between gap-3 text-sm text-muted-ink">
+            <span className="tabular-nums">Casus {i + 1} van {deck.length}</span>
+            <span className="tabular-nums">{score} goed</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-sky" aria-hidden="true">
+            <div className="h-full rounded-full bg-success transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${(i / deck.length) * 100}%` }} />
+          </div>
+
+          <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start">
+            <article className="rounded-2xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-7">
+              <p className="text-xs font-semibold uppercase tracking-[0.06em] text-blue">Casus</p>
+              <MarkupText source={card.case.vignette} idPrefix={`cv-${card.slug}`} className="mt-2" />
+              <p className="mt-5 font-semibold text-navy">Welk ziektebeeld past het best bij deze casus?</p>
+            </article>
+
+            <div>
+              <fieldset disabled={checked} className="space-y-2">
+                <legend className="sr-only">Kies een ziektebeeld</legend>
+                {options.map((o) => {
+                  const isPicked = picked === o.id;
+                  const isRight = checked && o.id === card.id;
+                  const isWrongPick = checked && isPicked && o.id !== card.id;
+                  return (
+                    <label
+                      key={o.id}
+                      className={cn(
+                        "flex cursor-pointer items-center gap-3 rounded-lg border bg-white px-4 py-3 text-[0.95rem] text-navy transition-colors",
+                        !checked && (isPicked ? "border-blue bg-sky" : "border-line hover:border-[#c3d3e6]"),
+                        isRight && "border-success bg-success-soft",
+                        isWrongPick && "border-[#e3a3a3] bg-[#fdf1f1]",
+                        checked && !isRight && !isWrongPick && "border-line opacity-70",
+                        checked && "cursor-default",
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name={`casus-${card.id}`}
+                        value={o.id}
+                        checked={isPicked}
+                        onChange={() => setPicked(o.id)}
+                        className="size-4 accent-[var(--color-blue)]"
+                      />
+                      <span className="flex-1">{o.name}</span>
+                      {isRight ? <CircleCheck className="size-5 text-success" aria-label="Juist antwoord" /> : null}
+                      {isWrongPick ? <CircleX className="size-5 text-[#c24b4b]" aria-label="Jouw antwoord, onjuist" /> : null}
+                    </label>
+                  );
+                })}
+              </fieldset>
+
+              {!checked ? (
+                <Button type="button" onClick={check} disabled={!picked} className="mt-4 w-full font-semibold">
+                  Controleer
+                </Button>
+              ) : null}
+            </div>
+          </div>
+
+          {checked ? (
+            <section
+              aria-live="polite"
+              className={cn(
+                "mt-5 rounded-2xl border p-5 shadow-[var(--shadow-card)] sm:p-7",
+                picked === card.id ? "border-success/30 bg-success-soft/40" : "border-[#e8c48a] bg-[#fffaf1]",
+              )}
+            >
+              <p className="flex items-center gap-2 font-semibold text-navy">
+                {picked === card.id ? (
+                  <><CircleCheck className="size-5 text-success" aria-hidden="true" /> Goed: {card.name}</>
+                ) : (
+                  <><CircleX className="size-5 text-[#c24b4b]" aria-hidden="true" /> Het juiste antwoord is {card.name}</>
+                )}
+              </p>
+              <MarkupText source={card.case.explanation} idPrefix={`ce-${card.slug}`} className="mt-3" />
+              <details className="mt-4 rounded-lg border border-line bg-white">
+                <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-blue">Lees de volledige uitleg over {card.name}</summary>
+                <div className="border-t border-line px-4 pb-5 pt-4">
+                  <DisorderBody d={card} themeLabels={new Map(themes.map((t) => [t.id, t.label]))} idPrefix={`cd-${card.slug}`} />
+                </div>
+              </details>
+              <div className="mt-5 flex justify-end">
+                <Button type="button" onClick={next} className="font-semibold">
+                  {i + 1 < deck.length ? "Volgende casus" : "Bekijk resultaat"} <ArrowRight aria-hidden="true" />
+                </Button>
+              </div>
+            </section>
+          ) : null}
+        </>
+      ) : (
+        <p className="rounded-xl border border-line bg-white p-6 text-sm text-muted-ink">Nog geen casussen voor dit thema.</p>
       )}
     </div>
   );

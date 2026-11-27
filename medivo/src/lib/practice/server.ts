@@ -61,7 +61,7 @@ const responseSchema: z.ZodType<QuestionResponse> = z.union([
 
 type QuestionRow = {
   id: string; topic_id: string; type: QuestionType; stem: string; context: string | null; points: number | string;
-  content: { items?: DropdownItem[]; grid?: DropdownGrid; unit?: string } | null; image_path: string | null; image_alt: string | null;
+  content: { items?: DropdownItem[]; grid?: DropdownGrid; follows?: string; unit?: string } | null; image_path: string | null; image_alt: string | null;
   hint: { summary_id: string; heading: string } | null;
   topics: { title: string } | null; question_options: { id: string; label: string; body: string; sort_order: number }[];
 };
@@ -134,6 +134,7 @@ async function loadQuestions(supabase: SupabaseClient, ids: string[]) {
       options: [...r.question_options].sort((a, b) => a.sort_order - b.sort_order).map(({ id, label, body }) => ({ id, label, body })),
       items: r.content?.items ?? [],
       grid: validGrid(r.content?.grid, r.content?.items?.length ?? 0),
+      follows: typeof r.content?.follows === "string" ? r.content.follows : null,
       unit: r.content?.unit ?? null,
       hint: hints.get(r.id) ?? null,
     }];

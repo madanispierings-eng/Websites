@@ -24,13 +24,13 @@ const hint: PracticeQuestion["hint"] = {
     { type: "paragraph", spans: [{ text: "Een tweede alinea, zodat het paneel ook bij een langere paragraaf te beoordelen is. Opvultekst opvultekst opvultekst opvultekst opvultekst." }] },
   ],
 };
-const base = { topicId: "t1a", topicTitle: "Subonderwerp 1a", context: null, imageUrl: null, imageAlt: null, options: [], items: [], grid: null, unit: null, points: 1, hint };
+const base = { topicId: "t1a", topicTitle: "Subonderwerp 1a", context: null, imageUrl: null, imageAlt: null, options: [], items: [], grid: null, follows: null, unit: null, points: 1, hint };
 const abcd = (id: string, n = 4) => ["A", "B", "C", "D", "E"].slice(0, n).map((l) => ({ id: `${id}${l}`, label: l, body: `Antwoordoptie ${l} (opvultekst)` }));
 
 const questions: PracticeQuestion[] = [
   { ...base, id: "q1", type: "single_choice", stem: "Voorbeeldvraag met één goed antwoord. Opvultekst; kies B.", options: abcd("q1") },
   {
-    ...base, id: "q2", type: "multiple_choice", options: abcd("q2", 5),
+    ...base, id: "q2", type: "multiple_choice", options: abcd("q2", 5), follows: "q1",
     stem: "Voorbeeldvraag waarbij meer antwoorden mogelijk zijn. Opvultekst; B en D zijn juist.\n\n| Kolom 1 | Kolom 2 |\n| --- | --- |\n| waarde | 1,2 |\n| waarde | 3,4 |",
   },
   {

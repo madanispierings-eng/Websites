@@ -184,6 +184,7 @@ export function QuestionView({
             <MarkupText source={q.context} idPrefix={`${q.id}-casus`} className="mt-1 space-y-3 text-[0.95rem] leading-relaxed text-navy" />
           </div>
         ) : null}
+        <EarlierParts state={state} q={q} />
         <div className="rounded-lg bg-sky px-4 py-4 sm:px-5">
           <MarkupText source={q.stem} idPrefix={`${q.id}-stam`} className="space-y-3 text-[0.98rem] leading-relaxed text-navy" />
         </div>
@@ -737,6 +738,74 @@ function GridCell({ id, label, choices, value, letter, ok, onChange }: {
         <option value="">Kies…</option>
         {choices.map((c, k) => <option key={c} value={c}>{LETTERS_LOWER[k]}. {c}</option>)}
       </select>
+    </div>
+  );
+}
+
+/** The earlier questions of the same case, oldest first, as far as they are in this session. */
+function followChain(state: EngineState, q: PracticeQuestion): PracticeQuestion[] {
+  const byId = new Map(state.questions.map((x) => [x.id, x]));
+  const chain: PracticeQuestion[] = [];
+  let cur = q.follows ? byId.get(q.follows) : undefined;
+  while (cur && chain.length < 6 && !chain.includes(cur)) {
+    chain.unshift(cur);
+    cur = cur.follows ? byId.get(cur.follows) : undefined;
+  }
+  return chain;
+}
+
+/** What the student answered, in words, for the recap above a follow-up question. */
+function answerText(q: PracticeQuestion, r: QuestionResponse | null): string | null {
+  if (!r) return null;
+  if ("option_id" in r) {
+    const o = q.options.find((x) => x.id === r.option_id);
+    return o ? `${o.label}. ${o.body}` : null;
+  }
+  if ("option_ids" in r) return q.options.filter((o) => r.option_ids.includes(o.id)).map((o) => `${o.label}. ${o.body}`).join("; ") || null;
+  if ("answers" in r) return r.answers.some(Boolean) ? r.answers.map((a) => a ?? "–").join("; ") : null;
+  if ("value" in r) return r.value;
+  return r.text.trim() || null;
+}
+
+/**
+ * A follow-up question ("vervolgvraag", or part b of an open case) shows the questions it builds on above it,
+ * with the answer given, so the case stays in view without going back.
+ */
+function EarlierParts({ state, q }: { state: EngineState; q: PracticeQuestion }) {
+  const chain = followChain(state, q);
+  if (!chain.length) return null;
+  return (
+    <div className="mb-3 rounded-lg border border-line bg-canvas px-4 py-3 sm:px-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.06em] text-muted-ink">
+        {chain.length === 1 ? "Eerdere vraag bij deze casus" : "Eerdere vragen bij deze casus"}
+      </p>
+      <ol className="mt-2 space-y-4">
+        {chain.map((p) => {
+          const a = answerFor(state, p.id);
+          const given = answerText(p, a.response);
+          const fb = a.feedback;
+          const right = fb && p.type === "single_choice" && fb.correctOptionId ? p.options.find((o) => o.id === fb.correctOptionId) : null;
+          const n = state.questions.indexOf(p) + 1;
+          return (
+            <li key={p.id}>
+              <p className="text-xs font-medium text-muted-ink">Vraag {n}</p>
+              {p.context && p.context !== q.context ? (
+                <MarkupText source={p.context} idPrefix={`${q.id}-eerder-${p.id}-casus`} className="mt-1 space-y-2 text-[0.92rem] leading-relaxed text-navy" />
+              ) : null}
+              <MarkupText source={p.stem} idPrefix={`${q.id}-eerder-${p.id}`} className="mt-1 space-y-2 text-[0.92rem] leading-relaxed text-navy" />
+              <p className="mt-2 text-sm text-navy">
+                <span className="font-semibold">Jouw antwoord: </span>
+                {given ?? <span className="text-muted-ink">{a.status === "answered" ? "geen, antwoord bekeken" : "nog niet beantwoord"}</span>}
+              </p>
+              {right && right.id !== (a.response && "option_id" in a.response ? a.response.option_id : null) ? (
+                <p className="mt-0.5 text-sm text-success-ink">
+                  <span className="font-semibold">Juiste antwoord: </span>{right.label}. {right.body}
+                </p>
+              ) : null}
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }

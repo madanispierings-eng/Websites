@@ -30,6 +30,8 @@ export type PracticeQuestion = {
   options: PracticeOption[];
   items: DropdownItem[];
   grid: DropdownGrid | null;
+  /** The earlier question of the same case that this follow-up builds on (shown above it when in the session). */
+  follows: string | null;
   unit: string | null;
   /** The summary section that helps with this question, shown after a wrong first answer. */
   hint: { title: string; blocks: ContentBlock[] } | null;

@@ -121,7 +121,7 @@ export default async function CoursePage({ params }: Props) {
           On wide screens all cards sit on one row (as many columns as there are cards). */}
       <section
         aria-label="Onderdelen"
-        style={{ "--cards": cards.length } as CSSProperties}
+        style={{ "--cards": cards.length > 6 ? Math.ceil(cards.length / 2) : cards.length } as CSSProperties}
         className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:[grid-template-columns:repeat(var(--cards),minmax(0,1fr))]"
       >
         {cards.map((s) => (

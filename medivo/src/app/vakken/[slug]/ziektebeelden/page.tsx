@@ -34,7 +34,7 @@ export default async function ZiektebeeldenPage({ params }: Props) {
         course={course}
         active="ziektebeelden"
         title="Ziektebeelden"
-        intro="Alle ziektebeelden van dit vak per thema. Lees de uitleg op precies het niveau dat je moet kennen, of oefen ze met flashcards."
+        intro="Alle ziektebeelden van dit vak per thema. Lees de uitleg op precies het niveau dat je moet kennen, oefen ze met flashcards of herken ze in casussen op tentamenniveau."
       />
       <div className={cn(container, "py-8 lg:py-10")}>
         {overview.disorders === 0 ? (

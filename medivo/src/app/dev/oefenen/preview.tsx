@@ -24,7 +24,7 @@ const hint: PracticeQuestion["hint"] = {
     { type: "paragraph", spans: [{ text: "Een tweede alinea, zodat het paneel ook bij een langere paragraaf te beoordelen is. Opvultekst opvultekst opvultekst opvultekst opvultekst." }] },
   ],
 };
-const base = { topicId: "t1a", topicTitle: "Subonderwerp 1a", context: null, imageUrl: null, imageAlt: null, options: [], items: [], unit: null, points: 1, hint };
+const base = { topicId: "t1a", topicTitle: "Subonderwerp 1a", context: null, imageUrl: null, imageAlt: null, options: [], items: [], grid: null, unit: null, points: 1, hint };
 const abcd = (id: string, n = 4) => ["A", "B", "C", "D", "E"].slice(0, n).map((l) => ({ id: `${id}${l}`, label: l, body: `Antwoordoptie ${l} (opvultekst)` }));
 
 const questions: PracticeQuestion[] = [
@@ -42,6 +42,16 @@ const questions: PracticeQuestion[] = [
       { prompt: "Onderdeel 3", choices: ["eerste", "tweede", "derde"] },
     ],
   },
+  {
+    ...base, id: "q6", type: "dropdowns", points: 4,
+    stem: "Voorbeeld van een tabelvraag (koppelvraag): kies per vakje de best passende optie. Opvultekst; op de diagonaal is steeds optie a juist, daarbuiten optie b.",
+    grid: { rows: ["Rij 1", "Rij 2", "Rij 3"], cols: ["Kolom 1", "Kolom 2", "Kolom 3"] },
+    items: Array.from({ length: 9 }, (_, i) => ({
+      prompt: `Vakje ${i + 1}`,
+      choices: ["Een lange antwoordoptie van een paar regels om de opmaak te zien (opvultekst)", "Tweede optie (opvultekst)", "Derde optie", "Vierde optie"],
+      points: 4 / 9,
+    })),
+  },
   { ...base, id: "q4", type: "numeric", unit: "mg", stem: "Voorbeeld van een rekenvraag met kort antwoord. Opvultekst; het antwoord is 400 (goed: 380–420).\n\n$$ D = \\frac{C \\cdot V_d}{F} $$" },
   {
     ...base, id: "q5", type: "open", points: 4, topicId: "t2", topicTitle: "Onderwerp 2",
@@ -53,6 +63,7 @@ const questions: PracticeQuestion[] = [
 const keys: Record<string, AnswerFeedback["answer"]> = {
   q2: { labels: ["B", "D"] },
   q3: { answers: ["eerste", "eerste", "eerste"] },
+  q6: { answers: Array.from({ length: 9 }, (_, i) => (i % 4 === 0 ? "Een lange antwoordoptie van een paar regels om de opmaak te zien (opvultekst)" : "Tweede optie (opvultekst)")) },
   q4: { min: 380, max: 420, display: "400 mg (goed: 380–420)" },
 };
 
@@ -64,7 +75,7 @@ function grade(q: PracticeQuestion, r: QuestionResponse): number | null {
     const net = r.option_ids.reduce((s, id) => s + (key.has(id) ? 1 : -1), 0);
     return Math.max(0, Math.min(q.points, (q.points / key.size) * net));
   }
-  if ("answers" in r) return (r.answers.filter((a, i) => a === keys.q3.answers![i]).length / q.items.length) * q.points;
+  if ("answers" in r) return (r.answers.filter((a, i) => a === keys[q.id].answers![i]).length / q.items.length) * q.points;
   if ("value" in r) {
     const v = Number(r.value.replace(",", ".").match(/-?\d+(\.\d+)?/)?.[0]);
     return v >= 380 && v <= 420 ? q.points : 0;
@@ -108,7 +119,7 @@ const api: PracticeApi = {
       const retry = mode !== "exam" && q.hint !== null && score !== null && score < q.points;
       answers.set(questionId, { response, score, final: !retry, usedHint: false });
       if (retry) {
-        const wrongItems = "answers" in response ? response.answers.flatMap((a, i) => (a === keys.q3.answers![i] ? [] : [i])) : [];
+        const wrongItems = "answers" in response ? response.answers.flatMap((a, i) => (a === keys[questionId]?.answers?.[i] ? [] : [i])) : [];
         return { ok: true, data: { response, feedback: null, retry: { wrongOptionIds: "option_id" in response ? [response.option_id] : [], wrongItems } } };
       }
     } else if (!prev.final) {

@@ -15,6 +15,7 @@ const q = (id: string, extra: Partial<PracticeQuestion> = {}): PracticeQuestion 
   imageAlt: null,
   options: ["a", "b", "c", "d"].map((o) => ({ id: `${id}-${o}`, label: o.toUpperCase(), body: o })),
   items: [],
+  grid: null,
   unit: null,
   hint: null,
   ...extra,

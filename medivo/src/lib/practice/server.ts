@@ -4,7 +4,7 @@ import { blocksSchema, type ContentBlock } from "@/lib/content/blocks";
 import { contentImageUrl } from "@/lib/content/images";
 import { sectionUnder } from "@/lib/content/sections";
 import { createClient, getViewer } from "@/lib/supabase/server";
-import type { ActionResult, AnswerFeedback, AnswerKey, DropdownItem, PracticeMode, PracticeQuestion, QuestionResponse, QuestionType, ResumableSession, ResumeAnswer, ResumeData, RetryInfo, SessionReview } from "./types";
+import type { ActionResult, AnswerFeedback, AnswerKey, DropdownGrid, DropdownItem, PracticeMode, PracticeQuestion, QuestionResponse, QuestionType, ResumableSession, ResumeAnswer, ResumeData, RetryInfo, SessionReview } from "./types";
 
 const uuid = z.string().uuid();
 
@@ -25,6 +25,12 @@ const errorMessages: Record<string, string> = {
   nothing_to_reveal: "Deze vraag heeft geen openstaande tweede poging.",
   all_answered: "Je hebt alle vragen van deze selectie al gemaakt.",
 };
+
+/** A table layout only when it covers exactly the items, so a bad config falls back to the plain list. */
+function validGrid(grid: DropdownGrid | undefined, nItems: number): DropdownGrid | null {
+  if (!grid || !Array.isArray(grid.rows) || !Array.isArray(grid.cols)) return null;
+  return grid.rows.length * grid.cols.length === nItems && nItems > 0 ? { rows: grid.rows, cols: grid.cols } : null;
+}
 
 function fail<T>(raw: string | undefined): ActionResult<T> {
   const key = Object.keys(errorMessages).find((k) => raw?.includes(k));
@@ -55,7 +61,7 @@ const responseSchema: z.ZodType<QuestionResponse> = z.union([
 
 type QuestionRow = {
   id: string; topic_id: string; type: QuestionType; stem: string; context: string | null; points: number | string;
-  content: { items?: DropdownItem[]; unit?: string } | null; image_path: string | null; image_alt: string | null;
+  content: { items?: DropdownItem[]; grid?: DropdownGrid; unit?: string } | null; image_path: string | null; image_alt: string | null;
   hint: { summary_id: string; heading: string } | null;
   topics: { title: string } | null; question_options: { id: string; label: string; body: string; sort_order: number }[];
 };
@@ -127,6 +133,7 @@ async function loadQuestions(supabase: SupabaseClient, ids: string[]) {
       imageAlt: r.image_alt,
       options: [...r.question_options].sort((a, b) => a.sort_order - b.sort_order).map(({ id, label, body }) => ({ id, label, body })),
       items: r.content?.items ?? [],
+      grid: validGrid(r.content?.grid, r.content?.items?.length ?? 0),
       unit: r.content?.unit ?? null,
       hint: hints.get(r.id) ?? null,
     }];

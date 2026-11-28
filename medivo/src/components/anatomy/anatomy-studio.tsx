@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Images, Maximize2, Minimize2, RotateCcw, Target, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Eye, EyeOff, Images, Maximize2, Minimize2, RotateCcw, Target, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { AnatomyImage, AnatomyProgress, AnatomyStructure, AnatomyUnit } from "@/lib/data/anatomy";
-import { MarkupText } from "@/components/markup-text";
+import { ContentBlocks } from "@/components/content-blocks";
+import type { ContentBlock } from "@/lib/content/blocks";
+import { parseMarkup } from "@/lib/content/markup";
 import { cn } from "@/lib/utils";
 import { reviewAnatomy } from "@/app/vakken/[slug]/anatomie/actions";
 
@@ -375,7 +377,7 @@ function UnitDetail({
         <ArrowLeft className="size-4" aria-hidden="true" />
         Alle practica
       </button>
-      <h2 className="text-2xl font-bold tracking-[-0.01em] text-navy">{unit.title}</h2>
+      <h2 className="text-2xl font-bold tracking-[-0.01em] text-navy">{cardTitle(unit.title)}</h2>
       {unit.subtitle ? <p className="mt-1 text-muted-ink">{unit.subtitle}</p> : null}
 
       {!ids.length ? (
@@ -385,12 +387,7 @@ function UnitDetail({
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-start">
           <div className="space-y-6">
-            {unit.mustKnow ? (
-              <section className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
-                <h3 className="text-lg font-semibold text-navy">Wat moet je weten?</h3>
-                <MarkupText source={unit.mustKnow} idPrefix={`${unit.id}-weten`} className="mt-3 space-y-3 text-[0.95rem] leading-relaxed text-navy" />
-              </section>
-            ) : null}
+            {unit.mustKnow ? <MustKnow source={unit.mustKnow} idPrefix={`${unit.id}-weten`} /> : null}
             <section className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
               <div className="flex items-baseline justify-between gap-3">
                 <h3 className="text-lg font-semibold text-navy">Deze structuren moet je kennen</h3>
@@ -409,7 +406,8 @@ function UnitDetail({
             </section>
           </div>
 
-          <aside className="space-y-4 lg:sticky lg:top-24">
+          {/* On a phone the practice buttons come first, above the long lists. */}
+          <aside className="order-first space-y-4 lg:sticky lg:top-24 lg:order-none">
             <section className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
               <h3 className="text-lg font-semibold text-navy">Oefenen</h3>
               <p className="mt-1 text-sm text-muted-ink">
@@ -451,6 +449,49 @@ function UnitDetail({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * "Wat moet je weten?" as a short intro plus one collapsible section per preparaat (the ### headings of the text),
+ * so the page stays scannable instead of one long wall of bullet points.
+ */
+function MustKnow({ source, idPrefix }: { source: string; idPrefix: string }) {
+  const { intro, sections } = useMemo(() => {
+    const intro: ContentBlock[] = [];
+    const sections: { title: string; blocks: ContentBlock[] }[] = [];
+    for (const b of parseMarkup(source)) {
+      if (b.type === "heading") sections.push({ title: b.text, blocks: [] });
+      else (sections.at(-1)?.blocks ?? intro).push(b);
+    }
+    return { intro, sections };
+  }, [source]);
+  const points = (bs: ContentBlock[]) => bs.reduce((n, b) => n + (b.type === "list" ? b.items.length : 1), 0);
+  const text = "space-y-3 text-[0.95rem] leading-relaxed text-navy";
+  return (
+    <section className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
+      <h3 className="text-lg font-semibold text-navy">Wat moet je weten?</h3>
+      {intro.length ? <ContentBlocks blocks={intro} imageUrls={{}} idPrefix={`${idPrefix}-intro`} className={cn("mt-2", text)} /> : null}
+      {sections.length ? (
+        <>
+          <p className="mt-3 text-sm text-muted-ink">Klap een onderdeel open voor de punten die je moet kennen.</p>
+          <div className="mt-3 divide-y divide-line overflow-hidden rounded-lg border border-line">
+            {sections.map((sec, i) => (
+              <details key={i} className="group">
+                <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 hover:bg-canvas [&::-webkit-details-marker]:hidden">
+                  <span className="min-w-0 flex-1 font-semibold text-navy">{sec.title}</span>
+                  <span className="shrink-0 text-xs tabular-nums text-muted-ink">{points(sec.blocks)} punten</span>
+                  <ChevronDown className="size-4 shrink-0 text-muted-ink transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
+                </summary>
+                <div className="border-t border-line bg-canvas/40 px-4 py-4">
+                  <ContentBlocks blocks={sec.blocks} imageUrls={{}} idPrefix={`${idPrefix}-${i}`} className={text} />
+                </div>
+              </details>
+            ))}
+          </div>
+        </>
+      ) : null}
+    </section>
   );
 }
 

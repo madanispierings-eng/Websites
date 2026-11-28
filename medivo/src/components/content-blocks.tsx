@@ -97,9 +97,9 @@ function NestedList({ nodes, ordered, start, depth, id }: { nodes: ListNode[]; o
 function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrls: Record<string, string>, watermark?: string) {
   switch (block.type) {
     case "heading": {
-      const Tag = block.level === 2 ? "h3" : "h4";
+      const Tag = block.level === 2 ? "h3" : block.level === 3 ? "h4" : "h5";
       const anchorId = `${idPrefix}-${slugify(block.text)}`;
-      const cls = cn("scroll-mt-24 font-semibold text-navy", block.level === 2 ? "pt-2 text-xl" : "pt-1 text-lg");
+      const cls = cn("scroll-mt-24 font-semibold text-navy", block.level === 2 ? "pt-2 text-xl" : block.level === 3 ? "pt-1 text-lg" : "text-base");
       // A faint, per-section licence line under each hoorcollege (level-2) title: traceable, but out of the reading flow.
       if (watermark && block.level === 2) {
         return (
@@ -130,7 +130,31 @@ function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrl
       );
     case "table":
       return (
-        <div key={id} id={id} className="overflow-x-auto rounded-lg border border-line">
+        <div key={id} id={id}>
+        {/* Phone: each row becomes a small card (first cell as its title), so nothing is cut off at the edge. */}
+        <div className="space-y-2 sm:hidden">
+          {block.caption ? <p className="text-xs font-medium text-muted-ink">{block.caption}</p> : null}
+          {block.rows.map((row, r) => (
+            <div key={r} className="rounded-lg border border-line bg-white px-3.5 py-3 text-sm">
+              <p className="font-semibold text-navy">
+                <Spans spans={parseSpans(row[0] ?? "")} />
+              </p>
+              {row.length > 1 ? (
+                <dl className="mt-1.5 space-y-1">
+                  {row.slice(1).map((cell, c) => (
+                    <div key={c}>
+                      {block.header[c + 1]?.trim() ? (
+                        <dt className="text-xs font-medium text-muted-ink"><Spans spans={parseSpans(block.header[c + 1])} /></dt>
+                      ) : null}
+                      <dd><Spans spans={parseSpans(cell)} /></dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : null}
+            </div>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto rounded-lg border border-line sm:block">
           <table className="w-full min-w-[32rem] border-collapse text-left text-sm">
             {block.caption ? <caption className="bg-canvas px-4 py-2 text-left text-xs font-medium text-muted-ink">{block.caption}</caption> : null}
             <thead className="bg-sky">
@@ -142,6 +166,7 @@ function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrl
               ))}
             </tbody>
           </table>
+        </div>
         </div>
       );
     case "image": {

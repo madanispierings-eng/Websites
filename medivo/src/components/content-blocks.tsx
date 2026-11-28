@@ -131,28 +131,26 @@ function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrl
     case "table":
       return (
         <div key={id} id={id}>
-        {/* Phone: each row becomes a small card (first cell as its title), so nothing is cut off at the edge. */}
-        <div className="space-y-2 sm:hidden">
-          {block.caption ? <p className="text-xs font-medium text-muted-ink">{block.caption}</p> : null}
-          {block.rows.map((row, r) => (
-            <div key={r} className="rounded-lg border border-line bg-white px-3.5 py-3 text-sm">
-              <p className="font-semibold text-navy">
-                <Spans spans={parseSpans(row[0] ?? "")} />
-              </p>
-              {row.length > 1 ? (
-                <dl className="mt-1.5 space-y-1">
-                  {row.slice(1).map((cell, c) => (
-                    <div key={c}>
-                      {block.header[c + 1]?.trim() ? (
-                        <dt className="text-xs font-medium text-muted-ink"><Spans spans={parseSpans(block.header[c + 1])} /></dt>
-                      ) : null}
-                      <dd><Spans spans={parseSpans(cell)} /></dd>
-                    </div>
-                  ))}
-                </dl>
-              ) : null}
-            </div>
-          ))}
+        {/* Phone: one compact list with a row per table row (first cell as its title), so nothing is cut off at the edge. */}
+        <div className="overflow-hidden rounded-lg border border-line bg-white text-sm sm:hidden">
+          {block.caption ? <p className="border-b border-line bg-canvas px-3.5 py-2 text-xs font-medium text-muted-ink">{block.caption}</p> : null}
+          <div className="divide-y divide-line">
+            {block.rows.map((row, r) => (
+              <div key={r} className="px-3.5 py-2.5">
+                <p className="font-semibold text-navy"><Spans spans={parseSpans(row[0] ?? "")} /></p>
+                {row.slice(1).map((cell, c) =>
+                  row.length === 2 || !block.header[c + 1]?.trim() ? (
+                    <p key={c} className="mt-0.5"><Spans spans={parseSpans(cell)} /></p>
+                  ) : (
+                    <p key={c} className="mt-0.5">
+                      <span className="text-muted-ink"><Spans spans={parseSpans(block.header[c + 1])} />: </span>
+                      <Spans spans={parseSpans(cell)} />
+                    </p>
+                  ),
+                )}
+              </div>
+            ))}
+          </div>
         </div>
         <div className="hidden overflow-x-auto rounded-lg border border-line sm:block">
           <table className="w-full min-w-[32rem] border-collapse text-left text-sm">

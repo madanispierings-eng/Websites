@@ -11,7 +11,7 @@ const span = z.object({
 // Every block type except the interactive quiz. These can appear on their own and can also make up
 // a quiz's model answer, so they are factored out and reused for both the content and answer schemas.
 const baseVariants = [
-  z.object({ type: z.literal("heading"), level: z.union([z.literal(2), z.literal(3)]), text: z.string().min(1) }),
+  z.object({ type: z.literal("heading"), level: z.union([z.literal(2), z.literal(3), z.literal(4)]), text: z.string().min(1) }),
   z.object({ type: z.literal("paragraph"), spans: z.array(span).min(1) }),
   z.object({
     type: z.literal("list"),

@@ -3,7 +3,7 @@ import type { ContentBlock } from "./blocks";
 // A small plain-text syntax for writing summaries in the admin, converted to typed content blocks.
 // It is deliberately limited: everything ends up as text in React, never as HTML.
 //
-//   ## Kop / ### Subkop
+//   ## Kop / ### Subkop / #### Tussenkop
 //   - opsomming            1. genummerde lijst
 //   | kop | kop |           (tabel; eerste rij is de kop, een |---| regel wordt overgeslagen)
 //   > Let op: tekst         > Klinisch: tekst        > Belangrijk: tekst
@@ -59,8 +59,8 @@ export function parseMarkup(source: string): ContentBlock[] {
       continue;
     }
     let m: RegExpMatchArray | null;
-    if ((m = t.match(/^(#{2,3})\s+(.+)$/))) {
-      blocks.push({ type: "heading", level: m[1].length === 2 ? 2 : 3, text: m[2].trim() });
+    if ((m = t.match(/^(#{2,4})\s+(.+)$/))) {
+      blocks.push({ type: "heading", level: m[1].length as 2 | 3 | 4, text: m[2].trim() });
       i++;
     } else if (/^[-*]\s+/.test(t)) {
       const items = collect((l) => /^\s*[-*]\s+/.test(l)).map((l) => l.trim().replace(/^[-*]\s+/, ""));
@@ -101,7 +101,7 @@ export function parseMarkup(source: string): ContentBlock[] {
       blocks.push({ type: "references", items });
     } else {
       // A paragraph runs until a blank line or the start of another block.
-      const text = collect((l) => l.trim() !== "" && !/^\s*(#{2,3}\s|[-*]\s|\d+[.)]\s|\||>|!\[|\$\$|\[\d+\]\s)/.test(l))
+      const text = collect((l) => l.trim() !== "" && !/^\s*(#{2,4}\s|[-*]\s|\d+[.)]\s|\||>|!\[|\$\$|\[\d+\]\s)/.test(l))
         .map((l) => l.trim())
         .join(" ");
       blocks.push({ type: "paragraph", spans: parseSpans(text || t) });
@@ -129,7 +129,7 @@ export function toMarkup(blocks: ContentBlock[]): string {
     .map((b) => {
       switch (b.type) {
         case "heading":
-          return `${b.level === 2 ? "##" : "###"} ${b.text}`;
+          return `${"#".repeat(b.level)} ${b.text}`;
         case "paragraph":
           return spansToText(b.spans);
         case "list":

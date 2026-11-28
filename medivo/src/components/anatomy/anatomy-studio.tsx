@@ -495,21 +495,6 @@ function MustKnow({ source, idPrefix }: { source: string; idPrefix: string }) {
   );
 }
 
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={cn(
-        "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
-        active ? "border-blue bg-blue text-white" : "border-line bg-white text-navy hover:border-blue/50",
-      )}
-    >
-      {children}
-    </button>
-  );
-}
 function Legend({ className, children }: { className: string; children: React.ReactNode }) {
   return (
     <span className="inline-flex items-center gap-1.5">
@@ -1030,7 +1015,18 @@ function PlateBrowser({ images, byId, initial, onBack }: { images: AnatomyImage[
   const [id, setId] = useState(initial ?? images[0]?.id);
   const [showAll, setShowAll] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
-  const image = images.find((i) => i.id === id) ?? images[0];
+  const stripRef = useRef<HTMLDivElement>(null);
+  const index = Math.max(0, images.findIndex((i) => i.id === id));
+  const image = images[index];
+  const go = (i: number) => {
+    const next = images[(i + images.length) % images.length];
+    setId(next.id);
+    setOpen(null);
+  };
+  // Keep the chosen thumbnail in view in the strip.
+  useEffect(() => {
+    stripRef.current?.querySelector<HTMLElement>(`[data-plate="${image.id}"]`)?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+  }, [image.id]);
   const openMarker = image.markers.find((m) => m.id === open);
   const openStructure = openMarker?.structureId ? byId.get(openMarker.structureId) : null;
   const numbers = numbering(image);
@@ -1041,12 +1037,50 @@ function PlateBrowser({ images, byId, initial, onBack }: { images: AnatomyImage[
         <ArrowLeft className="size-4" aria-hidden="true" />
         Terug naar het overzicht
       </button>
-      <div className="mb-4 flex flex-wrap gap-2">
-        {images.map((i) => (
-          <Chip key={i.id} active={i.id === image.id} onClick={() => { setId(i.id); setOpen(null); }}>
-            {i.title}
-          </Chip>
-        ))}
+
+      {/* All plates as a scrollable strip of thumbnails: you see what is on a plate before you open it. */}
+      <div ref={stripRef} role="list" aria-label="Platen" className="-mx-4 mb-5 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
+        {images.map((img, i) => {
+          const active = img.id === image.id;
+          return (
+            <button
+              key={img.id}
+              type="button"
+              role="listitem"
+              data-plate={img.id}
+              aria-current={active ? "true" : undefined}
+              onClick={() => go(i)}
+              className={cn(
+                "group w-32 shrink-0 snap-start overflow-hidden rounded-lg border bg-white text-left transition-shadow sm:w-36",
+                active ? "border-blue ring-2 ring-blue/30" : "border-line hover:border-[#c3d3e6] hover:shadow-[var(--shadow-card)]",
+              )}
+            >
+              <span className="relative block aspect-[4/3] border-b border-line bg-white">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img.url} alt="" loading="lazy" className="absolute inset-0 size-full object-contain p-1.5" />
+                <span className={cn("absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 text-[0.65rem] font-semibold tabular-nums", active ? "bg-blue text-white" : "bg-navy/80 text-white")}>{i + 1}</span>
+              </span>
+              <span className="block px-2 py-1.5">
+                <span className={cn("line-clamp-2 text-xs leading-snug", active ? "font-semibold text-blue" : "text-navy")}>{img.title}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mb-3 flex items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-muted-ink tabular-nums">Plaat {index + 1} van {images.length}</p>
+          <h3 className="truncate font-semibold text-navy sm:whitespace-normal">{image.title}</h3>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <Button type="button" variant="outline" size="icon" aria-label="Vorige plaat" onClick={() => go(index - 1)} className="border-line">
+            <ArrowLeft aria-hidden="true" />
+          </Button>
+          <Button type="button" variant="outline" size="icon" aria-label="Volgende plaat" onClick={() => go(index + 1)} className="border-line">
+            <ArrowRight aria-hidden="true" />
+          </Button>
+        </div>
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
         <Plate

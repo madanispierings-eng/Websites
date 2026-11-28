@@ -37,7 +37,7 @@ export function SummaryQuiz({ id, title, items }: { id: string; title?: string; 
       className="not-prose overflow-hidden rounded-2xl border border-blue/20 bg-white shadow-[var(--shadow-card)]"
     >
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-blue/20 bg-sky px-5 py-3">
-        <h4 className="flex items-center gap-2 text-lg font-semibold text-navy">
+        <h4 className="mt-0! flex items-center gap-2 text-lg font-semibold text-navy">
           <HelpCircle className="size-5 shrink-0 text-blue" aria-hidden="true" />
           {title ?? "Controlevragen"} <span className="font-normal text-muted-ink">· test jezelf</span>
         </h4>

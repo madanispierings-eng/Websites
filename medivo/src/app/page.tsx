@@ -26,18 +26,18 @@ export default async function HomePage() {
     <main id="inhoud">
       {/* Hero */}
       <section className="relative flex flex-col overflow-hidden bg-gradient-to-b from-[#eef4fb] to-canvas lg:block">
-        <div className="relative order-2 aspect-[4/3] w-full lg:absolute lg:inset-y-0 lg:right-0 lg:aspect-auto lg:w-[54%]">
+        <div className="relative order-1 aspect-[16/11] w-full sm:aspect-[16/9] lg:absolute lg:inset-y-0 lg:right-0 lg:aspect-auto lg:w-[54%]">
           <Image
             src="/images/leiden-universiteit.webp"
             alt="Historisch universiteitsgebouw van baksteen aan het water in Leiden"
             fill
             priority
             sizes="(min-width: 1024px) 54vw, 100vw"
-            className="object-cover object-[60%_50%] [mask-image:linear-gradient(to_bottom,black_70%,transparent)] lg:[mask-image:linear-gradient(to_right,transparent,black_30%)]"
+            className="object-cover object-[60%_50%] [mask-image:linear-gradient(to_bottom,black_55%,transparent)] lg:[mask-image:linear-gradient(to_right,transparent,black_30%)]"
           />
           <p
             aria-hidden="true"
-            className="absolute right-6 top-6 hidden rotate-[-8deg] text-right font-hand text-[1.7rem] leading-[1.05] text-navy lg:right-12 lg:top-10 lg:block"
+            className="absolute right-4 top-4 rotate-[-8deg] text-right font-hand text-[1.3rem] leading-[1.05] text-navy sm:right-6 sm:top-6 sm:text-[1.7rem] lg:right-12 lg:top-10"
           >
             Samen
             <br />
@@ -46,7 +46,7 @@ export default async function HomePage() {
             in Leiden!
           </p>
         </div>
-        <div className={cn(container, "relative order-1 grid gap-10 pb-8 pt-10 lg:grid-cols-2 lg:gap-0 lg:pb-28 lg:pt-16")}>
+        <div className={cn(container, "relative order-2 -mt-10 grid gap-10 pb-8 pt-0 sm:-mt-14 lg:mt-0 lg:grid-cols-2 lg:gap-0 lg:pb-28 lg:pt-16")}>
           <div className="relative z-10 max-w-xl lg:py-10">
             <Reveal>
               <h1 className="text-[2.4rem] font-bold leading-[1.06] tracking-[-0.03em] text-navy sm:text-5xl lg:text-[3.3rem] xl:text-[3.6rem]">

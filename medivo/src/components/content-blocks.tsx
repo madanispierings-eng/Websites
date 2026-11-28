@@ -134,11 +134,11 @@ function renderBlock(block: ContentBlock, id: string, idPrefix: string, imageUrl
           <table className="w-full min-w-[32rem] border-collapse text-left text-sm">
             {block.caption ? <caption className="bg-canvas px-4 py-2 text-left text-xs font-medium text-muted-ink">{block.caption}</caption> : null}
             <thead className="bg-sky">
-              <tr>{block.header.map((h, j) => <th key={j} scope="col" className="px-4 py-2.5 font-semibold text-navy">{h}</th>)}</tr>
+              <tr>{block.header.map((h, j) => <th key={j} scope="col" className="px-4 py-2.5 font-semibold text-navy"><Spans spans={parseSpans(h)} /></th>)}</tr>
             </thead>
             <tbody className="divide-y divide-line bg-white">
               {block.rows.map((row, r) => (
-                <tr key={r}>{row.map((cell, c) => <td key={c} className="px-4 py-2.5 align-top">{cell}</td>)}</tr>
+                <tr key={r}>{row.map((cell, c) => <td key={c} className="px-4 py-2.5 align-top"><Spans spans={parseSpans(cell)} /></td>)}</tr>
               ))}
             </tbody>
           </table>

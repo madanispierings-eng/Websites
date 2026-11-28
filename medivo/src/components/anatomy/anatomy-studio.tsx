@@ -124,7 +124,7 @@ export function AnatomyStudio({
     void reviewAnatomy(o);
   };
 
-  if (!unit || !scoped) return <UnitGrid units={units} byIdAll={byIdAll} progress={progress} onOpen={openUnit} />;
+  if (!unit || !scoped) return <UnitGrid units={units} images={images} byIdAll={byIdAll} progress={progress} onOpen={openUnit} />;
 
   if (view.kind === "oefenen")
     return (
@@ -156,51 +156,111 @@ export function AnatomyStudio({
 }
 
 // ---------- the practica ----------
+/** "PR Macroscopische Anatomie 1" reads better on a card as "Macroscopische anatomie 1". */
+const cardTitle = (t: string) => t.replace(/^PR\s+/i, "").replace(/^Macroscopische Anatomie/i, "Macroscopische anatomie");
+
 function UnitGrid({
   units,
+  images,
   byIdAll,
   progress,
   onOpen,
 }: {
   units: AnatomyUnit[];
+  images: AnatomyImage[];
   byIdAll: Map<string, AnatomyStructure>;
   progress: Record<string, AnatomyProgress>;
   onOpen: (slug: string) => void;
 }) {
+  const allIds = [...new Set(units.flatMap((u) => u.items.map((x) => x.structureId)).filter((id) => byIdAll.has(id)))];
+  const all = countStatus(allIds, progress);
+  const practised = allIds.length - all.nieuw;
+  const pctAll = allIds.length ? Math.round((all.beheerst / allIds.length) * 100) : 0;
   return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {units.map((u, i) => {
-        const ids = u.items.map((x) => x.structureId).filter((id) => byIdAll.has(id));
-        const c = countStatus(ids, progress);
-        const ready = ids.length > 0;
-        return (
-          <li key={u.id}>
-            <button
-              type="button"
-              onClick={() => onOpen(u.slug)}
-              className="group flex h-full w-full flex-col rounded-xl border border-line bg-white p-5 text-left shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-lift)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
-            >
-              <span className="grid size-9 place-items-center rounded-lg bg-sky text-sm font-bold tabular-nums text-blue">{i + 1}</span>
-              <span className="mt-3 font-semibold leading-snug text-navy">{u.title}</span>
-              {u.subtitle ? <span className="mt-1 text-sm text-muted-ink">{u.subtitle}</span> : null}
-              <span className="mt-auto pt-4">
-                {ready ? (
-                  <>
-                    <span className="flex items-baseline justify-between gap-2 text-xs text-muted-ink">
-                      <span>{ids.length} te kennen structuren</span>
-                      <span className="tabular-nums">{c.beheerst} beheerst</span>
-                    </span>
-                    <StatusBar c={c} total={ids.length} className="mt-1.5" />
-                  </>
-                ) : (
-                  <span className="text-xs font-medium text-muted-ink">Wordt voorbereid</span>
-                )}
-              </span>
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+    <div className="space-y-6">
+      <section aria-labelledby="anatomie-voortgang" className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+          <div>
+            <h2 id="anatomie-voortgang" className="text-sm font-semibold text-muted-ink">Jouw voortgang over alle practica</h2>
+            <p className="mt-1 text-2xl font-bold tracking-tight text-navy">
+              <span className="tabular-nums">{all.beheerst}</span>
+              <span className="text-base font-medium text-muted-ink"> van {allIds.length} structuren beheerst</span>
+            </p>
+          </div>
+          <p className="text-sm text-muted-ink">
+            {practised ? <><span className="tabular-nums font-semibold text-navy">{practised}</span> al geoefend</> : "Kies een practicum om te beginnen"}
+          </p>
+        </div>
+        <StatusBar c={all} total={allIds.length} className="mt-4 h-2.5" />
+        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-ink">
+          <Legend className="bg-success">Beheerst <span className="tabular-nums">{all.beheerst}</span></Legend>
+          <Legend className="bg-accent-blue/60">Mee bezig <span className="tabular-nums">{all.bezig}</span></Legend>
+          <Legend className="bg-danger/70">Fout, komt terug <span className="tabular-nums">{all.aandacht}</span></Legend>
+          <Legend className="bg-line">Nog niet geoefend <span className="tabular-nums">{all.nieuw}</span></Legend>
+          <span className="sr-only">{pctAll}% beheerst</span>
+        </div>
+      </section>
+
+      <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {units.map((u, i) => {
+          const ids = u.items.map((x) => x.structureId).filter((id) => byIdAll.has(id));
+          const c = countStatus(ids, progress);
+          const ready = ids.length > 0;
+          const plates = images.filter((img) => img.unitId === u.id);
+          // The richest modern plate gives the best impression of the practicum (old engravings only as fallback).
+          const modern = plates.filter((img) => !/gray|toldt/i.test(img.credit));
+          const cover = (modern.length ? modern : plates).reduce<AnatomyImage | undefined>((best, img) => (!best || img.markers.length > best.markers.length ? img : best), undefined);
+          const done = ids.length - c.nieuw;
+          const pct = ids.length ? Math.round((c.beheerst / ids.length) * 100) : 0;
+          return (
+            <li key={u.id}>
+              <button
+                type="button"
+                onClick={() => onOpen(u.slug)}
+                className="group flex h-full w-full flex-col overflow-hidden rounded-xl border border-line bg-white text-left shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-lift)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
+              >
+                <span className="relative block aspect-[16/10] overflow-hidden border-b border-line bg-white">
+                  {cover ? (
+                    // Signed, short-lived URL from private storage; next/image would cache it past its expiry.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={cover.url}
+                      alt=""
+                      loading="lazy"
+                      className="absolute inset-0 size-full object-contain p-3 transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                    />
+                  ) : null}
+                  <span className="absolute left-3 top-3 rounded-full bg-navy/90 px-2.5 py-1 text-xs font-semibold text-white">Practicum {i + 1}</span>
+                </span>
+                <span className="flex flex-1 flex-col p-5">
+                  <span className="text-lg font-semibold leading-snug text-navy">{cardTitle(u.title)}</span>
+                  {u.subtitle ? <span className="mt-1.5 text-sm leading-relaxed text-muted-ink">{u.subtitle}</span> : null}
+                  <span className="mt-auto pt-5">
+                    {ready ? (
+                      <>
+                        <span className="flex items-baseline justify-between gap-2 text-xs text-muted-ink">
+                          <span>
+                            <span className="tabular-nums font-semibold text-navy">{ids.length}</span> structuren · {plates.length} platen
+                          </span>
+                          <span className="tabular-nums">{c.beheerst ? `${pct}% beheerst` : done ? `${done} geoefend` : "Nog niet geoefend"}</span>
+                        </span>
+                        <StatusBar c={c} total={ids.length} className="mt-2 h-2" />
+                        <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-blue">
+                          {done ? "Verder oefenen" : "Start met oefenen"}
+                          <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-xs font-medium text-muted-ink">Wordt voorbereid</span>
+                    )}
+                  </span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 

@@ -274,7 +274,7 @@ export function ContentBlocks({
           const Icon = item.tone.icon;
           return (
             <section key={`panel-${k}`} className={cn("not-prose space-y-3 rounded-2xl border p-5 sm:p-6", item.tone.card)}>
-              <h4 className={cn("-mx-5 -mt-5 mb-1 flex items-center gap-2 rounded-t-2xl border-b px-5 py-3 text-lg font-semibold sm:-mx-6 sm:px-6", item.tone.head)}>
+              <h4 className={cn("-mx-5 -mt-5! mb-1 flex items-center gap-2 rounded-t-2xl border-b px-5 py-3 text-lg font-semibold sm:-mx-6 sm:px-6", item.tone.head)}>
                 <Icon className="size-5 shrink-0" aria-hidden="true" />
                 {item.title}
               </h4>

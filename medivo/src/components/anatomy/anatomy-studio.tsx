@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, Eye, EyeOff, Images, Maximize2, Minimize2, RotateCcw, Target, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Eye, EyeOff, Maximize2, Minimize2, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { AnatomyImage, AnatomyProgress, AnatomyStructure, AnatomyUnit } from "@/lib/data/anatomy";
 import { ContentBlocks } from "@/components/content-blocks";
@@ -409,46 +409,71 @@ function UnitDetail({
           {/* On a phone the practice buttons come first, above the long lists. */}
           <aside className="order-first space-y-4 lg:sticky lg:top-24 lg:order-none">
             <section className="rounded-xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
-              <h3 className="text-lg font-semibold text-navy">Oefenen</h3>
-              <p className="mt-1 text-sm text-muted-ink">
-                Meerkeuzevragen over alle structuren van dit practicum: welke structuur is aangewezen? Wat je fout had of gokte, komt
-                eerder terug. Je kunt altijd stoppen; je voortgang wordt per vraag bewaard.
-              </p>
-              <div className="mt-5 flex flex-col gap-3">
-                <Button type="button" className="h-auto min-h-11 py-2 font-semibold" onClick={() => startSession()} disabled={!practisable.length}>
-                  <Target className="size-4" aria-hidden="true" />
-                  Oefen alle structuren ({practisable.length} vragen)
-                </Button>
-                {practisable.length > SHORT_ROUND ? (
-                  <Button type="button" variant="outline" className="h-11" onClick={() => startSession(SHORT_ROUND)}>
-                    <Target className="size-4" aria-hidden="true" />
-                    Korte ronde ({SHORT_ROUND} vragen)
-                  </Button>
-                ) : null}
-                {toRepeat.length ? (
-                  <Button type="button" variant="outline" className="h-11" onClick={() => onStart(shuffle(toRepeat))}>
-                    <RotateCcw className="size-4" aria-hidden="true" />
-                    Herhaal wat je fout had ({toRepeat.length})
-                  </Button>
-                ) : null}
-                <Button type="button" variant="outline" className="h-11" onClick={() => onPlates()} disabled={!images.length}>
-                  <Images className="size-4" aria-hidden="true" />
-                  Platen bekijken ({images.length})
-                </Button>
+              <div className="flex items-baseline justify-between gap-3">
+                <h3 className="text-lg font-semibold text-navy">Oefenen</h3>
+                <span className="text-sm text-muted-ink">
+                  <span className="font-semibold tabular-nums text-navy">{c.beheerst}</span> van {ids.length} beheerst
+                </span>
               </div>
-              {practisable.length < ids.length ? (
-                <p className="mt-3 text-xs text-muted-ink">{ids.length - practisable.length} structuren staan nog niet op een plaat en worden nog niet gevraagd.</p>
-              ) : null}
-              <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-ink">
-                <Legend className="bg-success">Beheerst</Legend>
-                <Legend className="bg-accent-blue/60">Mee bezig</Legend>
-                <Legend className="bg-danger/70">Fout</Legend>
+              <StatusBar c={c} total={ids.length} className="mt-3 h-2" />
+              <p className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-ink">
+                <Legend className="bg-success">{c.beheerst} beheerst</Legend>
+                <Legend className="bg-accent-blue/60">{c.bezig} mee bezig</Legend>
+                <Legend className="bg-danger/70">{c.aandacht} fout</Legend>
+              </p>
+
+              <Button type="button" className="mt-5 h-12 w-full justify-between px-5 text-[0.95rem] font-semibold" onClick={() => startSession()} disabled={!practisable.length}>
+                <span>{c.nieuw < ids.length ? "Verder oefenen" : "Start met oefenen"}</span>
+                <span className="flex items-center gap-2 font-medium opacity-80">
+                  {practisable.length} structuren
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </span>
+              </Button>
+
+              <ul className="mt-4 divide-y divide-line overflow-hidden rounded-lg border border-line">
+                {practisable.length > SHORT_ROUND ? (
+                  <OptionRow title="Korte ronde" hint="Een snelle ronde, je fouten eerst" count={SHORT_ROUND} onClick={() => startSession(SHORT_ROUND)} />
+                ) : null}
+                <OptionRow
+                  title="Herhaal je fouten"
+                  hint={toRepeat.length ? "Alleen wat je de laatste keer fout had" : "Je hebt nu niets fout staan"}
+                  count={toRepeat.length}
+                  disabled={!toRepeat.length}
+                  onClick={() => onStart(shuffle(toRepeat))}
+                />
+                <OptionRow title="Platen bekijken" hint="Zelf rondkijken, met namen en uitleg" count={images.length} disabled={!images.length} onClick={() => onPlates()} />
+              </ul>
+
+              <p className="mt-4 text-xs leading-relaxed text-muted-ink">
+                Wat je fout had of gokte, komt eerder terug. Je voortgang wordt per vraag bewaard.
+                {practisable.length < ids.length ? ` ${ids.length - practisable.length} structuren staan nog niet op een plaat en worden nog niet gevraagd.` : ""}
               </p>
             </section>
           </aside>
         </div>
       )}
     </div>
+  );
+}
+
+/** A secondary way to practise, as a quiet list row instead of yet another big button. */
+function OptionRow({ title, hint, count, onClick, disabled }: { title: string; hint: string; count: number; onClick: () => void; disabled?: boolean }) {
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-canvas focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-blue disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:bg-transparent"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-navy">{title}</span>
+          <span className="block text-xs text-muted-ink">{hint}</span>
+        </span>
+        <span className="shrink-0 text-sm tabular-nums text-muted-ink">{count}</span>
+        <ArrowRight className="size-4 shrink-0 text-muted-ink" aria-hidden="true" />
+      </button>
+    </li>
   );
 }
 
